@@ -1,0 +1,391 @@
+---
+title: "Activation Patching"
+subtitle: "Causal intervention in neural networks"
+author: "Taras Tsugrii"
+date: 2025-01-05
+categories: [techniques, patching]
+description: "Attribution shows correlation. Patching proves causation. By surgically replacing activations, we test whether components are actually necessary for a behavior."
+---
+
+## From Observation to Experiment
+
+In Article 10, we learned to ask: "What contributed to this output?" Attribution decomposes the logit into per-component contributions, showing which attention heads and MLPs pushed the prediction in which direction.
+
+But attribution has a fundamental limitation: **it shows correlation, not causation**.
+
+When head 7.4 has high attribution for predicting "Paris," we know its output aligns with that prediction. We don't know whether head 7.4 is *necessary*—whether the model would fail without it, or whether the same information flows through redundant paths.
+
+To distinguish correlation from causation, we need to **intervene**—to modify the system and observe what happens. This is what activation patching provides: a way to surgically replace activations and measure the causal effect.
+
+::: {.callout-note}
+## The Core Idea
+Activation patching replaces a component's activation from one input with its activation from a different input, then measures how the output changes. If the output changes significantly, that component is causally important for the behavior.
+:::
+
+## The Clean/Corrupted Paradigm
+
+The standard patching setup uses two inputs:
+
+**Clean input**: Produces the behavior we want to understand
+**Corrupted input**: Produces a different (usually wrong) behavior
+
+For the IOI task from Article 8:
+- **Clean**: "When John and Mary went to the store, John gave the bag to ___" → predicts "Mary"
+- **Corrupted**: "When John and Mary went to the store, Mary gave the bag to ___" → predicts "John"
+
+The corrupted input is carefully constructed: it's minimally different from the clean input but produces a different output. This ensures that any differences in activation are due to the specific computation we're studying, not irrelevant factors.
+
+### The Patching Procedure
+
+1. Run both clean and corrupted inputs through the model
+2. Cache all intermediate activations for both runs
+3. At a specific location (layer, position, component), replace the corrupted activation with the clean activation
+4. Continue the forward pass with this patched activation
+5. Measure how the output changes
+
+If patching a component restores the clean output, that component carries information necessary for the behavior.
+
+```python
+# Pseudocode for activation patching
+def patch_and_measure(model, clean_input, corrupted_input, patch_location):
+    # Get clean activations
+    clean_cache = model.run_with_cache(clean_input)
+
+    # Run corrupted input, but patch at specific location
+    def patch_hook(activation, hook):
+        if hook.name == patch_location:
+            return clean_cache[patch_location]
+        return activation
+
+    patched_output = model.run_with_hooks(corrupted_input, hooks=[patch_hook])
+
+    # Measure recovery toward clean behavior
+    clean_logit = model(clean_input).logits[target_token]
+    corrupted_logit = model(corrupted_input).logits[target_token]
+    patched_logit = patched_output.logits[target_token]
+
+    recovery = (patched_logit - corrupted_logit) / (clean_logit - corrupted_logit)
+    return recovery
+```
+
+### Measuring Recovery
+
+The key metric is **logit difference recovery**: how much does patching restore the clean behavior?
+
+$$\text{Recovery} = \frac{\text{logit}_{\text{patched}} - \text{logit}_{\text{corrupted}}}{\text{logit}_{\text{clean}} - \text{logit}_{\text{corrupted}}}$$
+
+- Recovery ≈ 0%: Patching this component has no effect; it's not causally important
+- Recovery ≈ 100%: Patching this component fully restores the correct behavior; it's critically important
+- Recovery between 0-100%: The component contributes but isn't solely responsible
+
+::: {.callout-important}
+## The Causal Test
+Unlike attribution (which observes correlations), patching performs an intervention. If changing a component changes the output, that component is causally involved. This is the difference between observational and experimental science.
+:::
+
+## Types of Patching
+
+Different patching targets reveal different aspects of the computation.
+
+### Residual Stream Patching
+
+Patch the residual stream at a specific layer and position:
+
+```
+Layer L, Position P: Replace x_L^P(corrupted) with x_L^P(clean)
+```
+
+This tests: "Does the residual stream at this layer/position carry information necessary for the behavior?"
+
+**What it reveals**: Where in the network (which layer, which position) the critical information exists.
+
+**Limitation**: The residual stream is a sum of all prior contributions. High recovery at layer L could mean:
+- Layer L itself computes the answer
+- An earlier layer computed it, and layer L just carries it forward
+
+### Attention Head Patching
+
+Patch the output of a specific attention head:
+
+```
+Head H at Layer L: Replace h_H^L(corrupted) with h_H^L(clean)
+```
+
+This tests: "Is this specific attention head causally necessary?"
+
+**What it reveals**: Which heads are critical for the behavior.
+
+**The IOI Discovery**: Patching revealed that only 26 out of 144 heads in GPT-2 Small are necessary for indirect object identification. The other 118 heads can be corrupted without affecting the task.
+
+### MLP Patching
+
+Patch the output of an MLP layer:
+
+```
+MLP at Layer L: Replace m^L(corrupted) with m^L(clean)
+```
+
+This tests whether the nonlinear computations at this layer matter.
+
+### Position-Specific Patching
+
+Patch only at specific token positions:
+
+For "When John and Mary went to the store, John gave the bag to ___":
+- Patch only at the "Mary" position (position 4)
+- Patch only at the second "John" position (position 9)
+- Patch only at the final position (where prediction happens)
+
+**What it reveals**: Which positions carry the critical information at which layers.
+
+**Common Finding**: Information flows from source positions (where names appear) to the final position (where prediction happens) through specific layers.
+
+### Feature Patching with SAEs
+
+Using sparse autoencoders (Article 9), we can patch individual features:
+
+```
+Feature F: Replace activation_F(corrupted) with activation_F(clean)
+```
+
+This tests: "Is this specific *concept* causally necessary?"
+
+Instead of "is head 7.4 necessary?" we ask "is the 'France-capital' feature necessary?"
+
+**What it reveals**: Which interpretable features drive the behavior, not just which components.
+
+## Noising vs. Denoising
+
+There are two directions to patch:
+
+### Denoising (Corrupted → Clean)
+
+Start with corrupted behavior, patch in clean activations, measure recovery.
+
+**Question answered**: "What information is *sufficient* to restore the correct behavior?"
+
+**Interpretation**: High recovery means the patched component carries enough information to fix the behavior.
+
+### Noising (Clean → Corrupted)
+
+Start with clean behavior, patch in corrupted activations, measure degradation.
+
+**Question answered**: "What information is *necessary* for the correct behavior?"
+
+**Interpretation**: High degradation means the patched component is essential; corrupting it breaks the behavior.
+
+### Why Both Matter
+
+| Scenario | Denoising (corrupt→clean) | Noising (clean→corrupt) | Interpretation |
+|----------|---------------------------|-------------------------|----------------|
+| A | High recovery | High degradation | Component is both necessary and sufficient |
+| B | High recovery | Low degradation | Component is sufficient but redundant |
+| C | Low recovery | High degradation | Component is necessary but not sufficient alone |
+| D | Low recovery | Low degradation | Component is irrelevant |
+
+**The Full Picture**: A component that shows high denoising recovery might still be redundant if other paths carry the same information. Noising reveals whether those backup paths exist.
+
+::: {.callout-tip}
+## A Debugging Analogy
+Denoising is like fixing a bug by replacing a component—"if I use the correct version, does it work?" Noising is like introducing a bug—"if I break this component, does everything fail?" Both tests give different information about the system's dependencies.
+:::
+
+## Path Patching
+
+Beyond single-component patching, **path patching** traces how information flows between components.
+
+### The Idea
+
+Instead of patching a component's output directly, patch the effect of one component *on another specific component*.
+
+For example: "Does head 5.2's output affect head 7.4's computation?"
+
+### The Procedure
+
+1. Run clean and corrupted inputs
+2. At head 7.4, when it reads from the residual stream, replace only the contribution from head 5.2
+3. Measure whether this targeted patch changes the output
+
+If patching head 5.2's contribution to head 7.4 matters, there's a causal path from 5.2 to 7.4 to the output.
+
+### Building Circuit Diagrams
+
+Path patching constructs the circuit graph:
+
+1. Use regular patching to identify important components (nodes)
+2. Use path patching to identify important connections (edges)
+3. The result is a circuit diagram showing how information flows
+
+The IOI circuit (Article 8) was discovered using exactly this methodology:
+- Regular patching identified the 26 important heads
+- Path patching revealed how they connect (e.g., S-Inhibition heads suppress Name Mover heads)
+- The result was a complete circuit diagram with labeled components and connections
+
+### Computational Cost
+
+Path patching is expensive: for $n$ components, there are $O(n^2)$ possible paths to test. Researchers use heuristics:
+- Only test paths between components with high individual patching effects
+- Use gradient-based approximations (attribution patching) to prioritize
+- Apply ACDC-style automated discovery
+
+## The Connection to Causal Inference
+
+Activation patching is an application of **causal intervention** from statistics.
+
+### The Do-Operator
+
+In causal inference notation, patching corresponds to the $\text{do}()$ operator:
+
+$$P(Y \mid \text{do}(X = x))$$
+
+This asks: "What is the distribution of $Y$ if we *set* $X$ to value $x$, rather than merely observing that $X = x$?"
+
+Regular attribution computes $P(Y \mid X = x)$—the correlation between component values and outputs.
+
+Patching computes $P(Y \mid \text{do}(X = x))$—the causal effect of setting a component to a specific value.
+
+### Why Intervention Differs from Observation
+
+Observational data conflates multiple causal mechanisms:
+- $X$ causes $Y$ (direct effect)
+- $Y$ causes $X$ (reverse causation)
+- $Z$ causes both $X$ and $Y$ (confounding)
+
+Intervention breaks these dependencies by *setting* $X$, eliminating reverse causation and confounding.
+
+In neural networks:
+- Attribution observes: "This component's value correlates with the output"
+- Patching intervenes: "Setting this component to value $x$ causes output $y$"
+
+::: {.callout-note}
+## The Ladder of Causation
+Pearl's "ladder of causation" distinguishes three levels:
+1. **Association**: Seeing/observing (what attribution does)
+2. **Intervention**: Doing/acting (what patching does)
+3. **Counterfactual**: Imagining/reasoning (what would have happened)
+
+Patching elevates interpretability from level 1 to level 2—from correlation to causation.
+:::
+
+## Practical Considerations
+
+### Constructing Good Corrupted Inputs
+
+The quality of patching results depends on the corrupted input:
+
+**Minimal changes**: The corrupted input should differ minimally from the clean input, changing only what's necessary to flip the behavior.
+
+**Matched statistics**: Token lengths, positions, and structure should be preserved. "When John and Mary went..." vs "When Mary and John went..." is better than "When John and Mary went..." vs "The cat sat on the mat."
+
+**Multiple corruptions**: Test with multiple corrupted inputs to ensure results generalize. A single bad corruption choice could mislead.
+
+### Choosing What to Patch
+
+With hundreds of components, you can't patch everything. Strategies:
+
+1. **Use attribution first**: Patch components with high attribution scores. Attribution is cheap; use it to narrow the search.
+
+2. **Layer-by-layer scan**: Patch the entire residual stream at each layer to find where critical information appears, then drill down.
+
+3. **Known hypotheses**: If you hypothesize that a specific head matters, test it directly.
+
+### Interpreting Results
+
+**Beware of indirect effects**: Patching a component might affect the output indirectly by changing what downstream components receive.
+
+**Beware of backup circuits**: Low recovery from patching doesn't prove unimportance—backup circuits might compensate. Noising tests help detect this.
+
+**Beware of distribution shift**: Patched activations might be "out of distribution" for downstream components, causing unpredictable effects.
+
+## Patching Validates Attribution
+
+Patching and attribution are complementary:
+
+| Attribution | Patching |
+|-------------|----------|
+| Shows what *did* contribute | Shows what *must* contribute |
+| Cheap (one forward pass) | Expensive (many forward passes) |
+| Correlational | Causal |
+| Can mislead (redundancy) | Detects redundancy |
+| Good for hypothesis generation | Good for hypothesis testing |
+
+**The workflow**:
+1. Run attribution to identify candidate components
+2. Patch the top candidates to verify causal importance
+3. Use path patching to trace connections between verified components
+4. Build a circuit diagram from verified causal paths
+
+::: {.callout-tip}
+## A Performance Engineering Parallel
+Attribution is like profiler sampling—cheap, informative, but potentially misleading. Patching is like targeted benchmarking—you isolate a component and measure its actual impact. Good performance engineers use both: sampling to find candidates, benchmarking to verify.
+:::
+
+## Limitations
+
+### The Linearity Assumption
+
+Patching assumes effects are roughly additive—that replacing one component's activation has a predictable effect. But neural networks are nonlinear. The effect of patching might depend on the values of other components.
+
+### Computational Cost
+
+Full patching analysis requires $O(n)$ forward passes for $n$ components, or $O(n^2)$ for path patching. For large models with thousands of components, this becomes expensive.
+
+**Attribution patching** (using gradients to approximate patching effects) reduces cost dramatically but trades accuracy for speed.
+
+### Clean/Corrupted Design
+
+Results depend heavily on how you construct clean/corrupted pairs. Poor choices lead to:
+- Missing important components (if the corruption doesn't exercise them)
+- Finding spurious importance (if the corruption changes irrelevant factors)
+
+There's no universal recipe for good corrupted inputs—it requires understanding the task.
+
+### Distribution Shift
+
+Patching creates activations that the network never saw during training. A patched activation might be "out of distribution," causing downstream components to behave unpredictably.
+
+This is especially problematic for feature patching: forcing a feature to an unusual value might break assumptions the network relies on.
+
+## Polya's Perspective: The Experimental Method
+
+Patching embodies the scientific method: **form hypotheses, then test them experimentally**.
+
+Attribution gives hypotheses: "Head 7.4 seems important for this behavior."
+
+Patching tests hypotheses: "If we intervene on head 7.4, does the behavior change?"
+
+This is Polya's heuristic of **using all available data**—not just observational data (what the network does), but experimental data (what happens when we change it).
+
+::: {.callout-tip}
+## Polya's Insight
+"Use all the data." Observation alone leaves ambiguity—many causal structures produce the same correlations. Intervention resolves ambiguity by actively manipulating the system. Patching gives us experimental data that observation cannot provide.
+:::
+
+## Looking Ahead
+
+Patching tells us whether a component is necessary: "If we break this, does the behavior fail?"
+
+But there's a related question: "What happens if we completely remove this component?" This is **ablation**—the subject of the next article.
+
+While patching swaps activations between inputs, ablation removes components entirely (setting them to zero, or to their mean value). Ablation reveals:
+- What the network can do *without* a component
+- Whether backup circuits compensate for removal
+- The "minimal sufficient circuit" for a behavior
+
+Together, attribution, patching, and ablation form a complete toolkit for understanding neural network computations—observation, intervention, and removal.
+
+---
+
+## Further Reading
+
+1. **Interpretability in the Wild: IOI** — [arXiv:2211.00593](https://arxiv.org/abs/2211.00593): The paper that established patching methodology by reverse-engineering the IOI circuit.
+
+2. **Causal Scrubbing** — [Redwood Research](https://www.lesswrong.com/posts/JvZhhzycHu2Yd57RN/causal-scrubbing-a-method-for-rigorously-testing): A rigorous framework for validating causal hypotheses about circuits.
+
+3. **Attribution Patching** — [Neel Nanda](https://www.neelnanda.io/mechanistic-interpretability/attribution-patching): Using gradients to efficiently approximate patching effects.
+
+4. **Towards Automated Circuit Discovery (ACDC)** — [arXiv:2304.14997](https://arxiv.org/abs/2304.14997): Automated methods for finding minimal circuits using iterative patching.
+
+5. **Activation Patching in TransformerLens** — [GitHub](https://github.com/TransformerLensOrg/TransformerLens): Implementation guide for running patching experiments.
+
+6. **Causal Inference in Statistics: A Primer** — Pearl, Glymour, Jewell: The theoretical foundation for understanding patching as causal intervention.
