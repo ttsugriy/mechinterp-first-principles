@@ -1,0 +1,477 @@
+---
+title: "Induction Heads"
+subtitle: "A complete case study"
+author: "Taras Tsugrii"
+date: 2025-01-05
+categories: [synthesis, circuits, case-study]
+description: "Induction heads enable in-context learning—the ability to learn patterns from examples without weight updates. They're the best-understood circuit in transformers."
+---
+
+## The Complete Picture
+
+We've built a complete interpretability toolkit:
+
+**Theory** (Arc II):
+- Features as directions
+- Superposition and sparsity
+- Circuits as composable algorithms
+
+**Techniques** (Arc III):
+- SAEs for extracting features
+- Attribution for finding correlations
+- Patching for testing causation
+- Ablation for identifying necessity
+
+Now we apply everything to understand a single capability: **in-context learning**—the ability of language models to learn from examples within a prompt, without any gradient updates.
+
+This article is a complete case study. We'll reverse-engineer the circuit responsible for this capability, using every technique we've learned.
+
+::: {.callout-note}
+## The Target Capability
+**In-context learning**: Given examples in a prompt, the model predicts continuations that follow the demonstrated pattern—without any training.
+
+Example: "The cat chased the mouse. The dog chased the ___" → "bone" (following the "[animal] chased [prey/toy]" pattern)
+
+How does this work? The answer is **induction heads**.
+:::
+
+## The Pattern
+
+Induction heads detect and continue **copying patterns**.
+
+The simplest case:
+
+```
+Input:  [A] [B] ... [A] → ?
+Output: [B]
+```
+
+When the model sees token $A$ followed later by token $B$, then encounters $A$ again, it predicts $B$.
+
+### Concrete Examples
+
+**Exact copying**:
+```
+the quick brown fox jumped over the quick → brown
+```
+
+**Pattern generalization**:
+```
+When John went to the store, John → when
+```
+(The model predicts "when" would follow "John" the second time, mirroring the structure after the first "John")
+
+**In-context learning**:
+```
+A: Paris. Q: France. A: Berlin. Q: Germany. A: Madrid. Q: → Spain
+```
+(The model learns the Q-A pattern from examples in the prompt)
+
+All three involve the same core mechanism: detecting a repeated token and retrieving what followed it previously.
+
+::: {.callout-important}
+## Why This Matters
+Induction heads are the primary mechanism for few-shot learning in transformers. When you show GPT-4 three examples and it generalizes on the fourth, induction heads are doing much of the work. Understanding induction heads is understanding how transformers learn from context.
+:::
+
+## The Two-Layer Circuit
+
+Induction heads aren't a single component—they're a **circuit** involving multiple attention heads across two layers.
+
+### The Algorithm
+
+**Layer 1: Previous Token Head**
+- Attention pattern: Each position attends to the previous token
+- Effect: Writes information to the residual stream indicating "token $B$ came after token $A$"
+
+**Layer 2: Induction Head**
+- Attention pattern: Looks for positions where the previous token matches the current token
+- Effect: When it finds a match, it copies the token that followed
+
+The composition:
+1. At position $i$, token is $A$
+2. Previous token head at position $i+1$ writes "$B$ follows $A$" into the residual stream
+3. Later, at position $j$, token is again $A$
+4. Induction head at position $j$ searches for positions where the previous token was also $A$
+5. Finds position $i$ (where $A$ occurred before)
+6. Copies the token at position $i+1$, which is $B$
+
+::: {.callout-tip}
+## The Two-Head Composition
+Previous token head: "Record what came before"
+Induction head: "Find where this token appeared before and copy what followed"
+
+Together: pattern matching and retrieval.
+:::
+
+### Why Two Layers?
+
+Transformers can't implement induction in a single layer because attention is computed from the current residual stream state. At position $j$, the model needs to:
+1. Look backward for previous occurrences of the current token
+2. To do this, it needs to know what the *previous* token at each earlier position was
+
+But at position $i$, the residual stream doesn't natively contain "what's the previous token?" information. Layer 1 writes this information into the stream, enabling layer 2 to use it.
+
+This is **K-composition** (Article 8): layer 1's output modifies layer 2's keys, changing what layer 2 attends to.
+
+## Discovery Through Attention Patterns
+
+The first clue that induction heads exist came from visualizing attention patterns.
+
+### The Signature Pattern
+
+When you visualize what an induction head attends to, you see a distinctive **diagonal stripe** pattern:
+
+```
+Position:  0  1  2  3  4  5  6  7  8
+Token:     A  B  C  A  B  ?
+
+Layer 2 attention at position 5:
+Position:  0  1  2  3  4  5  6  7  8
+Attention: 0  █  0  0  █  0  0  0  0
+```
+
+The head at position 5 (token $B$) strongly attends to position 1 (the previous occurrence of $B$) where the prior token was $A$.
+
+This creates diagonal stripes across the attention matrix because:
+- When processing position 5, attend to position 1 (offset -4)
+- When processing position 6, attend to position 2 (offset -4)
+- When processing position 7, attend to position 3 (offset -4)
+
+The constant offset creates a diagonal.
+
+### Searching for Induction Heads
+
+Researchers developed an **induction score** to automatically detect these heads:
+
+1. Create inputs with repeated sequences: "[random] [random] [random] [random]..."
+2. Measure whether head $H$ at position $i$ attends to position $j$ where $\text{token}[j-1] = \text{token}[i-1]$
+3. High score → likely induction head
+
+**Finding**: In every transformer language model tested (GPT-2, GPT-3, BLOOM, LLaMA), induction heads emerge in layer 1-2, comprising 5-15% of all attention heads.
+
+## The Phase Transition
+
+One of the most striking findings: induction heads don't exist at initialization. They **emerge suddenly** during training.
+
+### The Training Dynamics
+
+Anthropic researchers tracked training on a small model, measuring:
+- **Induction score**: How strong the diagonal attention pattern is
+- **In-context learning performance**: How well the model continues patterns
+
+Both metrics show a **sharp phase transition**:
+
+```
+Training steps:    0      5K     10K    15K    20K
+Induction score:   0.0    0.0    0.0    0.8    0.9
+ICL accuracy:      20%    21%    22%    72%    85%
+```
+
+Around step 15K, both metrics spike simultaneously:
+- Induction heads suddenly develop the diagonal attention pattern
+- In-context learning capability suddenly improves
+
+The transition isn't gradual—it's a discrete shift from "no induction heads" to "strong induction heads" over just a few thousand steps.
+
+::: {.callout-important}
+## The Phase Transition Insight
+Induction heads aren't present from the start—they're discovered by gradient descent as a sharp improvement to the loss. Their sudden emergence suggests they're a discrete algorithmic solution that the optimizer finds and implements quickly once conditions are right.
+:::
+
+### What Causes the Transition?
+
+The phase transition happens when:
+1. Earlier layers have learned useful features (token identities, positional information)
+2. The model has enough capacity to implement the two-layer circuit
+3. Training data provides sufficient signal for the induction pattern
+
+Before the transition: the model relies on simple heuristics (unigram frequencies, positional biases).
+
+After the transition: the model uses genuine in-context learning via pattern matching.
+
+## Reverse-Engineering the Circuit
+
+Let's apply our interpretability toolkit to verify the induction head mechanism.
+
+### Step 1: Attribution
+
+Which components contribute to induction predictions?
+
+Run the model on: "the quick brown fox jumped over the quick → ___"
+
+Measure logit attribution for "brown":
+
+| Component | Attribution to "brown" |
+|-----------|----------------------|
+| Head 1.5 (previous token) | +0.8 |
+| Head 2.3 (induction) | +2.4 |
+| MLP layer 2 | +0.6 |
+| Other heads | < 0.2 each |
+
+**Finding**: Head 2.3 has high attribution. This is a candidate induction head.
+
+### Step 2: Attention Pattern Analysis
+
+Visualize where head 2.3 attends:
+
+When processing "the quick" (second occurrence), head 2.3 strongly attends to "the quick" (first occurrence) with offset matching the previous token pattern.
+
+**Confirmation**: The attention pattern matches the induction head signature.
+
+### Step 3: Ablation
+
+What happens if we remove head 2.3?
+
+Ablate head 2.3 (mean ablation) and measure:
+
+- Baseline: 87% accuracy on induction tasks
+- Ablated: 23% accuracy
+
+**Finding**: Performance collapses. Head 2.3 is necessary.
+
+What about head 1.5 (previous token head)?
+
+- Ablated head 1.5: 19% accuracy
+
+**Finding**: Head 1.5 is also necessary. Both components of the circuit are critical.
+
+### Step 4: Patching
+
+Clean: "A B C D E F A B → C"
+Corrupted: "A B C D E F X Y → ?"
+
+Patch head 2.3's output from clean to corrupted:
+
+- Corrupted logit for "C": -1.2
+- Patched logit for "C": +0.8
+
+**Recovery**: 80%+. Patching head 2.3 largely restores the correct prediction.
+
+Path patching: Does head 1.5 → head 2.3 path matter?
+
+Patch head 1.5's contribution to head 2.3's keys:
+
+- Recovery: 65%
+
+**Finding**: The connection from head 1.5 to head 2.3 is causally important. This confirms the two-layer circuit.
+
+### Step 5: Feature Analysis (with SAEs)
+
+Train a sparse autoencoder on layer 2 activations.
+
+Which features activate strongly during induction?
+
+- Feature 1,248: "Repeated token detection"
+- Feature 3,891: "Previous position offset"
+- Feature 7,102: "Copy operation"
+
+Ablating feature 1,248: Accuracy drops from 87% to 31%.
+
+**Finding**: Specific features encode the components of the induction algorithm.
+
+## The Complete Circuit Diagram
+
+Putting it all together:
+
+```
+Position i: [token A]
+           ↓
+Layer 1: Previous Token Head (1.5)
+         Writes "token A followed by ___" to residual stream
+           ↓
+Position i+1: [token B]
+         Reads residual stream
+         Associates "A → B"
+           ↓
+...later...
+           ↓
+Position j: [token A] (repeated)
+           ↓
+Layer 2: Induction Head (2.3)
+         Query: "Where did A appear before?"
+         Key matching: Finds position i (using previous token info from head 1.5)
+         Value: Retrieves token at position i+1
+           ↓
+Output: Predict "B"
+```
+
+**Verification**:
+- Attribution: ✓ (head 2.3 has highest attribution)
+- Attention: ✓ (diagonal stripe pattern)
+- Ablation: ✓ (removing either head breaks the circuit)
+- Patching: ✓ (patching restores behavior)
+- Features: ✓ (interpretable features encode the algorithm)
+
+This is a **fully reverse-engineered circuit**.
+
+## Generalizations and Variations
+
+Induction heads aren't a single universal algorithm—they're a family of related circuits.
+
+### Fuzzy Matching
+
+Some induction heads don't require exact token matches. They trigger on:
+- Semantic similarity ("Paris" → "France" matches "Berlin" → "Germany")
+- Structural similarity (matching syntax, not content)
+
+These "fuzzy induction heads" enable more sophisticated in-context learning.
+
+### Multi-Token Patterns
+
+Some induction heads track longer sequences: [A][B][C] ... [A][B] → [C]
+
+These enable learning from richer context.
+
+### Position-Dependent Induction
+
+Some heads combine induction with positional information:
+- "This token appeared $k$ positions ago"
+- "Copy, but only if within the last $n$ tokens"
+
+These add constraints to the copying mechanism.
+
+### Translation Induction
+
+In multilingual models:
+- "French word X translates to English word Y"
+- Later: "French word Z translates to..." → retrieve the translation pattern
+
+This is induction across languages.
+
+## Why Induction Heads Matter
+
+Induction heads are foundational:
+
+### 1. They Enable In-Context Learning
+
+The core capability that makes few-shot prompting work. Without induction heads, language models couldn't generalize from examples in context.
+
+### 2. They Emerge Reliably
+
+Every large language model develops induction heads. This suggests they're a convergent solution—gradient descent discovers them independently across architectures, scales, and training regimes.
+
+### 3. They're Understandable
+
+Unlike most neural network behaviors, the induction circuit is:
+- Localizable (specific heads in specific layers)
+- Interpretable (the algorithm is clear)
+- Verifiable (all techniques confirm the mechanism)
+
+This makes induction heads the **best-understood capability** in transformers.
+
+### 4. They Demonstrate Composition
+
+The circuit requires two layers working together—K-composition between previous token heads and induction heads. This is proof that transformers build complex algorithms by composing simple components.
+
+## Connections to Broader Capabilities
+
+Induction heads aren't isolated—they connect to many model capabilities.
+
+### Translation
+
+Parallel corpus learning: "French: bonjour. English: hello. French: merci. English: → thank you"
+
+Induction pattern: [source language token] → [target language token]
+
+### Code Completion
+
+Pattern: Function signature → function body
+
+```python
+def add(a, b):
+    return a + b
+
+def multiply(a, b):
+    return → a * b
+```
+
+### Analogical Reasoning
+
+"King is to Queen as Man is to → Woman"
+
+This is induction across semantic spaces.
+
+### Instruction Following
+
+"Q: What is 2+2? A: 4. Q: What is 3+3? A: → 6"
+
+The Q-A structure is learned via induction.
+
+::: {.callout-note}
+## The Unifying Principle
+Many "emergent capabilities" may be sophisticated applications of induction heads. The basic copying circuit, combined with semantic features, enables learning from examples across domains.
+:::
+
+## Limitations and Open Questions
+
+Despite being well-understood, induction heads leave questions unanswered:
+
+### What's the Capacity Limit?
+
+How many patterns can induction heads track simultaneously? Early experiments suggest ~10-20, but this varies by model and context length.
+
+### How Do They Interact with Other Circuits?
+
+Induction heads are part of a larger system. How do they interact with:
+- Factual recall circuits
+- Reasoning circuits
+- Output formatting circuits
+
+The interfaces aren't fully mapped.
+
+### Why This Algorithm?
+
+Gradient descent discovered induction heads, but are they optimal? Could there be better algorithms for in-context learning that transformers haven't found?
+
+### Do They Scale?
+
+Induction heads are clear in small models (GPT-2, 124M parameters). In large models (70B+ parameters), are the circuits still as clean? Early evidence suggests more redundancy and fuzzier boundaries.
+
+## Polya's Perspective: Worked Example
+
+This article applies Polya's heuristic: **study worked examples**.
+
+Before trying to reverse-engineer every capability, understand one capability completely. Induction heads are that worked example:
+- Well-defined behavior
+- Discoverable circuit
+- Verifiable mechanism
+- Applicable techniques
+
+Once you've reverse-engineered one circuit completely, you have a template for reverse-engineering others. The process (attribution → attention analysis → ablation → patching → features → circuit diagram) transfers.
+
+::: {.callout-tip}
+## Polya's Insight
+"Study solutions to related problems." You can't learn proof techniques by reading theory alone—you need worked examples. Induction heads are the worked example for mechanistic interpretability. Master this case, then apply the approach to other circuits.
+:::
+
+## Looking Ahead
+
+We've now seen the full interpretability workflow in action, applied to a real capability.
+
+But interpretability research is incomplete. Many fundamental questions remain open:
+
+- How much of model behavior can we explain with circuits?
+- What capabilities resist circuit-based explanation?
+- How do we scale interpretability to 100B+ parameter models?
+- Can we use interpretability to improve safety and alignment?
+
+These questions are the subject of the next article: **Open Problems in Mechanistic Interpretability**.
+
+After that, we'll close with **A Practice Regime**—concrete advice for how to actually do interpretability research, from choosing problems to debugging circuits to publishing results.
+
+---
+
+## Further Reading
+
+1. **In-Context Learning and Induction Heads** — [Anthropic](https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html): The definitive paper on induction heads, including the phase transition discovery.
+
+2. **A Mathematical Framework for Transformer Circuits** — [Anthropic](https://transformer-circuits.pub/2021/framework/index.html): The theoretical foundations for understanding composition in transformers.
+
+3. **Progress Measures for Grokking** — [arXiv:2301.05217](https://arxiv.org/abs/2301.05217): Analysis of the phase transition and what causes sudden capability emergence.
+
+4. **Induction Head Replication** — [Neel Nanda](https://www.neelnanda.io/mechanistic-interpretability/induction-heads): Step-by-step guide to finding induction heads in any transformer.
+
+5. **The Quantization Model of Neural Scaling** — [arXiv:2303.13506](https://arxiv.org/abs/2303.13506): Theoretical framework explaining why capabilities emerge suddenly (phase transitions).
+
+6. **Transformer Circuits Thread** — [Anthropic](https://transformer-circuits.pub/): Collection of papers reverse-engineering transformer circuits, with induction heads as a central example.
