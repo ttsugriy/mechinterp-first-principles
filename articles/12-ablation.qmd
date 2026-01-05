@@ -1,0 +1,387 @@
+---
+title: "Ablation"
+subtitle: "Learning by removal"
+author: "Taras Tsugrii"
+date: 2025-01-05
+categories: [techniques, ablation]
+description: "Ablation removes components entirely to reveal what the network truly needs. It's the interpretability equivalent of knockout experiments in biology."
+---
+
+## The Simplest Intervention
+
+We've now built a complete interpretability pipeline:
+
+- **Attribution** (Article 10): What correlates with the output?
+- **Patching** (Article 11): What causes the output?
+
+There's one more question: **What happens if we remove it entirely?**
+
+This is ablation—the technique of "knocking out" components and observing the consequences. If patching is surgery (transplanting tissue from one context to another), ablation is amputation (removing tissue entirely).
+
+::: {.callout-note}
+## The Core Idea
+Ablation sets a component's contribution to zero (or to some baseline value) and measures the effect on behavior. If the behavior degrades, the component was necessary. If it's preserved, the component was redundant.
+:::
+
+## Why Ablation Matters
+
+Ablation answers questions that patching cannot:
+
+**1. What's the minimal circuit?**
+Patching tells you whether a component carries relevant information. Ablation tells you whether the network can function *without* that component. The distinction matters when backup circuits exist.
+
+**2. What does each component contribute?**
+Ablation quantifies each component's contribution: "Removing head 7.4 drops accuracy from 89% to 23%." This gives a concrete measure of importance.
+
+**3. How robust is the network?**
+Some networks are fragile—ablating one component breaks everything. Others are robust—many components can be removed with minimal effect. Ablation reveals this structure.
+
+## Types of Ablation
+
+There are several ways to "remove" a component, each with different properties.
+
+### Zero Ablation
+
+The simplest approach: set the component's output to zero.
+
+$$h_{\text{ablated}} = 0$$
+
+**Interpretation**: The component contributes nothing to the residual stream.
+
+**Problem**: Zero might be far from the typical activation distribution. Downstream components might behave unpredictably when they receive zeros instead of normal activations.
+
+### Mean Ablation
+
+Replace the component's output with its average value across many inputs:
+
+$$h_{\text{ablated}} = \mathbb{E}[h]$$
+
+**Interpretation**: The component contributes its "default" or "average" information, but nothing input-specific.
+
+**Advantage**: Less distribution shift than zero ablation. Downstream components receive activations in a familiar range.
+
+**Calculation**: Requires a dataset to compute the mean. The mean is typically computed once and cached.
+
+### Resample Ablation
+
+Replace the component's output with its value on a random different input:
+
+$$h_{\text{ablated}} = h(\text{random other input})$$
+
+**Interpretation**: The component contributes *some* information, but unrelated to the current input.
+
+**Advantage**: Maintains realistic activation statistics.
+
+**Disadvantage**: Introduces noise from the random sample. Results may vary depending on which sample is chosen.
+
+### Comparison
+
+| Method | Distribution Shift | What It Tests |
+|--------|-------------------|---------------|
+| Zero ablation | High | "What if this component was never there?" |
+| Mean ablation | Medium | "What if this component was uninformative?" |
+| Resample ablation | Low | "What if this component was disconnected?" |
+
+Each method answers a slightly different question. Mean ablation is the most common default because it balances interpretability with reduced distribution shift.
+
+::: {.callout-tip}
+## A Software Analogy
+Zero ablation is like removing a function and replacing all calls with `null`. Mean ablation is like replacing it with a stub that returns a default value. Resample ablation is like redirecting calls to a random different implementation. Each tests different aspects of the system's robustness.
+:::
+
+## What to Ablate
+
+### Attention Heads
+
+The most common target. Ablate individual heads to find which are critical:
+
+```python
+for layer in range(n_layers):
+    for head in range(n_heads):
+        ablated_output = run_with_head_ablated(layer, head)
+        impact = measure_impact(clean_output, ablated_output)
+        print(f"Head {layer}.{head}: impact = {impact:.2f}")
+```
+
+**Finding**: Most heads have minimal impact. A small subset (typically 10-20%) are critical for any given task.
+
+### MLP Layers
+
+Ablate entire MLP layers to understand their role:
+
+- Early layers: Often can be ablated with minimal impact
+- Middle layers: More critical, often encode task-relevant knowledge
+- Late layers: Refine predictions; ablation degrades but rarely breaks
+
+### Individual Neurons
+
+Ablate specific neurons within an MLP:
+
+$$m_{\text{ablated}} = m - w_{\text{out},i} \cdot \sigma(w_{\text{in},i} \cdot x)$$
+
+This removes one neuron's contribution while preserving others.
+
+**Use case**: Testing hypotheses about what individual neurons compute.
+
+### Positions
+
+Ablate the residual stream at specific token positions:
+
+For "The capital of France is ___":
+- Ablate position 3 ("France"): Does the model still predict "Paris"?
+- Ablate position 0 ("The"): Less likely to matter
+
+**Finding**: Information flows from source tokens (where entities are mentioned) to query tokens (where predictions happen). Ablating sources degrades performance more than ablating fillers.
+
+### SAE Features
+
+Using sparse autoencoders (Article 9), ablate specific features:
+
+$$x_{\text{ablated}} = x - a_f \cdot d_f$$
+
+where $a_f$ is the feature activation and $d_f$ is the feature direction.
+
+This tests whether a *concept* (not just a component) is necessary.
+
+## The Ablation Protocol
+
+A systematic approach to ablation studies:
+
+### 1. Establish Baseline
+
+Run the model on your test set without any ablation. Record:
+- Task accuracy / success rate
+- Logit differences (for specific predictions)
+- Any other relevant metrics
+
+### 2. Single-Component Ablation
+
+Ablate each component individually:
+
+```python
+for component in all_components:
+    ablated_metric = run_with_ablation(component)
+    impact[component] = baseline_metric - ablated_metric
+```
+
+Rank components by impact. Identify the critical few.
+
+### 3. Cumulative Ablation
+
+Ablate multiple components simultaneously, starting with the least important:
+
+1. Ablate the 10% lowest-impact components → measure degradation
+2. Ablate the 20% lowest-impact components → measure degradation
+3. Continue until performance breaks
+
+**Finding**: Often, you can ablate 50-80% of components with minimal impact. Then performance cliff-drops.
+
+### 4. Minimal Sufficient Circuit
+
+Find the smallest set of components that preserves performance:
+
+1. Start with all components ablated
+2. Restore components one at a time, measuring recovery
+3. Stop when performance is restored
+
+The resulting set is a candidate for the "minimal sufficient circuit."
+
+::: {.callout-important}
+## The Sparsity Finding
+Real circuits are sparse. The IOI circuit uses 18% of attention heads. The greater-than circuit uses ~5% of MLPs. Most of the network is not involved in any single narrow behavior.
+:::
+
+## Ablation vs. Patching
+
+These techniques are complementary:
+
+| Patching | Ablation |
+|----------|----------|
+| Swaps activations between inputs | Removes activations entirely |
+| Tests information transfer | Tests necessity |
+| Requires clean/corrupted pair | Requires only one input |
+| More targeted (specific information) | More general (any contribution) |
+
+### When to Use Which
+
+**Use patching when**: You have a specific hypothesis about what information a component carries. "Does head 7.4 transmit the indirect object's identity?"
+
+**Use ablation when**: You want to know overall importance. "Which heads matter for this task?" Or when constructing clean/corrupted pairs is difficult.
+
+### Combined Analysis
+
+The most powerful approach combines both:
+
+1. **Ablation first**: Find which components matter (importance ranking)
+2. **Patching second**: Understand *what* the important components do
+
+This is how the IOI circuit was discovered:
+- Ablation identified the 26 critical heads
+- Patching revealed what each head contributes
+- Path patching traced how they connect
+
+## Interpreting Ablation Results
+
+### Positive Impact (Performance Drops)
+
+If ablating component $C$ drops accuracy from 90% to 70%, then $C$ contributes +20% to performance.
+
+**Interpretation**: $C$ is doing useful work for this task.
+
+### Negative Impact (Performance Improves!)
+
+Sometimes ablation *improves* performance. If ablating $C$ raises accuracy from 90% to 93%, then $C$ was hurting performance.
+
+**Interpretation**: $C$ is computing something counterproductive for this task. This happens with:
+- Negative name movers (in IOI, heads that incorrectly boost the wrong answer)
+- Components fine-tuned for different tasks
+- Interference from superposition
+
+### Zero Impact
+
+If ablation has no effect, the component is:
+- Unused for this task, OR
+- Redundant (backup circuits compensate)
+
+Distinguishing these requires additional analysis (e.g., ablating multiple components simultaneously).
+
+## Cautions and Failure Modes
+
+### Distribution Shift
+
+Ablated activations are out-of-distribution. Downstream components were trained on normal activations, not zeros or means.
+
+**Symptom**: Ablation causes wild, unpredictable changes—not just degraded performance, but nonsensical outputs.
+
+**Mitigation**: Use mean or resample ablation instead of zero ablation. Compare results across ablation types.
+
+### Backup Circuits
+
+Redundancy exists in neural networks. If backup circuits compensate for ablation, you'll underestimate the component's importance.
+
+**Symptom**: Ablating head A has no effect. Ablating head B has no effect. But ablating both breaks the task.
+
+**Mitigation**: Test combinations of ablations, not just individual ones.
+
+### Task Specificity
+
+A component critical for one task might be irrelevant for another. Ablation results are task-specific, not universal.
+
+**Example**: The IOI circuit's 26 heads are critical for indirect object identification but irrelevant for arithmetic tasks.
+
+**Implication**: Ablation studies must be run separately for each behavior of interest.
+
+### Nonlinear Interactions
+
+The effect of ablating component $C$ might depend on whether component $D$ is also ablated. Single-component ablation misses these interactions.
+
+**Mitigation**: Test pairwise or higher-order ablations for suspected interactions.
+
+::: {.callout-important}
+## The Interpretation Challenge
+Ablation shows *that* a component matters, not *why* it matters or *how* it computes. Ablation is a blunt instrument—it tells you the component is necessary but doesn't explain the mechanism.
+:::
+
+## Ablation in Practice
+
+### Computational Cost
+
+Single-component ablation requires $n$ forward passes for $n$ components. This is expensive but parallelizable—each ablation is independent.
+
+For cumulative or combinatorial ablation, costs grow faster. Heuristics help:
+- Cluster components and ablate clusters
+- Use attribution to prioritize which components to test
+- Use gradient approximations for initial screening
+
+### Tooling
+
+Modern interpretability libraries support ablation out of the box:
+
+```python
+# TransformerLens example
+from transformer_lens import HookedTransformer
+
+model = HookedTransformer.from_pretrained("gpt2-small")
+
+# Ablate head 5.2 with mean ablation
+def ablate_head(activation, hook):
+    activation[:, :, 2, :] = activation[:, :, 2, :].mean()
+    return activation
+
+output = model.run_with_hooks(
+    input_text,
+    fwd_hooks=[(f"blocks.5.attn.hook_z", ablate_head)]
+)
+```
+
+### Reporting Results
+
+Standard practice for ablation studies:
+
+1. **Baseline metrics**: Performance without ablation
+2. **Per-component impacts**: Ranked list of ablation effects
+3. **Ablation type**: Specify zero/mean/resample
+4. **Threshold for "critical"**: What impact counts as important?
+5. **Error bars**: Variance across test examples
+
+## The Bigger Picture
+
+Ablation completes our interpretability toolkit:
+
+| Technique | Question Answered | Nature |
+|-----------|------------------|--------|
+| Attribution | What did contribute? | Observational |
+| Patching | What caused the output? | Interventional |
+| Ablation | What's necessary? | Interventional |
+
+Together, they enable the full interpretability workflow:
+
+1. **Attribution** generates hypotheses about which components matter
+2. **Ablation** validates which components are truly necessary
+3. **Patching** reveals what information the necessary components carry
+4. **Path patching** traces how information flows between components
+5. The result is a **circuit**—an interpretable description of the computation
+
+This is the methodology that produced the IOI circuit, the induction head analysis, and other major interpretability results.
+
+## Polya's Perspective: Simplification
+
+Ablation embodies Polya's heuristic of **simplification**: understand a system by making it simpler.
+
+A full transformer has hundreds of components working together. That's too complex to understand at once. Ablation lets us ask: "What if we simplify by removing this component?"
+
+If the simplified system still works, we've identified something inessential. If it breaks, we've identified something critical. Either way, we've learned about the structure.
+
+::: {.callout-tip}
+## Polya's Insight
+"Simplify the problem." When a system is too complex, remove parts until it's simple enough to understand. Ablation is systematic simplification—remove components one by one, observing what breaks and what survives.
+:::
+
+## Looking Ahead
+
+We've now completed the techniques arc:
+
+- **SAEs** (Article 9): Extract interpretable features from superposition
+- **Attribution** (Article 10): Find what correlates with outputs
+- **Patching** (Article 11): Test causal relationships
+- **Ablation** (Article 12): Identify necessary components
+
+These techniques work together. No single technique suffices—but combined, they enable rigorous reverse-engineering of neural computations.
+
+The next arc applies these techniques to a complete case study: **induction heads**—the attention pattern that enables in-context learning. We'll see features, circuits, attribution, patching, and ablation working together to explain a fundamental capability of language models.
+
+---
+
+## Further Reading
+
+1. **Interpretability in the Wild: IOI** — [arXiv:2211.00593](https://arxiv.org/abs/2211.00593): Uses ablation extensively to verify the IOI circuit.
+
+2. **Locating and Editing Factual Knowledge** — [arXiv:2202.05262](https://arxiv.org/abs/2202.05262): Uses ablation to identify where factual associations are stored.
+
+3. **Causal Tracing in Language Models** — [Rome Project](https://rome.baulab.info/): Combines patching and ablation to localize and edit knowledge.
+
+4. **Ablation Studies in TransformerLens** — [Neel Nanda's Guide](https://www.neelnanda.io/mechanistic-interpretability): Practical tutorials on running ablation experiments.
+
+5. **A Mathematical Framework for Transformer Circuits** — [Anthropic](https://transformer-circuits.pub/2021/framework/index.html): Theoretical foundations for understanding component contributions.
+
+6. **Scaling Monosemanticity** — [Anthropic](https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html): Uses feature ablation (via SAEs) to verify feature causal roles.
