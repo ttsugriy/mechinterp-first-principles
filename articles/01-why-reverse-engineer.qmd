@@ -1,0 +1,200 @@
+---
+title: "Why Reverse Engineer Neural Networks?"
+subtitle: "The case for mechanistic interpretability"
+author: "Taras Tsugrii"
+date: 2025-01-04
+categories: [foundations, motivation]
+description: "Neural networks discover algorithms we didn't teach them. Understanding how they work is one of the most important scientific challenges of our time."
+---
+
+## The Mystery
+
+In 2022, researchers at OpenAI were training a small neural network to do modular arithmetic—computing sums like (23 + 47) mod 97. The task is trivial for a pocket calculator, but the researchers wanted to understand how neural networks learn such algorithmic tasks.
+
+At first, the network did what neural networks often do: it memorized. Given training examples, it got the right answers. Given new examples, it failed completely. The network had learned a lookup table, not an algorithm.
+
+Then something strange happened.
+
+The researchers had left the training running longer than necessary—an accident, really. After what should have been pointless additional training, the network's accuracy on unseen examples suddenly jumped from near-zero to near-perfect. It had stopped memorizing and started *understanding*.
+
+When scientists looked inside to see what algorithm the network had discovered, they found something no one expected. The network wasn't counting. It wasn't using any procedure a human would naturally devise. Instead, it had invented a method involving discrete Fourier transforms—arranging numbers on a circle and manipulating them through trigonometric functions. The researchers called this phenomenon "grokking," borrowing a term from science fiction meaning to understand something so thoroughly that you become part of it.
+
+::: {.callout-note}
+## The Key Surprise
+We built this network. We know every weight, every connection, every parameter. Yet we didn't know—couldn't have predicted—that it would discover Fourier-based arithmetic. The algorithm emerged from training, and we only understood it by carefully reverse engineering the trained network.
+:::
+
+This isn't an isolated curiosity. Neural networks consistently discover solutions we don't understand, using methods we didn't teach them. The question isn't whether this is happening. The question is: how do we find out what's going on inside?
+
+## The Black Box Problem
+
+We have a strange situation in modern AI. We can build systems that write code, diagnose diseases, prove mathematical theorems, and carry on conversations. We know exactly what these systems are made of: matrices of floating-point numbers, organized into layers, trained on data through gradient descent. Every parameter is recorded. Every computation is deterministic.
+
+And yet we don't understand how they work.
+
+This isn't the usual kind of "don't understand" where something is too complex to track in detail. We can run any input through the network and observe every intermediate value. The problem is that these observations don't *mean* anything to us. Looking at a billion floating-point numbers doesn't reveal the algorithm any more than staring at a compiled binary reveals the source code.
+
+We have the executable, but not the source. We have the output, but not the reasoning. We can say "the model predicts X" but not "the model predicts X *because* of Y."
+
+Chris Olah, one of the pioneers of neural network interpretability, frames it this way: if an alien landed on Earth with these capabilities—writing, reasoning, conversing—scientists would drop everything to study it. How does it think? What's its internal structure? And if you found a mysterious binary file that could do these things, security researchers would immediately start reverse engineering.
+
+We have both: systems that accomplish tasks we don't know how to program directly, stored as inscrutable arrays of numbers that we ourselves created. The question, as Olah puts it, "cries out to be answered."
+
+## Why Care?
+
+You might wonder: if the systems work, why does it matter that we don't understand them? There are at least three compelling reasons.
+
+### Scientific Understanding
+
+These are the most capable learning systems ever built. They solve problems—translation, code generation, medical diagnosis—that we couldn't solve by writing explicit rules. Something interesting is happening in there, something about learning and representation and computation that we don't fully grasp.
+
+Understanding neural networks isn't just about AI. It's about understanding a new kind of information processing, one that emerged from optimization rather than design. If we can reverse engineer these systems, we might learn something fundamental about intelligence itself.
+
+For those of us with a performance engineering mindset, there's a simpler framing: *you can't optimize what you don't understand*. We've hit diminishing returns on many simple scaling approaches. Understanding the internals might reveal inefficiencies, redundancies, or entirely new directions for improvement.
+
+### Safety and Trust
+
+We're deploying neural networks in increasingly high-stakes contexts: medical diagnosis, legal analysis, autonomous vehicles, infrastructure management. These systems make decisions that affect human lives.
+
+Can we trust systems we don't understand?
+
+The honest answer is: only so far. We can test extensively, but tests only cover cases we think to check. We can look at aggregate statistics, but statistics don't explain individual decisions. If a model behaves unexpectedly in a novel situation, we have no way to predict or explain why.
+
+Understanding the mechanism would change this. If we know *how* a model makes decisions, we can reason about what might go wrong. We can identify the circuits responsible for specific behaviors and verify they work as intended. We can catch problems before deployment rather than after failure.
+
+### Capability Through Understanding
+
+Understanding isn't just defensive—it enables new capabilities.
+
+In 2024, Anthropic researchers were using interpretability tools to study Claude, a large language model. They found an internal "feature" that activated strongly for the Golden Gate Bridge—a direction in the model's activation space that corresponded to that concept. When they artificially amplified this feature, something remarkable happened: the model began *identifying as* the Golden Gate Bridge. Asked about itself, it would explain that it was a suspension bridge spanning the San Francisco Bay.
+
+This was strange, but it was also powerful. By understanding the model's internal representations, the researchers could *steer* its behavior in predictable ways. Find a feature for honesty, amplify it. Find a feature for harmful content, suppress it. Understanding the mechanism makes the system controllable.
+
+The grokking research points to another kind of capability gain. The network discovered a Fourier-based algorithm for modular arithmetic—an approach humans wouldn't naturally use. By reverse engineering trained networks, we might learn new algorithms, new approaches to problems, insights that emerge from optimization but that we can then understand and apply elsewhere.
+
+## The Reverse Engineering Frame
+
+What we're doing is reverse engineering. The analogy to software is instructive.
+
+When security researchers analyze an unknown binary, they face a similar challenge: the executable runs, but its logic isn't human-readable. The compiled code is a long sequence of machine instructions that, in aggregate, implement some algorithm. The goal of reverse engineering is to recover that algorithm—to go from the low-level representation back to something humans can understand.
+
+Mechanistic interpretability is the same project applied to neural networks:
+
+- **Decompilation**: Binary code → (approximation of) source code
+- **Mechanistic interpretability**: Trained weights → (approximation of) learned algorithm
+
+The parallels run deep. Both deal with representations that aren't human-readable. Both try to recover high-level structure from low-level implementation. Both require specialized tools—disassemblers for binaries, interpretability techniques for neural networks. And both are fundamentally *empirical*: you form hypotheses about what's happening, test them against evidence, and refine your understanding.
+
+But the neural network case is, in some ways, harder.
+
+With software, someone wrote the original code. There was intent, structure, modularity. Comments might survive. Function boundaries are real. The code was designed to be understood by humans, even if the compiled form obscures that.
+
+Neural network weights weren't written by anyone. They emerged from training—an optimization process that cares only about minimizing loss, not about human comprehensibility. There's no guarantee the learned algorithm decomposes into clean modules. There's no spec to check against. The "source code" may not even exist in a form that maps onto human concepts.
+
+We're reverse engineering something stranger than any human-written software. But that strangeness is precisely why the project matters.
+
+## Why Naive Interpretation Fails
+
+The obvious approach to understanding a neural network is to understand its components. Neural networks are made of neurons. Each neuron takes inputs, computes a weighted sum, applies a nonlinearity. To understand the network, understand each neuron.
+
+This sounds reasonable. It's also wrong.
+
+Here's what actually happens when you try to interpret individual neurons. In a famous example from image classification networks, researchers found a neuron that activated strongly for:
+
+- Cat faces
+- Cat legs
+- The fronts of cars
+
+These are not related concepts. Cats and cars share no obvious feature. The researchers tested whether the neuron might be detecting some abstract property like "sleekness" or "curvedness." It wasn't—snakes and ferrets, which are sleek and curved, didn't activate the neuron at all. The neuron just happened to fire for cat parts and car fronts.
+
+This phenomenon is called *polysemanticity*: a single neuron responding to multiple, unrelated features. It's not a rare bug; it's the common case. Most neurons in trained networks are polysemantic.
+
+::: {.callout-important}
+## Why Polysemanticity Matters
+The network's concepts aren't stored in individual neurons. They're distributed across many neurons, superimposed on each other. The obvious unit of analysis—the neuron—is the wrong one.
+:::
+
+Why does this happen? The short answer is *efficiency*. Neural networks represent far more concepts than they have neurons. To fit everything, they compress: multiple features get encoded in overlapping patterns across many neurons. This works because features rarely co-occur—you don't often see cat faces and car fronts in the same image—so the overlap doesn't cause problems during inference. But it means you can't interpret the network by interpreting neurons one at a time.
+
+To understand the network, we need to find the right *features*—the actual units of meaning—not the neurons, which are just a convenient basis that happened to fall out of implementation choices.
+
+This is the core challenge of mechanistic interpretability. We need better tools and better concepts. We'll build them over this series.
+
+## What "Mechanistic" Means
+
+The word "mechanistic" is doing important work in "mechanistic interpretability." It distinguishes this project from other ways you might try to understand a model.
+
+Consider a language model that, given "The capital of France is," predicts "Paris." There are different levels at which you might claim to "understand" this:
+
+**Behavioral understanding**: The model predicts "Paris" for inputs about the capital of France. We've characterized the input-output relationship. This is useful, but it doesn't tell us *how* the model knows this or what would happen in related but different cases.
+
+**Statistical understanding**: The model saw many examples of "capital of France → Paris" in training, so it learned the association. This explains *why* the model learned the behavior, but not *how* it implements it during inference.
+
+**Mechanistic understanding**: The model represents countries and capitals as features in activation space. When it sees "France," a certain pattern activates. Attention heads in middle layers look up associated information. A specific circuit retrieves the capital. The output "Paris" is produced by this identifiable mechanism.
+
+Mechanistic understanding is understanding *how*: which components are involved, what computation they perform, and why that computation produces the observed output.
+
+The standard is demanding. We've understood something mechanistically when we can:
+
+1. **Identify** the components responsible for the behavior
+2. **Explain** why those components produce the output
+3. **Predict** what would happen if we modified those components
+4. **Verify** our explanation through intervention (changing inputs, ablating components)
+
+The gold standard, as Chris Olah has noted, is when you understand a circuit well enough to hand-write the weights yourself. You could construct, from scratch, the parameters that implement the mechanism. Few circuits have been understood to this level, but that's the target.
+
+Mechanistic understanding is *actionable*. If we know the mechanism behind a behavior, we can check if it generalizes. We can ask whether it might fail in edge cases. We can modify it if needed. The behavior stops being a black-box correlation and becomes an intelligible process.
+
+## Polya's First Step: Understanding the Problem
+
+This series is about more than facts. It's about *how to think*—how to approach the problem of understanding neural networks with the rigor and creativity of a mathematician or a reverse engineer.
+
+We'll structure our thinking using George Polya's framework from *How to Solve It*. Polya identified four phases of problem-solving:
+
+1. **Understand the problem**
+2. Devise a plan
+3. Carry out the plan
+4. Look back
+
+This article is the first step: understanding the problem. Before devising techniques or running experiments, we need clarity on what we're trying to do.
+
+::: {.callout-tip}
+## Polya's Questions
+**What is the unknown?**
+The algorithm the network implements. The *why* behind its behaviors. The mechanism that transforms inputs into outputs.
+
+**What are the data?**
+
+- *Weights*: Billions of parameters, fixed after training, that determine the computation
+- *Activations*: Intermediate values computed during a forward pass
+- *Behavior*: The input-output mapping the network exhibits
+
+**What is the condition?**
+We can only observe—we cannot directly read the algorithm. The network has no comments, no documentation, no spec. We must *infer* the mechanism from evidence.
+:::
+
+This frame will guide every article in this series. We'll devise plans (build tools, develop techniques). We'll carry them out (run experiments, analyze results). We'll look back (check our understanding, generalize to new cases). But we'll always start by making sure we understand what problem we're solving.
+
+## Looking Ahead
+
+The network that learned modular arithmetic discovered a Fourier-based algorithm. But what is the basic computational fabric in which such algorithms can emerge? What does each step of a transformer's forward pass actually do?
+
+Before we can reverse engineer the learned algorithm, we need to understand the machine that runs it. In the next article, we'll look at transformers—the architecture behind modern language models—and see that they're fundamentally *matrix multiplication machines*. This sounds simple, but the simplicity is deceptive. From these basic linear operations, combined with a few nonlinearities, emerges everything these models can do.
+
+Understanding the transformer's mechanics is the foundation for everything else in this series. Once we see the computational substrate, we can start asking: what *structures* does training build within it? What are the atoms of representation? How do they compose into algorithms?
+
+The grokking network invented Fourier transforms for modular arithmetic. Modern language models invent mechanisms for grammar, for reasoning, for knowledge retrieval—mechanisms we're only beginning to understand. The project of mechanistic interpretability is to reverse engineer these inventions, one circuit at a time.
+
+Let's begin.
+
+## Further Reading
+
+1. **Chris Olah on interpretability** — [80,000 Hours Podcast](https://80000hours.org/podcast/episodes/chris-olah-interpretability-research/): Deep conversation about why interpretability matters and how to think about the field.
+
+2. **Grokking: Generalization Beyond Overfitting** — [arXiv:2201.02177](https://arxiv.org/abs/2201.02177): The original paper on grokking, showing how networks suddenly generalize after prolonged training.
+
+3. **How Machines "Grok" Data** — [Quanta Magazine](https://www.quantamagazine.org/how-do-machines-grok-data-20240412/): Accessible overview of grokking research and the algorithms networks discover.
+
+4. **What are polysemantic neurons?** — [AI Safety Info](https://aisafety.info/questions/8KGQ/): Clear explanation of why individual neurons don't correspond to individual concepts.
+
+5. **Zoom In: An Introduction to Circuits** — [Distill](https://distill.pub/2020/circuits/zoom-in/): The foundational article on the circuits approach to interpretability.

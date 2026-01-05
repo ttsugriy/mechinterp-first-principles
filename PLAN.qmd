@@ -1,0 +1,1340 @@
+---
+title: "Series Plan & Roadmap"
+subtitle: "The complete outline and structure"
+---
+
+# Mechanistic Interpretability Series Plan {.unnumbered}
+
+## Series Title (Working)
+**"First Principles of Mechanistic Interpretability"**
+
+Alternative titles:
+- "Reverse Engineering Neural Networks from Scratch"
+- "Understanding AI from the Inside Out"
+- "The Geometry of Understanding"
+
+---
+
+## Series Vision
+
+### What This Series Is
+A first-principles exploration of mechanistic interpretability that builds each concept from the ground up, using Polya's problem-solving framework and a performance-engineering mindset.
+
+### Unique Angle
+1. **True first-principles approach** — No assumed knowledge beyond basic linear algebra
+2. **Polya's framework integration** — Explicit problem-solving heuristics throughout
+3. **Performance engineering rigor** — Measure before interpret, verify claims empirically
+4. **Intuition before formalism** — Concepts first, math as clarification
+
+### Target Audience
+- Software engineers curious about ML internals
+- ML practitioners who want deeper understanding
+- Performance engineers interested in AI
+- Anyone who values understanding *why* over just *how*
+
+### What Success Looks Like
+A reader who completes the series can:
+1. Explain what mechanistic interpretability is and why it matters
+2. Understand the core concepts (features, circuits, superposition)
+3. Use TransformerLens for basic investigations
+4. Read research papers in the field
+5. Identify open problems and limitations
+6. Apply Polya's heuristics to new interpretability questions
+
+---
+
+## Series Structure Overview
+
+### Arc I: Foundations (Articles 1-4)
+*Build the mental model of what we're reverse engineering*
+
+| # | Title | Core Concept |
+|---|-------|--------------|
+| 1 | Why Reverse Engineer Neural Networks? | Motivation & problem framing |
+| 2 | Transformers as Matrix Multiplication Machines | The computational substrate |
+| 3 | The Residual Stream: The Central Communication Bus | Key abstraction for interpretability |
+| 4 | Activations as Geometry | Bridge from computation to representation |
+
+### Arc II: Core Theory (Articles 5-8)
+*The fundamental concepts of mechanistic interpretability*
+
+| # | Title | Core Concept |
+|---|-------|--------------|
+| 5 | Features: The Atoms of Representation | What the network represents |
+| 6 | The Superposition Hypothesis | Why interpretability is hard |
+| 7 | Toy Models: Understanding Superposition in Miniature | Polya's "solve simpler problem first" |
+| 8 | Circuits: The Molecules of Computation | How features compose |
+
+### Arc III: Techniques (Articles 9-12)
+*The methods used to investigate circuits*
+
+| # | Title | Core Concept |
+|---|-------|--------------|
+| 9 | Sparse Autoencoders: Extracting Features | The tool for finding features |
+| 10 | Attribution: Working Backwards from the Output | Polya's "work backwards" |
+| 11 | Activation Patching: Causal Intervention | Verification technique |
+| 12 | Ablation and Knockout Studies | Complementary verification |
+
+### Arc IV: Synthesis (Articles 13-15)
+*Put it all together, then confront the limits*
+
+| # | Title | Core Concept |
+|---|-------|--------------|
+| 13 | Case Study: Induction Heads | The canonical worked example |
+| 14 | What We Don't Understand: Open Problems | Honest limitations |
+| 15 | Building Intuition: A Practice Regime | Turn readers into practitioners |
+
+---
+
+## Dependency Graph
+
+```
+[Article 1: Why Interpretability]
+        │
+        ▼
+[Article 2: Transformers as Computation]
+        │
+        ▼
+[Article 3: The Residual Stream] ◄────────────────────────┐
+        │                                                  │
+        ▼                                                  │
+[Article 4: Activations as Geometry]                       │
+        │                                                  │
+        ▼                                                  │
+[Article 5: Features as Directions]                        │
+        │                                                  │
+        ▼                                                  │
+[Article 6: Superposition]                                 │
+        │                                                  │
+        ├────────────────────┐                             │
+        ▼                    ▼                             │
+[Article 7: Toy Models]  [Article 9: SAEs]                 │
+        │                    │                             │
+        ▼                    │                             │
+[Article 8: Circuits] ◄──────┘                             │
+        │                                                  │
+        ▼                                                  │
+[Article 10: Attribution] ─────────────────────────────────┘
+        │
+        ▼
+[Article 11: Patching]
+        │
+        ▼
+[Article 12: Ablation]
+        │
+        ▼
+[Article 13: Induction Heads Case Study]
+        │
+        ▼
+[Article 14: Open Problems]
+        │
+        ▼
+[Article 15: Practice Regime]
+```
+
+---
+
+## Polya Integration Map
+
+| Article | Polya Step | How It Manifests |
+|---------|------------|------------------|
+| 1-2 | Understand the problem | What are we solving? What's given? |
+| 3-4 | Auxiliary constructions | Residual stream abstraction, geometric view |
+| 5-6 | Identify the unknown | Features are what we seek; superposition is why it's hard |
+| 7 | Solve a simpler problem | Toy models |
+| 8 | Find related problems | Circuits as familiar concept (logic, biology) |
+| 9 | Auxiliary constructions | SAEs as tools we add to make progress |
+| 10 | Work backwards | Attribution from output |
+| 11-12 | Check your work | Patching and ablation as verification |
+| 13 | Look back | What did we learn? What transfers? |
+| 14 | Know when you're stuck | Intellectual honesty about limits |
+| 15 | Practice | Build intuition through repetition |
+
+---
+
+## Arc I: Foundations — Detailed Outlines
+
+### Article 1: "Why Reverse Engineer Neural Networks?"
+
+**Purpose:** Opens the series. Establishes motivation without requiring technical background.
+
+**Assumes:** Reader knows what neural networks are (input → output black boxes)
+
+**Introduces:**
+- The black box problem: we can use these systems but don't understand them
+- Three motivations:
+  1. **Safety**: Can't trust what you don't understand
+  2. **Science**: These are the most capable learning systems ever built
+  3. **Capability**: Understanding may enable improvement
+- The analogy: decompiling software vs. reverse engineering weights
+- Why "just look at neurons" doesn't work (preview of polysemanticity)
+- What "mechanistic" means: understanding the algorithm, not just behavior
+
+**Key Insight:** "We want to go from 'the model outputs X' to 'the model outputs X *because* of mechanism Y.'"
+
+**Polya Frame:** "Understanding the problem" — What is the unknown? (The algorithm.) What are the data? (Weights, activations, behavior.) What is the condition? (We can only observe, not read "source code.")
+
+**Question Planted:** "What exactly is the 'machine' we're trying to understand? What does a transformer actually compute?"
+
+**Diagrams Needed:**
+- Black box vs. interpreted model visual
+- Timeline of interpretability progress
+
+**Estimated Length:** 2000-2500 words
+
+**Key References:**
+- Chris Olah's "Zoom In" introduction
+- Anthropic's interpretability mission statement
+
+---
+
+### Article 2: "Transformers as Matrix Multiplication Machines"
+
+**Purpose:** The computational substrate. Everything that follows is interpretation of this.
+
+**Assumes:** Basic linear algebra (matrix-vector multiplication, what a basis is)
+
+**Introduces:**
+- The transformer forward pass, step by step
+- Key insight: it's *just* linear algebra with nonlinearities
+- Embedding: tokens → vectors
+- Attention: "soft dictionary lookup" / information routing
+- MLPs: "processing stations" that transform information
+- Layer norm: keeping numbers stable
+- Why linearity matters: linear operations preserve structure, making interpretation tractable
+
+**Key Insight:** "The model is fundamentally doing linear algebra. This is why linear interpretability methods have any hope of working."
+
+**Polya Frame:** Still "understanding the problem" but at the implementation level. Before you can reverse engineer, you must know what the machine does.
+
+**Question Planted:** "If it's all matrix multiplication, what's the 'workspace' where computation happens? Where does information accumulate?"
+
+**Diagrams Needed:**
+- Transformer architecture diagram (simplified)
+- Attention as soft lookup visualization
+- Matrix multiplication as linear transformation
+
+**Estimated Length:** 3000-3500 words
+
+**Key References:**
+- "The Illustrated Transformer" (Jay Alammar)
+- "Transformers for Software Engineers" (Nelson Elhage)
+- 3Blue1Brown linear algebra videos
+
+**Code Appendix:** Optional notebook showing forward pass in raw PyTorch
+
+---
+
+### Article 3: "The Residual Stream: The Central Communication Bus"
+
+**Purpose:** The single most important abstraction in transformer interpretability.
+
+**Assumes:** Article 2 (forward pass structure)
+
+**Introduces:**
+- The residual stream: a vector that accumulates information across layers
+- Key reframe: don't think "layers process sequentially"
+- Think: "shared workspace with components reading/writing"
+- The "communication bus" analogy from computer architecture
+- Each attention head and MLP reads from the stream, computes, writes back
+- Components don't talk to each other directly — only via the stream
+- Why this matters: interpretation becomes "what did each component add to or remove from the stream?"
+
+**Key Insight:** "The residual stream is like the data bus in a CPU. Understanding the bus traffic is understanding the computation."
+
+**Polya Frame:** "Auxiliary construction" — the residual stream abstraction isn't in the original transformer paper, but it makes the problem tractable.
+
+**Question Planted:** "The residual stream is a vector. What does each dimension 'mean'? What's actually represented in this high-dimensional space?"
+
+**Diagrams Needed:**
+- Traditional layer view vs. residual stream view
+- Components as "workers" reading/writing to shared workspace
+- Information flow visualization
+
+**Estimated Length:** 2500-3000 words
+
+**Key References:**
+- "A Mathematical Framework for Transformer Circuits" (Elhage et al.)
+- "Residual Stream is Key to Transformer Interpretability" blog posts
+
+**Performance Engineering Connection:** The residual stream is like a shared memory bus. Just as you'd profile memory traffic to understand a system, you analyze stream contributions to understand the model.
+
+---
+
+### Article 4: "Activations as Geometry"
+
+**Purpose:** Bridge from computation to representation. Sets up features-as-directions.
+
+**Assumes:** Article 3 (residual stream), basic linear algebra (vectors, distance, angles)
+
+**Introduces:**
+- Activations are vectors in high-dimensional space
+- Key shift: think geometrically, not numerically
+- Distance has meaning: similar inputs → nearby vectors
+- Direction has meaning: concepts "point" in directions
+- Visualization: dimensionality reduction (PCA, t-SNE) as a window into the space
+- The curse of dimensionality: our intuitions from 2D/3D don't always transfer
+- But also: high dimensions have useful properties (almost-orthogonality is common)
+
+**Key Insight:** "The network doesn't store symbols. It stores directions in a continuous space. Understanding the geometry is understanding the representation."
+
+**Polya Frame:** Building geometric intuition before formalism. The geometry *is* the first principle that makes features-as-directions natural.
+
+**Question Planted:** "If concepts are directions, what exactly is a 'feature'? How do we find these directions? And what happens when there are more concepts than dimensions?"
+
+**Diagrams Needed:**
+- 2D/3D visualization of activation space
+- Clustering of similar concepts
+- Direction = concept illustration
+- Dimensionality reduction example
+
+**Estimated Length:** 2500-3000 words
+
+**Key References:**
+- "Representation Learning" section of deep learning textbooks
+- Word2vec analogy visualizations (king - man + woman = queen)
+- Distill.pub feature visualization articles
+
+---
+
+## Arc II: Core Theory — Detailed Outlines
+
+### Article 5: "Features: The Atoms of Representation"
+
+**Purpose:** Central concept #1. What the network actually represents internally.
+
+**Assumes:** Article 4 (activations as geometry)
+
+**Introduces:**
+- Definition: a feature is a property of the input that the network represents
+- Examples: "is this a curve?", "is this word French?", "is this code?", "is this about deception?"
+- The linear representation hypothesis: features are directions in activation space
+- Why linearity? Because the operations are linear, directions are natural units
+- Features vs. neurons: they're *not* the same thing (critical distinction)
+- Features are "fuzzy" — no rigorous definition exists yet
+- The ontology question: what features does the model "care about"?
+
+**Key Insight:** "Features are what the network *cares about* — the dimensions of its understanding. Finding features is finding the network's ontology."
+
+**Polya Frame:** We've now identified what the "unknown" really is — not weights, not neurons, but *features*. This clarifies the goal.
+
+**Question Planted:** "If each feature is a direction, and we have N dimensions, can we only represent N features? What if the network 'knows' more things than it has dimensions?"
+
+**Diagrams Needed:**
+- Feature as direction in activation space
+- Same activation, different feature bases
+- Neuron vs. feature distinction visual
+
+**Estimated Length:** 2500-3000 words
+
+**Key References:**
+- Neel Nanda's Glossary (features definition)
+- "Toy Models of Superposition" paper (feature definition)
+- Anthropic's dictionary learning work
+
+---
+
+### Article 6: "The Superposition Hypothesis"
+
+**Purpose:** Central concept #2. Why interpretability is fundamentally hard.
+
+**Assumes:** Article 5 (features as directions)
+
+**Introduces:**
+- The observation: networks seem to represent MORE features than they have dimensions
+- How is this possible? Features can be "almost orthogonal" in high dimensions
+- The math: in d dimensions, you can fit ~exp(d) almost-orthogonal vectors
+- The cost: interference between features (they're not perfectly separable)
+- The sparsity tradeoff: if features rarely co-occur, interference is manageable
+- Polysemanticity explained: neurons respond to multiple features because features overlap in the neuron basis
+- Why this makes interpretation hard: you can't just read off "what this neuron means"
+
+**Key Insight:** "The network is compressing a high-dimensional world into a lower-dimensional space. Superposition is the compression scheme. Polysemanticity is a symptom."
+
+**Polya Frame:** Now we understand why the problem is hard. This is still "understanding the problem" — we need to know the obstacles before devising a plan.
+
+**Question Planted:** "Can we study superposition in a controlled setting? Can we build a model simple enough to fully understand, that still exhibits superposition?"
+
+**Diagrams Needed:**
+- Almost-orthogonal vectors in 2D/3D
+- Superposition geometry visualization
+- Interference when features co-occur
+- Polysemantic neuron example
+
+**Estimated Length:** 3000-3500 words
+
+**Key References:**
+- "Toy Models of Superposition" (Elhage et al., 2022)
+- Neel Nanda's walkthrough of the paper
+- Johnson-Lindenstrauss lemma (math background)
+
+**Performance Engineering Connection:** Superposition is like a hash collision — you're packing more items into a space than it "should" hold, accepting occasional interference as a tradeoff.
+
+---
+
+### Article 7: "Toy Models: Understanding Superposition in Miniature"
+
+**Purpose:** Polya's "solve a simpler problem first" in action. Masterclass in simplification.
+
+**Assumes:** Article 6 (superposition concept)
+
+**Introduces:**
+- The Anthropic toy model: a simple autoencoder (input → hidden → output)
+- Setup: 5 sparse features, 2 hidden dimensions, ReLU activation
+- What we can study: how does the model represent 5 things in 2 dimensions?
+- Key finding: features arrange themselves geometrically to minimize interference
+- Phase transitions: as sparsity changes, the model "chooses" different representations
+- The pentagon: when features are sparse enough, 5 features form a pentagon in 2D
+- What transfers to large models: the same forces (sparsity, limited capacity) operate
+- What doesn't transfer: large models are vastly more complex
+
+**Key Insight:** "Toy models let us see the phenomenon clearly. The same forces — sparsity pressure, limited dimensions — operate at scale in GPT-4."
+
+**Polya Frame:** This article is a masterclass in Polya's heuristic. We're teaching readers *how to simplify* — a transferable skill for any research problem.
+
+**Question Planted:** "We understand single features and their geometry. How do features *compose*? How does the network build complex computations from simple parts?"
+
+**Diagrams Needed:**
+- Toy model architecture
+- Feature geometry (pentagon in 2D)
+- Phase transition diagram
+- Comparison: toy model vs. real model
+
+**Estimated Length:** 3000-3500 words
+
+**Key References:**
+- "Toy Models of Superposition" (Elhage et al., 2022)
+- Neel Nanda's video walkthrough
+- ARENA tutorial on toy models
+
+**Code Appendix:** Notebook to reproduce toy model experiments
+
+---
+
+### Article 8: "Circuits: The Molecules of Computation"
+
+**Purpose:** Central concept #3. How features compose into algorithms.
+
+**Assumes:** Articles 5-7 (features, superposition, toy models)
+
+**Introduces:**
+- Definition: a circuit is a subgraph of the network that performs an understandable computation
+- Analogy: features are atoms; circuits are molecules
+- Circuits connect early features to later features via weights
+- The compositional hypothesis: complex behaviors emerge from simpler circuits
+- The localization hypothesis: most behavior depends on small subsets of the network
+- Example preview: the induction head circuit (two heads working together)
+- What a "complete" circuit explanation looks like
+
+**Key Insight:** "Features are atoms; circuits are molecules. Understanding the network means finding the molecular structure of its computations."
+
+**Polya Frame:** "Find a related problem" — circuits are a familiar concept from electronics and biology. We're leveraging prior intuition.
+
+**Question Planted:** "How do we actually *find* these circuits? What tools let us trace information flow and identify the relevant components?"
+
+**Diagrams Needed:**
+- Circuit diagram notation
+- Features → circuit → behavior
+- Localization: most of the network doesn't matter for a given behavior
+- Preview of induction circuit structure
+
+**Estimated Length:** 2500-3000 words
+
+**Key References:**
+- "Zoom In: An Introduction to Circuits" (Olah et al.)
+- "A Mathematical Framework for Transformer Circuits"
+- "In-Context Learning and Induction Heads"
+
+---
+
+## Arc III: Techniques — Detailed Outlines
+
+### Article 9: "Sparse Autoencoders: Extracting Features from Activations"
+
+**Purpose:** The primary tool for finding features. Making the invisible visible.
+
+**Assumes:** Article 6 (superposition), basic understanding of autoencoders
+
+**Introduces:**
+- The problem: activations are in the "neuron basis," but features are in some other basis
+- The idea: learn a dictionary that decomposes activations into sparse features
+- SAE architecture: encode into a large sparse space, decode back
+- The sparsity constraint: force most features to be zero for any given input
+- Training: minimize reconstruction error + sparsity penalty
+- What you get: a set of (hopefully) monosemantic features
+- Interpreting SAE features: looking at max-activating examples
+- Limitations:
+  - Reconstruction error (10-40% performance drop)
+  - Computational expense (parameters exceed original model)
+  - How do you know you found the "right" features?
+
+**Key Insight:** "The SAE is an *auxiliary construction* (Polya's term) — it's not part of the model, but it makes the model's features visible."
+
+**Polya Frame:** This is adding auxiliary structure to make the problem tractable. Just as you might add a construction line in geometry, you add an SAE to reveal hidden structure.
+
+**Question Planted:** "We can find features. But how do we trace their effect on the model's output? How do we know which features *matter*?"
+
+**Diagrams Needed:**
+- SAE architecture diagram
+- Encoder/decoder visualization
+- Example features with max-activating inputs
+- Reconstruction error visualization
+
+**Estimated Length:** 3000-3500 words
+
+**Key References:**
+- "Towards Monosemanticity" (Anthropic, 2023)
+- "Scaling Monosemanticity" (Anthropic, 2024)
+- TransformerLens SAE tutorials
+
+**Code Appendix:** Notebook demonstrating SAE training on a small model
+
+---
+
+### Article 10: "Attribution: Working Backwards from the Output"
+
+**Purpose:** Polya's "work backwards" as technique. Find what contributed to the output.
+
+**Assumes:** Article 3 (residual stream), Article 8 (circuits)
+
+**Introduces:**
+- The intuition: start from the output, ask "what contributed to this?"
+- Logit attribution: decompose the output logits by component
+- How it works: each attention head and MLP adds to the residual stream; trace those additions
+- Direct logit attribution: which components directly increased/decreased the output token's logit?
+- The logit lens: read off the model's "current best guess" at each layer
+- Tuned lens: a refined version with learned parameters
+- Limitations:
+  - Shows correlation, not causation
+  - Misses indirect effects (A affects B which affects output)
+  - Can be misleading when components interact
+
+**Key Insight:** "Attribution is like profiling — it tells you where the compute goes, but not *why*. It's the first step, not the last."
+
+**Polya Frame:** "Work backwards" — start from the answer and trace back. This is a fundamental problem-solving heuristic.
+
+**Question Planted:** "Attribution shows correlation. How do we prove a component is *causally necessary* for the behavior?"
+
+**Diagrams Needed:**
+- Logit attribution breakdown visual
+- Residual stream → output decomposition
+- Logit lens across layers
+
+**Estimated Length:** 2500-3000 words
+
+**Key References:**
+- "A Mathematical Framework for Transformer Circuits"
+- TransformerLens documentation on logit attribution
+- "Interpreting GPT" (logit lens paper)
+
+**Performance Engineering Connection:** Attribution is exactly like profiling. You identify the hot spots, then investigate *why* they're hot. Never stop at profiling.
+
+---
+
+### Article 11: "Activation Patching: Causal Intervention"
+
+**Purpose:** The verification technique. Move from correlation to causation.
+
+**Assumes:** Article 10 (attribution)
+
+**Introduces:**
+- The limitation of attribution: it shows what's active, not what's necessary
+- The solution: intervene and observe
+- Activation patching: run two inputs (clean and corrupted), swap an activation, see what changes
+- The logic: if swapping activation X from clean to corrupted changes the output, X is causally important
+- Types of patching:
+  - Residual stream patching
+  - Attention output patching
+  - MLP output patching
+- Path patching: trace causal paths through the network
+- Noising vs. denoising: two complementary directions
+- The gold standard: patching + attribution together
+
+**Key Insight:** "Patching is the difference between 'this component is active' and 'this component matters.' It's Polya's 'check your work.'"
+
+**Polya Frame:** This is verification. You've made a hypothesis based on attribution; now you test it. Never trust an interpretation without causal evidence.
+
+**Question Planted:** "We can show a component is necessary. What about removing components entirely? What's the difference between patching and ablation?"
+
+**Diagrams Needed:**
+- Patching procedure illustration
+- Clean vs. corrupted run comparison
+- Path patching through network layers
+
+**Estimated Length:** 3000-3500 words
+
+**Key References:**
+- "Locating and Editing Factual Associations" (ROME paper)
+- ARENA patching tutorials
+- "Interpretability in the Wild" (IOI paper)
+
+**Code Appendix:** Notebook demonstrating patching on a simple task
+
+---
+
+### Article 12: "Ablation and Knockout Studies"
+
+**Purpose:** The complementary verification technique. What happens when you remove things?
+
+**Assumes:** Article 11 (patching)
+
+**Introduces:**
+- Ablation: remove a component and observe the effect
+- Types of ablation:
+  - Zero ablation: set output to zero
+  - Mean ablation: set to average activation
+  - Resample ablation: replace with activation from different input
+- What ablation tells you:
+  - Is this component *sufficient*? (If ablating breaks it, it was necessary)
+  - How robust is the behavior? (If ablating doesn't break it, there's redundancy)
+- Ablation vs. patching: patching tests a specific hypothesis; ablation is more exploratory
+- Knockout studies: systematically ablate to find the minimal circuit
+- Failure modes:
+  - Compensation: other components may adapt
+  - Distributed representations: removing one component may not remove the feature
+
+**Key Insight:** "Ablation is the interpretability equivalent of commenting out code to see what breaks."
+
+**Polya Frame:** Still "check your work" — but from a different angle. Patching asks "is this the cause?"; ablation asks "what happens without this?"
+
+**Question Planted:** "We have all the pieces now. Let's see them work together on a real example — the induction head."
+
+**Diagrams Needed:**
+- Ablation types comparison
+- Circuit knockout procedure
+- Minimal circuit extraction
+
+**Estimated Length:** 2500-3000 words
+
+**Key References:**
+- "Causal Scrubbing" (Redwood Research)
+- "Interpretability in the Wild" (IOI paper)
+- ARENA ablation tutorials
+
+---
+
+## Arc IV: Synthesis — Detailed Outlines
+
+### Article 13: "Case Study: Induction Heads"
+
+**Purpose:** The canonical example, fully worked. Everything comes together.
+
+**Assumes:** All of Arc III (techniques)
+
+**Introduces:**
+- The behavior: in-context copying — "[A][B]...[A]" → model predicts "[B]"
+- Why this matters: induction is a core mechanism of in-context learning
+- The circuit: two-head composition
+  1. Previous token head: attends from position i to position i-1
+  2. Induction head: looks for "[A]" in history, attends to what came after it
+- Walkthrough: how the circuit was discovered (the investigation process)
+  - Step 1: Observe the behavior
+  - Step 2: Attribution — which heads matter?
+  - Step 3: Patching — verify causal importance
+  - Step 4: Understand the mechanism — QK and OV circuits
+  - Step 5: Ablation — confirm the minimal circuit
+- The key insight: composition of two simple operations creates complex behavior
+- What generalizes: the pattern of "head composition" appears throughout transformers
+- What doesn't: specific circuits are model-dependent
+
+**Key Insight:** "This is what success looks like. We understand *why* the model does this, not just *that* it does."
+
+**Polya Frame:** "Look back" — we've solved one problem completely. What can we learn from the process? What transfers to other problems?
+
+**Question Planted:** "We've seen success. What about failure? Where do current techniques break down?"
+
+**Diagrams Needed:**
+- Induction head attention pattern
+- Two-head composition diagram
+- The investigation workflow
+- QK and OV circuit visualization
+
+**Estimated Length:** 4000-4500 words (the longest article — this is the payoff)
+
+**Key References:**
+- "In-Context Learning and Induction Heads" (Olsson et al., 2022)
+- ARENA induction heads tutorial
+- TransformerLens induction head notebook
+
+**Code Appendix:** Full notebook walking through the investigation
+
+---
+
+### Article 14: "What We Don't Understand: Open Problems"
+
+**Purpose:** Intellectual honesty about the limits. What the field doesn't know.
+
+**Assumes:** Full series
+
+**Introduces:**
+- Theoretical gaps:
+  - What *is* a feature? (No rigorous definition)
+  - Does the linear representation hypothesis always hold?
+  - When does superposition fail to explain observations?
+- Methodological challenges:
+  - SAE reconstruction errors are high (10-40%)
+  - Training SAEs is computationally prohibitive at scale
+  - How do you know your interpretation is correct?
+- Scaling problems:
+  - Current techniques struggle with frontier models
+  - Circuits found in small models may not exist in large models
+  - Distributed representations resist localization
+- Validation crisis:
+  - "Interpretability illusions" — explanations that feel right but aren't
+  - Adversarial examples for interpretations
+  - No ground truth to check against
+- Alternative perspectives:
+  - Critics argue mechanistic interpretability is fundamentally misguided
+  - Top-down approaches (representation engineering) as alternative
+  - Maybe complete understanding isn't necessary for safety
+- Open research directions:
+  - Automated circuit discovery
+  - Better feature evaluation metrics
+  - Scaling dictionary learning
+
+**Key Insight:** "First-principles understanding includes knowing where the principles run out."
+
+**Polya Frame:** "Know when you're stuck" — good problem-solvers know the limits of their methods. Intellectual humility is a strength.
+
+**Question Planted:** "Given these challenges, how do we make progress? What should a practitioner do?"
+
+**Diagrams Needed:**
+- Reconstruction error visualization
+- Known vs. unknown diagram
+- Scaling challenges graph
+
+**Estimated Length:** 3000-3500 words
+
+**Key References:**
+- "Open Problems in Mechanistic Interpretability" (2025 paper)
+- "The Misguided Quest for Mechanistic AI Interpretability" (critical perspective)
+- "200 Concrete Open Problems" (Neel Nanda)
+
+---
+
+### Article 15: "Building Intuition: A Practice Regime"
+
+**Purpose:** Turn readers into practitioners. The bridge from understanding to doing.
+
+**Assumes:** Full series
+
+**Introduces:**
+- The gap between reading and doing
+- Suggested progression:
+  1. **Replicate**: Reproduce known results (induction heads, IOI circuit)
+  2. **Explore**: Use TransformerLens to poke at models
+  3. **Investigate**: Pick a behavior, apply the full methodology
+  4. **Contribute**: Work on open problems
+- Specific exercises:
+  - Exercise 1: Find induction heads in GPT-2
+  - Exercise 2: Attribute a simple behavior (greater-than, modular arithmetic)
+  - Exercise 3: Train a small SAE and interpret features
+  - Exercise 4: Replicate one result from a published paper
+- How to read papers actively:
+  - Don't just read — replicate
+  - Focus on methodology, not just results
+  - Ask "what would break this interpretation?"
+- The 200 open problems as a source of projects
+- Common mistakes and how to avoid them:
+  - Mistake: Interpreting without verifying causally
+  - Mistake: Overfitting explanations to specific examples
+  - Mistake: Ignoring reconstruction error
+  - Mistake: Assuming neurons are features
+- Building intuition:
+  - Intuition comes from pattern recognition
+  - Pattern recognition requires many examples
+  - No substitute for running experiments
+
+**Key Insight:** "Understanding comes from doing. This series gave you concepts; now build the muscle memory."
+
+**Polya Frame:** "Practice" — Polya emphasized that problem-solving skill develops through deliberate practice. This article provides the practice regime.
+
+**Diagrams Needed:**
+- Learning progression visual
+- Exercise difficulty ladder
+- Common mistakes checklist
+
+**Estimated Length:** 2500-3000 words
+
+**Key References:**
+- TransformerLens getting started guide
+- ARENA tutorials
+- "200 Concrete Open Problems"
+- Neel Nanda's YouTube walkthroughs
+
+**Code Appendix:** Starter notebooks for each exercise
+
+---
+
+## Research Resources & Key References
+
+### Foundational Papers (Must Read)
+
+| Paper | Authors | Year | Key Contribution |
+|-------|---------|------|------------------|
+| A Mathematical Framework for Transformer Circuits | Elhage et al. | 2021 | How to decompose transformers into analyzable components |
+| Zoom In: An Introduction to Circuits | Olah et al. | 2020 | The circuits paradigm for interpretability |
+| Toy Models of Superposition | Elhage et al. | 2022 | Why polysemanticity exists; geometry of features |
+| In-Context Learning and Induction Heads | Olsson et al. | 2022 | First clean circuit explanation of emergent capability |
+| Towards Monosemanticity | Bricken et al. | 2023 | Sparse autoencoders for feature extraction |
+| Scaling Monosemanticity | Templeton et al. | 2024 | SAEs applied to Claude 3 Sonnet |
+| Open Problems in Mechanistic Interpretability | Various | 2025 | Current research frontiers |
+
+### Learning Resources
+
+**Courses & Curricula**
+- [ARENA Curriculum](https://www.arena.education/curriculum) — Comprehensive 4-chapter program
+- [Johns Hopkins: Introduction to Mechanistic Interpretability](https://ep.jhu.edu/courses/705771-introduction-to-mechanistic-interpretability/)
+- [Neel Nanda's 4-Week Course](https://github.com/nerdlab53/mech-interp-course)
+
+**Guides & References**
+- [Neel Nanda's Prerequisites Guide](https://www.neelnanda.io/mechanistic-interpretability/prereqs)
+- [Neel Nanda's Glossary](https://www.neelnanda.io/mechanistic-interpretability/glossary)
+- [200 Concrete Open Problems](https://www.alignmentforum.org/posts/LbrPTJ4fmABEdEnLf/200-concrete-open-problems-in-mechanistic-interpretability)
+
+**Tools**
+- [TransformerLens](https://github.com/TransformerLensOrg/TransformerLens) — Primary library for mechinterp
+- [TransformerLens Getting Started](https://TransformerLensOrg.github.io/TransformerLens/content/getting_started_mech_interp.html)
+
+### Visual & Interactive Resources
+
+- [Distill.pub](https://distill.pub/) — Feature Visualization, Activation Atlas, Building Blocks
+- [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/) — Visual transformer explanation
+- [3Blue1Brown Linear Algebra](https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab) — Foundation math
+
+### Podcasts & Interviews
+
+- [AXRP #19: Mechanistic Interpretability with Neel Nanda](https://axrp.net/episode/2023/02/04/episode-19-mechanistic-interpretability-neel-nanda.html)
+- [80,000 Hours: Chris Olah on Interpretability](https://80000hours.org/podcast/episodes/chris-olah-interpretability-research/)
+- [The Inside View: Neel Nanda](https://theinsideview.ai/neel)
+
+### Critical Perspectives
+
+- [The Misguided Quest for Mechanistic AI Interpretability](https://ai-frontiers.org/articles/the-misguided-quest-for-mechanistic-ai-interpretability) — Critique of the field
+- [Mechanistic Interpretability for AI Safety: A Review](https://arxiv.org/html/2404.14082v2) — Balanced overview
+
+---
+
+## Article Template & Writing Guidelines
+
+### Standard Article Structure
+
+Every article should follow this template:
+
+```markdown
+# [Article Title]
+
+**Series:** First Principles of Mechanistic Interpretability
+**Part:** [N] of 15
+**Prerequisites:** [List articles that must be read first]
+
+---
+
+## The Question
+
+[1-2 paragraphs setting up the problem. What question are we answering? Why does the reader care? This should connect to the "Question Planted" from the previous article.]
+
+---
+
+## [Main Content Sections]
+
+[3-5 sections developing the concept. Each section should:
+- Start with intuition/motivation
+- Build to the formal understanding
+- Include a concrete example
+- End with a clear takeaway]
+
+---
+
+## The Key Insight
+
+[One paragraph crystallizing the main idea. This should be quotable and memorable.]
+
+---
+
+## Polya's Perspective
+
+[One paragraph explicitly connecting to problem-solving. What heuristic are we using? How does this apply beyond this specific topic?]
+
+---
+
+## Looking Ahead
+
+[1-2 paragraphs connecting to what comes next. Plant the question for the next article.]
+
+---
+
+## Further Reading
+
+[3-5 key references for readers who want to go deeper]
+
+---
+
+## Appendix: Code (Optional)
+
+[Link to Colab notebook or inline code for hands-on exploration]
+```
+
+### Writing Guidelines
+
+**Voice & Tone**
+- Direct and confident, but not arrogant
+- Technical precision without unnecessary jargon
+- Use "we" to include the reader in the investigation
+- Acknowledge uncertainty where it exists
+
+**First-Principles Discipline**
+- Never use a term before defining it
+- Motivate every concept: "why do we need this?"
+- Prefer concrete examples over abstract definitions
+- Build on previous articles explicitly
+
+**Polya Integration (Every Article)**
+Each article should make explicit which Polya heuristic applies:
+1. Understand the problem — What are we solving?
+2. Devise a plan — What approach will we use?
+3. Carry out the plan — Let's execute and verify
+4. Look back — What did we learn? What transfers?
+
+Additional heuristics to surface:
+- Work backwards — Start from the answer
+- Solve a simpler problem — Use toy models
+- Find a related problem — Use analogies
+- Introduce auxiliary elements — Add tools/abstractions
+- Check your work — Verify independently
+
+**Performance Engineering Lens**
+Where applicable, draw explicit connections:
+- Attribution ↔ Profiling
+- Patching ↔ Controlled experiments
+- Residual stream ↔ Memory bus
+- Superposition ↔ Hash collisions
+- Verification ↔ Never trust unvalidated claims
+
+**Visual Requirements**
+- Minimum 2 diagrams per article
+- Diagrams should be referenced in text
+- Prefer showing over describing
+- Use consistent visual vocabulary across series
+
+**Length Guidelines**
+- Target: 2500-3500 words per article
+- Arc I (foundations): Can be shorter (~2000-2500)
+- Arc II-III (theory/techniques): Standard length (~2500-3500)
+- Article 13 (case study): Longer (~4000-4500)
+
+**Code Policy**
+- Main text should be conceptual
+- Code lives in appendices or linked notebooks
+- Code should be runnable (Colab preferred)
+- Comments should explain *why*, not *what*
+
+---
+
+## Critical Perspectives & Honest Limitations
+
+### What the Series Must Acknowledge
+
+**The Case Against Mechanistic Interpretability**
+
+Critics argue that mechinterp may be fundamentally misguided:
+
+1. **Complexity Argument**: Neural networks are complex systems where "the whole is more than the sum of its parts." Bottom-up mechanistic analysis may never yield useful understanding, just as understanding individual neurons doesn't explain human cognition.
+
+2. **Compression Paradox**: If AI behavior could be compressed into simple human-understandable descriptions, the model itself could likely be simplified. The complexity may be irreducible.
+
+3. **Edge Case Problem**: When we compress models to find core features, we lose "the ability to parse the long tail of edge cases where decisions are not obvious." Safety risks often emerge in edge cases.
+
+4. **Track Record**: Despite significant investment, mechanistic interpretability hasn't produced practical safety tools. DeepMind reportedly deprioritized SAEs after disappointing results.
+
+**How to Address This in the Series**
+
+- Article 14 should engage seriously with these critiques
+- Present top-down alternatives (representation engineering) fairly
+- Acknowledge that complete understanding may not be necessary for safety
+- Be honest about what has and hasn't been achieved
+
+### Technical Limitations to Be Explicit About
+
+**Sparse Autoencoder Issues**
+- Reconstruction errors cause 10-40% performance degradation
+- Training SAEs requires compute exceeding the original model
+- No principled way to choose dictionary size
+- "Features" found may be artifacts of the method
+
+**The Validation Crisis**
+- No ground truth for whether an interpretation is correct
+- "Interpretability illusions": plausible explanations for arbitrary directions
+- Adversarial examples can fool interpretation methods
+- Human annotators project their biases
+
+**Scaling Problems**
+- Methods developed on GPT-2 may not transfer to frontier models
+- Localization hypothesis may fail for distributed representations
+- Computational cost scales prohibitively
+
+**Theoretical Gaps**
+- No rigorous definition of "feature"
+- Linear representation hypothesis may not hold universally
+- Superposition geometry is not fully understood
+
+### How This Strengthens the Series
+
+Being explicit about limitations:
+1. Builds credibility with sophisticated readers
+2. Prevents readers from overconfident application
+3. Identifies where research is actually needed
+4. Distinguishes this series from hype-driven content
+
+---
+
+## Implementation Roadmap
+
+### Phase 1: Foundation Building (First 4 Articles)
+Write and publish Arc I articles in sequence. These are the most standalone and provide the foundation everything else builds on.
+
+**Order of Writing:**
+1. Article 1: Why Reverse Engineer Neural Networks?
+2. Article 2: Transformers as Matrix Multiplication Machines
+3. Article 3: The Residual Stream
+4. Article 4: Activations as Geometry
+
+### Phase 2: Core Theory (Articles 5-8)
+These can be drafted in parallel but should be published sequentially.
+
+**Order of Writing:**
+5. Article 5: Features
+6. Article 6: Superposition
+7. Article 7: Toy Models
+8. Article 8: Circuits
+
+### Phase 3: Techniques (Articles 9-12)
+These require hands-on work with TransformerLens to ensure accuracy.
+
+**Order of Writing:**
+9. Article 9: SAEs
+10. Article 10: Attribution
+11. Article 11: Patching
+12. Article 12: Ablation
+
+### Phase 4: Synthesis (Articles 13-15)
+The capstone articles that tie everything together.
+
+**Order of Writing:**
+13. Article 13: Induction Heads Case Study
+14. Article 14: Open Problems
+15. Article 15: Practice Regime
+
+### Parallel Work Streams
+
+**While writing articles:**
+- Build Colab notebooks for each article with code examples
+- Create or source diagrams for each article
+- Read and annotate key papers for accuracy
+- Set up feedback mechanism with readers
+
+---
+
+## Quick Reference: Series at a Glance
+
+| # | Title | Core Concept | Polya Heuristic | Words |
+|---|-------|--------------|-----------------|-------|
+| 1 | Why Reverse Engineer Neural Networks? | Motivation | Understand the problem | 2000-2500 |
+| 2 | Transformers as Matrix Multiplication Machines | Computation | Understand the problem | 3000-3500 |
+| 3 | The Residual Stream | Key abstraction | Auxiliary construction | 2500-3000 |
+| 4 | Activations as Geometry | Representation | Build intuition | 2500-3000 |
+| 5 | Features | What networks represent | Identify the unknown | 2500-3000 |
+| 6 | The Superposition Hypothesis | Why it's hard | Understand obstacles | 3000-3500 |
+| 7 | Toy Models | Controlled study | Solve simpler problem | 3000-3500 |
+| 8 | Circuits | Composition | Find related problems | 2500-3000 |
+| 9 | Sparse Autoencoders | Feature extraction | Auxiliary construction | 3000-3500 |
+| 10 | Attribution | Tracing contributions | Work backwards | 2500-3000 |
+| 11 | Activation Patching | Causal verification | Check your work | 3000-3500 |
+| 12 | Ablation | Knockout studies | Check your work | 2500-3000 |
+| 13 | Induction Heads | Complete example | Look back | 4000-4500 |
+| 14 | Open Problems | Limitations | Know when you're stuck | 3000-3500 |
+| 15 | Building Intuition | Practice | Practice | 2500-3000 |
+
+**Total estimated length:** ~44,000-52,000 words
+
+---
+
+## Status & Next Steps
+
+**Document Status:** Complete outline with detailed plans for all 15 articles
+
+**Ready to Begin Writing:**
+- [ ] Article 1: Why Reverse Engineer Neural Networks?
+
+**Preparation Needed:**
+- [ ] Set up Colab notebook template
+- [ ] Create visual style guide for diagrams
+- [ ] Collect max-activating examples for feature visualizations
+- [ ] Review and annotate key papers in depth
+
+**Ongoing:**
+- [ ] Track reader feedback after each article
+- [ ] Iterate on structure based on what works
+
+---
+
+## Article 1: Deep Dive & Draft Plan
+
+### The Challenge
+
+Article 1 must:
+1. Hook readers immediately with something vivid
+2. Establish the "why" before any "how"
+3. Be accessible to someone without deep ML background
+4. Set up the problem-solving frame for the entire series
+5. Make readers want to continue to Article 2
+
+### Opening Hook: Three Options
+
+**Option A: The Grokking Mystery (Recommended)**
+> When researchers at OpenAI trained a small neural network to do modular arithmetic, something strange happened. At first, the network memorized: it got training examples right but failed on new ones. Then, after training far longer than seemed useful, the network suddenly "got it"—accuracy on unseen data jumped from zero to near-perfect.
+>
+> When scientists looked inside, they found the network had invented its own algorithm. Not the simple counting a human might use, but something involving discrete Fourier transforms and trigonometry. The network discovered a solution no one taught it, using mathematics no one expected.
+>
+> How? We built this thing. We know every weight, every connection. Yet we don't know *why* it works.
+
+**Why this works:** Concrete, surprising, immediately raises the question "how do we find out?"
+
+**Option B: The Alien Thought Experiment (Chris Olah's framing)**
+> Imagine an alien lands on Earth. It can write poetry, prove theorems, diagnose diseases, and hold conversations. Scientists would drop everything to study it.
+>
+> Now imagine instead you found a mysterious binary file that did all these things. Security researchers would immediately start reverse engineering it.
+>
+> We have both: systems that accomplish tasks we don't know how to program, stored as inscrutable arrays of floating-point numbers. The question isn't whether to study them. It's how.
+
+**Why this works:** Frames the obvious importance, invokes the reverse engineering mindset.
+
+**Option C: The Golden Gate Bridge**
+> In 2024, Anthropic researchers found a feature inside Claude that activated for the Golden Gate Bridge. When they amplified this feature, something remarkable happened: the AI started *identifying as* the Golden Gate Bridge. Asked about itself, it would explain that it was a suspension bridge spanning the San Francisco Bay.
+>
+> This wasn't programmed. No one told the model to do this. The feature emerged from training, and manipulating it changed the model's behavior in predictable ways. For a moment, we could see—and control—what was happening inside.
+>
+> This is mechanistic interpretability: the project of understanding *how* neural networks work, not just *that* they work.
+
+**Why this works:** Dramatic, recent, directly demonstrates the payoff.
+
+**Recommendation:** Open with Option A (grokking), reference Option C (Golden Gate) later as a second example.
+
+---
+
+### Section-by-Section Outline
+
+#### Section 1: The Mystery (Opening Hook)
+**~400 words**
+
+Use the grokking story as the hook. Key beats:
+- Describe the experiment: training on modular arithmetic
+- The surprise: sudden generalization after apparent memorization
+- The bigger surprise: the algorithm is alien (Fourier transforms, not counting)
+- The question: How did it figure this out? How can we find out?
+
+Transition: This isn't an isolated case. Neural networks consistently discover solutions we don't understand.
+
+#### Section 2: The Black Box Problem
+**~400 words**
+
+Establish what we know and don't know:
+- We built these systems—we know every weight, every parameter
+- Yet the weights are unreadable: billions of floating-point numbers
+- The gap: we have the "binary" but not the "source code"
+- What we *can* observe: inputs, outputs, activations (intermediate values)
+- What we *can't* directly read: the algorithm, the reasoning, the "why"
+
+Key quote (paraphrase Chris Olah): "These models do things we don't know how to do. How is that possible? This question cries out to be answered."
+
+#### Section 3: Why Care? Three Reasons
+**~600 words**
+
+**3.1: Scientific Understanding (~200 words)**
+- These are the most capable learning systems ever built
+- They solve problems we couldn't solve by direct programming
+- Understanding them is understanding intelligence itself (partially)
+- The performance engineer's perspective: you can't optimize what you don't understand
+
+**3.2: Safety and Trust (~200 words)**
+- We're deploying these systems in high-stakes contexts
+- Can we trust systems we don't understand?
+- What happens in situations the training didn't cover?
+- The alien analogy: would you trust an alien you didn't understand?
+
+**3.3: Capability Improvement (~200 words)**
+- Understanding may reveal inefficiencies
+- We might learn new algorithms from what the network discovered
+- Golden Gate Claude example: once we found the feature, we could *steer* the model
+- Understanding isn't just defensive—it enables capabilities
+
+#### Section 4: The Decompilation Analogy
+**~400 words**
+
+Draw the parallel to software reverse engineering:
+- **Decompilation**: Binary → approximation of source code
+- **Mechinterp**: Weights → approximation of algorithm
+
+The similarities:
+- Both deal with representations that aren't human-readable
+- Both try to recover higher-level structure from lower-level implementation
+- Both use tools and techniques, not just inspection
+
+The differences (be honest):
+- Code was written by humans with intent; weights emerged from training
+- Assembly instructions have defined semantics; neural "operations" are less clear
+- Decompiled code is still code; neural "algorithms" may not map to discrete steps
+
+The key insight: We're reverse engineering, but the target is stranger than any human-written software.
+
+#### Section 5: Why Naive Interpretation Fails
+**~350 words**
+
+The obvious approach:
+- Neural networks are made of neurons
+- To understand the network, understand each neuron
+- Look at what makes each neuron activate
+
+Why this fails (preview without full explanation):
+- Single neurons often respond to seemingly unrelated things
+- Example: a neuron that fires for cat faces, car fronts, and cat legs (ImageNet examples)
+- This isn't a bug—it's a feature called "polysemanticity" (more in Article 5)
+- The network's "concepts" aren't stored in individual neurons
+
+The implication: We need better tools and better concepts. The neuron isn't the right unit of analysis.
+
+(Don't fully explain superposition here—just plant the seed)
+
+#### Section 6: What "Mechanistic" Means
+**~300 words**
+
+Contrast behavioral vs. mechanistic understanding:
+- **Behavioral**: The model predicts "Paris" after "The capital of France is"
+- **Mechanistic**: The model retrieves country→capital associations via specific attention patterns that look up learned facts
+
+The standard: We've understood something mechanistically when we can:
+- Identify the components responsible
+- Explain *why* those components produce the behavior
+- Predict what happens if we change those components
+- (Ideally) Hand-write weights that do the same thing
+
+The payoff: Mechanistic understanding is *actionable*. If we know the mechanism, we can verify, modify, and predict.
+
+#### Section 7: The Polya Frame
+**~250 words**
+
+Introduce the problem-solving orientation:
+- This series isn't just about facts—it's about *how to think* about interpretation
+- We'll use Polya's problem-solving framework throughout
+- Step 1: **Understand the problem** (this article)
+
+What is the unknown?
+- The algorithm the network implements
+- Why it produces the behaviors we observe
+
+What are the data?
+- Weights (fixed after training)
+- Activations (intermediate computations)
+- Behavior (input → output)
+
+What is the condition?
+- We can only observe—we can't directly read the "code"
+- We must infer the algorithm from evidence
+
+This frame will guide every article: before devising plans or executing experiments, we must understand what we're trying to solve.
+
+#### Section 8: Looking Ahead
+**~200 words**
+
+What's next:
+- Before we can reverse engineer, we need to understand the machine itself
+- Article 2: What does a transformer actually compute?
+- We'll see it's "just" matrix multiplication—but that simplicity is deceptive
+
+The question to carry forward:
+> The network learned an algorithm for modular arithmetic using Fourier transforms. But what is the basic computational fabric in which such algorithms can emerge? What does each step of a forward pass actually do?
+
+Close with anticipation: understanding the transformer's mechanics is the foundation for everything else.
+
+---
+
+### Key Quotes to Include
+
+**Chris Olah (paraphrased):**
+> "If an alien landed with these capabilities, scientists would fall over themselves to study it. We have something similar—and it's stored in arrays of floating-point numbers we created."
+
+**On mechanistic understanding:**
+> "We've understood a behavior mechanistically when we can not only predict it, but explain *why* it happens and what would make it change."
+
+**The grokking researchers:**
+> "The network discovered a solution no one taught it, using mathematics no one expected."
+
+---
+
+### Diagrams for Article 1
+
+**Diagram 1: The Black Box**
+```
+┌─────────────────────────────────────────────────┐
+│                                                 │
+│    Input ──────► [  ???????  ] ──────► Output   │
+│                                                 │
+│                Billions of weights              │
+│                No readable code                 │
+│                Unknown algorithm                │
+│                                                 │
+└─────────────────────────────────────────────────┘
+```
+Caption: We built it. We don't understand it.
+
+**Diagram 2: The Goal**
+```
+Before:                          After:
+┌──────────────┐                 ┌──────────────┐
+│   Behavior   │                 │   Behavior   │
+│  "It works"  │      ───►       │  explained   │
+│              │                 │  by circuit  │
+└──────────────┘                 └──────┬───────┘
+                                        │
+                                        ▼
+                                 ┌──────────────┐
+                                 │  Mechanism   │
+                                 │  identified  │
+                                 │  & verified  │
+                                 └──────────────┘
+```
+Caption: From "it works" to "we know why."
+
+---
+
+### Estimated Word Counts
+
+| Section | Words |
+|---------|-------|
+| 1. The Mystery (Hook) | 400 |
+| 2. The Black Box Problem | 400 |
+| 3. Why Care? Three Reasons | 600 |
+| 4. The Decompilation Analogy | 400 |
+| 5. Why Naive Interpretation Fails | 350 |
+| 6. What "Mechanistic" Means | 300 |
+| 7. The Polya Frame | 250 |
+| 8. Looking Ahead | 200 |
+| **Total** | **~2,900** |
+
+---
+
+### Tone Notes
+
+- **Curious, not alarmist**: The mystery is fascinating, not terrifying
+- **Confident, not arrogant**: We're embarking on a hard problem; we don't have all the answers
+- **Concrete, not abstract**: Examples before generalizations
+- **Performance mindset**: "You can't optimize what you don't understand" as a refrain
+
+---
+
+### Sources to Cite
+
+1. [80,000 Hours podcast with Chris Olah](https://80000hours.org/podcast/episodes/chris-olah-interpretability-research/) — Key quotes on motivation
+2. [Quanta Magazine on Grokking](https://www.quantamagazine.org/how-do-machines-grok-data-20240412/) — The Fourier transform discovery
+3. Golden Gate Claude (Anthropic blog) — Feature steering example
+4. "Zoom In: An Introduction to Circuits" (Olah et al.) — The circuits paradigm

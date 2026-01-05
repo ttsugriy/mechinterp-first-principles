@@ -1,0 +1,54 @@
+project:
+  type: book
+  output-dir: _site
+
+book:
+  title: "First Principles of Mechanistic Interpretability"
+  author: "Taras Tsugrii"
+  date: today
+  repo-url: https://github.com/ttsugriy/mechinterp-first-principles
+  repo-actions: [edit, issue]
+
+  chapters:
+    - index.qmd
+    - part: "Arc I: Foundations"
+      chapters:
+        - articles/01-why-reverse-engineer.qmd
+        # - articles/02-transformers.qmd
+        # - articles/03-residual-stream.qmd
+        # - articles/04-activations-geometry.qmd
+    # - part: "Arc II: Core Theory"
+    #   chapters:
+    #     - articles/05-features.qmd
+    #     - articles/06-superposition.qmd
+    #     - articles/07-toy-models.qmd
+    #     - articles/08-circuits.qmd
+    # - part: "Arc III: Techniques"
+    #   chapters:
+    #     - articles/09-sparse-autoencoders.qmd
+    #     - articles/10-attribution.qmd
+    #     - articles/11-patching.qmd
+    #     - articles/12-ablation.qmd
+    # - part: "Arc IV: Synthesis"
+    #   chapters:
+    #     - articles/13-induction-heads.qmd
+    #     - articles/14-open-problems.qmd
+    #     - articles/15-practice-regime.qmd
+    - PLAN.qmd
+
+format:
+  html:
+    theme:
+      light: flatly
+      dark: darkly
+    code-fold: true
+    code-tools: true
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    highlight-style: github
+
+execute:
+  freeze: auto
+
+bibliography: references.bib

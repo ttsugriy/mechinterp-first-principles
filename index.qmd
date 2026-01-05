@@ -1,0 +1,41 @@
+---
+title: "First Principles of Mechanistic Interpretability"
+---
+
+# Welcome {.unnumbered}
+
+This is a first-principles exploration of **mechanistic interpretability** — the project of reverse engineering neural networks to understand *how* they work, not just *that* they work.
+
+## What This Series Is
+
+A 15-article journey from foundations to practice:
+
+- **Arc I: Foundations** — What are we trying to understand?
+- **Arc II: Core Theory** — Features, superposition, circuits
+- **Arc III: Techniques** — The tools of the trade
+- **Arc IV: Synthesis** — Putting it all together
+
+## Who This Is For
+
+- Software engineers curious about ML internals
+- ML practitioners who want deeper understanding
+- Performance engineers interested in AI
+- Anyone who values understanding *why* over just *how*
+
+## The Approach
+
+We use **Polya's problem-solving framework** throughout: understand the problem before devising solutions, verify your understanding through intervention, and always ask "what would make this explanation wrong?"
+
+We also bring a **performance engineering mindset**: you can't optimize what you don't understand, measure before you interpret, and never trust unvalidated claims.
+
+## Getting Started
+
+Start with [Article 1: Why Reverse Engineer Neural Networks?](articles/01-why-reverse-engineer.qmd) to understand the motivation and scope of the project.
+
+## Also Published On
+
+This series is also available on [Software Bits](https://softwarebits.substack.com/) on Substack.
+
+---
+
+*This book is a work in progress. New articles are added as they're completed.*
