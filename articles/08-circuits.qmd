@@ -1,0 +1,360 @@
+---
+title: "Circuits"
+subtitle: "The molecules of computation"
+author: "Taras Tsugrii"
+date: 2025-01-05
+categories: [core-theory, circuits]
+description: "Features are atoms. Circuits are molecules—how individual features compose into algorithms that perform understandable computations."
+---
+
+## From Atoms to Molecules
+
+We've spent the last three articles building up the atomic theory of neural network representations:
+
+- **Article 5**: Features are directions in activation space
+- **Article 6**: Superposition packs many features into few dimensions
+- **Article 7**: Toy models show this is the optimal compression strategy
+
+But features in isolation don't explain how networks *compute*. A language model doesn't just represent "French" and "cooking" as separate features—it processes "French cuisine" by combining those concepts to predict appropriate continuations.
+
+How do features compose? How do networks build complex computations from simple parts?
+
+The answer is **circuits**: identifiable subnetworks that perform specific computations by connecting features through learned weights and nonlinearities.
+
+::: {.callout-note}
+## The Central Analogy
+If features are atoms, circuits are molecules. Atoms are fundamental units; molecules are stable combinations of atoms that have emergent properties. Similarly, circuits are stable combinations of features that implement recognizable algorithms.
+:::
+
+## What Is a Circuit?
+
+A circuit is **a subgraph of the network that performs an understandable computation**.
+
+More formally: a circuit transforms earlier interpretable features into later interpretable features through a specific pathway of weights and activations.
+
+### The Three Characteristics
+
+**1. Localization**: A circuit involves only a subset of the network's components (a few attention heads, a few neurons), not the entire model.
+
+**2. Interpretability**: Both the inputs and outputs of the circuit correspond to human-understandable features or concepts.
+
+**3. Composability**: Circuits can connect to other circuits, forming larger computational structures.
+
+### An Informal Definition
+
+Chris Olah and collaborators at Anthropic introduced circuits as "meaningful algorithmic components" discovered by reverse-engineering neural network weights. Rather than treating networks as black boxes, circuits research asks: what specific sub-algorithms has training discovered, and how do they work?
+
+::: {.callout-tip}
+## A Programming Analogy
+In software, you don't understand a program by reading every line. You identify functions, understand what each does, and see how they compose. Circuits are the neural network equivalent: sub-algorithms that perform identifiable computations and compose into larger systems.
+:::
+
+## The Circuits Hypothesis
+
+The circuits approach rests on three claims:
+
+### 1. Features Exist
+
+Individual neurons (or more precisely, directions in activation space) learn to detect specific, interpretable patterns. We established this in Articles 5-7.
+
+### 2. Circuits Exist
+
+These features don't work in isolation. They connect through weights to form organized computational systems. You can identify interpretable circuits that perform specific tasks—not just correlations, but causal mechanisms.
+
+### 3. Universality (Weak Form)
+
+Similar circuits appear across different models. If GPT-2 uses a specific mechanism for some task, Claude might use a similar (though not identical) mechanism for the same task.
+
+The evidence for claims 1 and 2 is strong. Claim 3 (universality) is more uncertain—circuits transfer imperfectly between models, especially at different scales.
+
+## A Concrete Example: Indirect Object Identification
+
+Let's ground this with a real circuit discovered in GPT-2 Small.
+
+**Task**: Given "When John and Mary went to the shop, John gave a bottle of milk to ___", predict "Mary".
+
+This requires understanding:
+- Who the subject is (John)
+- Who the indirect object is (Mary)
+- That the sentence asks for the indirect object, not the subject
+
+### The IOI Circuit
+
+Researchers at Redwood Research discovered that GPT-2 Small solves this task using **26 specific attention heads** organized into **7 functional groups**:
+
+**1. Previous Token Heads**: Track the position of the indirect object (where "Mary" appeared)
+
+**2. Duplicate Token Heads**: Detect that "John" appears twice, marking it as the subject
+
+**3. Induction Heads**: Use patterns to identify the indirect object position
+
+**4. S-Inhibition Heads**: Suppress attention to the subject ("John")—make sure we don't output the wrong name
+
+**5. Name Mover Heads**: Copy the indirect object name to the output position
+
+**6. Negative Name Mover Heads**: Actively suppress incorrect answers
+
+**7. Backup Name Movers**: Alternative pathways if the primary circuit fails
+
+**MLPs**: Compose and refine the final decision
+
+This is a circuit: a specific set of components working together to perform a well-defined computation (identify the indirect object and predict it).
+
+### Why This Is Remarkable
+
+The circuit involves only 26 out of 144 attention heads (18% of the model). The other 82% aren't necessary for this specific task.
+
+Moreover, you can *verify* the circuit: if you remove ("ablate") the identified heads, performance on IOI tasks degrades significantly. If you remove random heads of the same count, performance barely changes. The circuit is causally necessary, not just correlated.
+
+::: {.callout-important}
+## The Localization Insight
+Specific behaviors in neural networks are computed by small, identifiable subnetworks, not by the entire model working in concert. This is why mechanistic interpretability is tractable: we don't need to understand the whole billion-parameter model at once—we can understand one circuit at a time.
+:::
+
+## How Circuits Compose
+
+The power of circuits comes from composition—how multiple simple circuits connect to perform complex tasks.
+
+### Sequential Composition
+
+The simplest case: one circuit's output becomes another circuit's input.
+
+In IOI:
+1. **Early heads** identify name positions → output "Mary is at position 5"
+2. **Middle heads** read that information → determine "the indirect object is at position 5"
+3. **Late heads** read *that* information → move "Mary" to the output
+
+Each stage builds on the previous. Information flows through the residual stream, and each circuit adds its contribution.
+
+### Parallel Composition
+
+Multiple circuits can run simultaneously, each contributing to the output.
+
+In IOI:
+- Name Mover Heads boost the correct answer
+- Negative Name Mover Heads suppress the incorrect answer
+- Backup Name Mover Heads provide redundancy
+
+All three work in parallel. The final prediction is the sum of their contributions (remember the residual stream from Article 3).
+
+### Attention Composition
+
+Attention heads compose in specific ways that deserve their own discussion.
+
+#### Q-Composition (Query Composition)
+
+One head's output influences what another head queries.
+
+- Head A computes "the indirect object is at position 5"
+- Head B uses this to construct a query: "get the token at position 5"
+- Head B successfully retrieves "Mary"
+
+#### K-Composition (Key Composition)
+
+One head's output influences what another head attends *to*.
+
+- Head A marks "John" with a flag: "this is the subject, don't attend here"
+- Head B reads these flags in its keys, ignoring "John"
+- Result: suppression of incorrect answers
+
+#### V-Composition (Value Composition)
+
+One head's output influences what information another head retrieves.
+
+Less common than Q and K composition, but appears in complex circuits where the *content* retrieved needs to be modulated by context.
+
+::: {.callout-note}
+## Virtual Attention Heads
+Sometimes the composition of multiple real attention heads creates an effective computation that looks like a different attention pattern—a "virtual head." This isn't a physical component but an emergent algorithm from composition.
+:::
+
+## Discovering Circuits
+
+How do researchers actually find circuits? The process is painstaking but systematic.
+
+### The Basic Method: Activation Patching
+
+**1. Create two inputs**:
+- **Clean**: Produces the correct output
+- **Corrupted**: Produces an incorrect output
+
+Example:
+- Clean: "When John and Mary went to the store, John gave the bag to ___" → "Mary"
+- Corrupted: "When John and Mary went to the store, Mary gave the bag to ___" → "John"
+
+**2. Run both inputs through the model**, caching all intermediate activations
+
+**3. Selectively patch** activations from the clean run into the corrupted run at specific locations (individual attention heads, MLP layers, positions in the residual stream)
+
+**4. Measure the effect**: Does patching this component restore correct behavior?
+
+**5. Identify critical components**: Heads where patching makes a large difference are part of the circuit
+
+This is a *causal* test. We're not just finding correlations—we're intervening and measuring what happens.
+
+### Automated Discovery: ACDC
+
+Manually patching thousands of components doesn't scale. The ACDC algorithm automates discovery:
+
+1. Start with the full network
+2. Systematically ablate edges (connections between components)
+3. Measure which ablations degrade performance
+4. Keep only the edges that matter
+5. Repeat until you have a minimal circuit
+
+ACDC successfully rediscovered the greater-than circuit in GPT-2, identifying 68 important edges out of 32,000 total—a 99.8% reduction.
+
+### The Challenge
+
+Circuit discovery is still largely manual:
+- You must design the task (IOI, greater-than, etc.)
+- You must define what "correct output" means
+- You must interpret the discovered components
+
+This works for narrow, well-defined tasks. It struggles for open-ended generation or complex reasoning where "correct" is ambiguous.
+
+## Examples of Discovered Circuits
+
+Beyond IOI, what other circuits have researchers found?
+
+### Induction Heads
+
+One of the most important circuits in transformers. We'll cover these in depth in Article 13, but the basic idea:
+
+**Task**: Copy patterns from earlier in the sequence.
+
+Example: "A B ... A" → predict "B"
+
+**Circuit**:
+- Previous Token Head: Tracks what came before each position
+- Induction Head: Matches the current token to earlier occurrences and retrieves what followed
+
+**Significance**: Induction heads enable in-context learning—the ability to learn from examples within a single forward pass. They emerge suddenly during training in a phase transition, suggesting they're a fundamental building block.
+
+### Greater-Than Circuit
+
+**Task**: "The war lasted from year 1732 to year 17__" → predict years > 32
+
+**Circuit**: Uses MLPs in final layers to boost logits for valid continuations and suppress invalid ones. The mechanism involves representing year ranges and applying comparison logic through nonlinear transformations.
+
+**Significance**: Shows circuits can perform non-trivial mathematical reasoning with interpretable intermediate steps.
+
+### Acronym Circuit
+
+**Task**: Predict multi-letter acronyms (FBI, CIA, NASA)
+
+**Circuit**: 8 attention heads (~5% of the model) organized into 3 functional groups handling positional information.
+
+**Significance**: First circuit study to handle multi-token outputs, showing circuits can implement sequential algorithms.
+
+## The Localization Hypothesis
+
+All of this depends on a key assumption: **specific computations happen in small, localizable subnetworks**.
+
+### The Evidence
+
+- IOI circuit: 18% of attention heads
+- Acronym circuit: 5% of attention heads
+- Greater-than: ~5% of MLPs
+- ACDC finds < 1% of edges necessary for well-defined tasks
+
+This suggests networks are modular, not holistic. Specific behaviors involve specific sub-algorithms.
+
+### The Caveats
+
+Localization works best for:
+- **Narrow tasks**: Well-defined predictions (IOI, greater-than)
+- **Small models**: GPT-2 Small (124M parameters) shows clear circuits
+- **Single-token outputs**: Tasks with clear success criteria
+
+It breaks down for:
+- **Complex reasoning**: Multi-step inference, planning
+- **Large models**: Circuits become fuzzier in 70B+ parameter models
+- **Distributed representations**: Some tasks genuinely need broad integration
+
+The honest assessment: localization is real but incomplete. Circuits explain specific narrow behaviors well. They may not explain everything the model does.
+
+## Limits of the Circuits View
+
+We must acknowledge where circuits research struggles.
+
+### Scalability
+
+Circuit discovery doesn't scale easily:
+- Manual task design doesn't cover all model behaviors
+- Activation patching is computationally expensive (thousands of forward passes)
+- Interpretation of discovered components is still human-bottlenecked
+
+### Polysemanticity
+
+Remember Article 5: most neurons are polysemantic, responding to multiple unrelated features. This means:
+- A head in the IOI circuit might *also* be part of a different circuit for a different task
+- Circuits aren't cleanly separated but overlap and interfere
+- Understanding one circuit doesn't explain what else those components do
+
+### Superposition
+
+From Article 6: features are superimposed, not cleanly separated. This creates problems:
+- Circuit boundaries become fuzzy
+- Interference between circuits is possible
+- Some computation may happen in superposition, making it hard to decompose
+
+### Validation
+
+How do we know a circuit is correct? Current methods:
+- Patching shows correlation (this component matters)
+- Ablation shows necessity (without it, performance drops)
+
+But we lack proof of *sufficiency*: is the circuit alone enough to perform the task, or does it need supporting context from the rest of the model?
+
+::: {.callout-important}
+## The Fundamental Tension
+Circuits research assumes interpretable features and clean composition. But superposition means features are compressed and overlapping. Reconciling these views—understanding how superposed features compose into circuits—is an open problem.
+:::
+
+## Polya's Perspective: Finding Familiar Structure
+
+This article applies Polya's heuristic: **find a related problem you understand**.
+
+We understand how software composes—functions call other functions, building complex programs from simple parts. Circuits let us apply that understanding to neural networks: sub-algorithms compose through defined interfaces (the residual stream, attention composition), just like functions compose through parameters and return values.
+
+This doesn't mean networks *are* programs. But it means we can use our intuitions about compositional structure to guide interpretation.
+
+::: {.callout-tip}
+## Polya's Heuristic: Analogy
+When facing an unfamiliar problem, look for familiar structure. Circuits are familiar—they're like modules in software, or chemical reactions in biology, or logic gates in hardware. The analogy helps us understand the unfamiliar (neural computation) through the familiar (compositional systems).
+:::
+
+## Looking Ahead
+
+We've now completed the core theory:
+
+- **Features**: What the network represents (atoms)
+- **Superposition**: How it compresses those representations (packing atoms densely)
+- **Circuits**: How features compose into computations (forming molecules)
+
+But theory alone doesn't let us interpret real models. We need **techniques**—practical methods for finding features, tracing circuits, and verifying interpretations.
+
+The next arc (Articles 9-12) covers these techniques:
+- **Sparse Autoencoders** (Article 9): The tool for extracting features from superposition
+- **Attribution** (Article 10): Tracing which components contribute to outputs
+- **Activation Patching** (Article 11): Causal verification through intervention
+- **Ablation** (Article 12): Understanding what happens when you remove components
+
+These techniques are how we move from "circuits probably exist" to "here's the circuit for IOI, verified and explained."
+
+---
+
+## Further Reading
+
+1. **Zoom In: An Introduction to Circuits** — [Distill](https://distill.pub/2020/circuits/zoom-in/): The foundational article introducing circuits in vision models.
+
+2. **A Mathematical Framework for Transformer Circuits** — [Anthropic](https://transformer-circuits.pub/2021/framework/index.html): How to think about circuits in transformers, including Q/K/V composition.
+
+3. **Interpretability in the Wild: A Circuit for Indirect Object Identification** — [arXiv:2211.00593](https://arxiv.org/abs/2211.00593): The complete IOI circuit reverse-engineering, a landmark in transformer interpretability.
+
+4. **In-Context Learning and Induction Heads** — [Anthropic](https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html): How induction circuits enable in-context learning (preview of Article 13).
+
+5. **Towards Automated Circuit Discovery (ACDC)** — [arXiv:2304.14997](https://arxiv.org/abs/2304.14997): Automated methods for finding circuits at scale.
+
+6. **Neel Nanda's Mechanistic Interpretability Glossary** — [neelnanda.io](https://www.neelnanda.io/mechanistic-interpretability/glossary): Comprehensive reference including circuits definitions.
