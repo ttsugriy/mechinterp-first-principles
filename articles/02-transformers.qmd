@@ -1,0 +1,248 @@
+---
+title: "Transformers as Matrix Multiplication Machines"
+subtitle: "The computational substrate of modern AI"
+author: "Taras Tsugrii"
+date: 2025-01-05
+categories: [foundations, transformers]
+description: "Before we can reverse engineer what a transformer learns, we need to understand what it computes. The answer is surprisingly simple: matrix multiplications, all the way down."
+---
+
+## The Machine We're Trying to Understand
+
+In the previous article, we saw a neural network discover Fourier transforms for modular arithmetic—an algorithm no one taught it. We established that mechanistic interpretability is the project of reverse engineering such discoveries: finding the *how* behind the *what*.
+
+But before we can reverse engineer a transformer, we need to understand what it actually computes. What happens when you feed text into GPT-4? What operations transform "The capital of France is" into a prediction of "Paris"?
+
+The answer is surprisingly simple, and surprisingly important: **transformers are matrix multiplication machines**.
+
+This might sound reductive. A system that writes poetry, proves theorems, and carries on conversations—surely it's doing something more sophisticated than multiplying matrices?
+
+Yes and no. The sophistication lies not in the operations themselves, but in what those operations *learn to represent*. The transformer architecture provides a computational fabric—a substrate of linear algebra with a few nonlinearities—and training weaves complex algorithms into that fabric. Understanding the fabric is the first step to understanding what's woven into it.
+
+## The Big Picture
+
+Here's the transformer forward pass in one sentence:
+
+> A transformer takes a sequence of tokens, converts them to vectors, repeatedly applies attention (information routing) and MLPs (information processing), and produces a probability distribution over next tokens.
+
+Every step in this process is built from the same primitive: **matrix-vector multiplication**. Take a vector, multiply it by a matrix, get a new vector. That's it. The magic lies in what the matrices *learn to encode* during training.
+
+Let's walk through each component.
+
+## From Text to Numbers: Token Embedding
+
+Transformers don't operate on text directly. They operate on numbers—specifically, vectors of floating-point numbers.
+
+The first step is **tokenization**: breaking text into discrete units called tokens. These might be words, subwords, or even individual characters, depending on the tokenizer. "Understanding" might become one token; "transformers" might become ["transform", "ers"].
+
+Each token has an ID—an index in a vocabulary of, say, 50,000 possible tokens. But an index isn't useful for computation. We need something richer.
+
+Enter the **embedding matrix**. This is a giant lookup table: for each of the 50,000 token IDs, it stores a corresponding vector of, say, 768 dimensions. Token ID 4523 maps to a specific 768-dimensional vector. Token ID 8901 maps to a different one.
+
+```
+Token: "Paris"
+Token ID: 4523
+Embedding: [0.23, -0.87, 0.45, ..., 0.12]  (768 numbers)
+```
+
+::: {.callout-note}
+## The First Matrix Multiplication
+Looking up a token embedding is equivalent to multiplying a one-hot vector by the embedding matrix. If we represent token ID 4523 as a vector with a 1 in position 4523 and 0s elsewhere, then multiplying by the embedding matrix extracts exactly row 4523.
+:::
+
+After embedding, we also add **positional information**. The token "Paris" in position 5 gets a different representation than "Paris" in position 20. This is typically done by adding a position-specific vector to the token embedding.
+
+The result: each token becomes a vector, and the entire input sequence becomes a matrix—one row per token position.
+
+## Attention: Soft Dictionary Lookup
+
+Attention is the signature operation of transformers, and it's where things get interesting.
+
+The core insight is that attention performs **soft dictionary lookup**. In a regular dictionary, you have a key and you retrieve exactly one value. In attention, you have a query and you retrieve a *weighted blend* of all values, where the weights depend on how well each key matches your query.
+
+Here's how it works:
+
+### Queries, Keys, and Values
+
+For each token position, we compute three vectors:
+- **Query (Q)**: What am I looking for?
+- **Key (K)**: What do I contain?
+- **Value (V)**: What information do I provide?
+
+These are computed by—you guessed it—multiplying the token's embedding by learned matrices:
+
+```
+Q = embedding × W_Q
+K = embedding × W_K
+V = embedding × W_V
+```
+
+Three matrix multiplications, three new vectors.
+
+### Computing Attention Weights
+
+Now we compare each query to all keys. How similar is position 5's query to position 3's key? We measure this with a dot product:
+
+```
+attention_score = Q_5 · K_3
+```
+
+A high dot product means "position 5 is looking for something that position 3 has." We compute this for all pairs of positions, giving us a matrix of attention scores.
+
+We then apply **softmax** to turn these scores into probabilities—weights that sum to 1. This is one of the few *nonlinearities* in the transformer. It's crucial: without it, everything would collapse into a single linear operation.
+
+### Retrieving Information
+
+Finally, we use these weights to compute a weighted average of all values:
+
+```
+output_5 = 0.7 × V_3 + 0.2 × V_7 + 0.1 × V_1 + ...
+```
+
+Position 5 "attends to" position 3 (weight 0.7), a bit to position 7, a bit to position 1, and so on. The output is a blend of information from across the sequence.
+
+::: {.callout-important}
+## Why This Matters
+Attention is how transformers move information between positions. A token at the end of the sequence can access information from the beginning. This is fundamentally different from older architectures that processed sequences one step at a time.
+:::
+
+### Multi-Head Attention
+
+In practice, transformers use **multiple attention heads** in parallel. Each head has its own Q, K, V matrices, letting the model attend to different aspects simultaneously. One head might focus on syntax, another on semantics, another on nearby tokens.
+
+The outputs of all heads are concatenated and multiplied by yet another matrix (W_O) to produce the final attention output. More matrix multiplications.
+
+## MLPs: Where Knowledge Lives
+
+After attention, each token's representation passes through a **multi-layer perceptron (MLP)**, also called a feed-forward network.
+
+The structure is simple:
+
+```
+hidden = ReLU(input × W_1 + b_1)
+output = hidden × W_2 + b_2
+```
+
+Two matrix multiplications with a ReLU nonlinearity in between. That's it.
+
+But recent research has revealed something fascinating: **MLP layers function as key-value memories**.
+
+The first matrix (W_1) learns to recognize patterns—like keys in a dictionary. The second matrix (W_2) associates those patterns with likely next tokens—like values. When the input matches a learned pattern, the corresponding value "fires," influencing the output.
+
+Lower layers recognize shallow patterns like n-grams and common phrases. Upper layers recognize semantic patterns—detecting that "the capital of France" and "France's capital city" should trigger similar responses.
+
+::: {.callout-tip}
+## Two-Thirds of Parameters
+MLP layers contain about two-thirds of a transformer's parameters. They're not just activation functions—they're where much of the model's knowledge is stored.
+:::
+
+## Layer Norm: Keeping Things Stable
+
+Between attention and MLP blocks, transformers apply **layer normalization**. This rescales vectors to have consistent statistics (zero mean, unit variance across dimensions).
+
+Layer norm isn't glamorous, but it's essential for training stability. Without it, activations would grow or shrink uncontrollably through the many layers of a deep transformer.
+
+For interpretability, layer norm is a minor complication—another linear(ish) operation to account for. We'll mostly set it aside, but it's there.
+
+## The Residual Stream: A Preview
+
+Here's a crucial architectural detail that will become central in the next article: **residual connections**.
+
+After each attention block and each MLP block, the output is *added* to the input:
+
+```
+x = x + attention(x)
+x = x + mlp(x)
+```
+
+This creates what's called the **residual stream**—a vector that flows through the entire network, accumulating contributions from each component.
+
+Think of it like a shared workspace. Each attention head and each MLP reads from this workspace, performs some computation, and writes its contribution back. Components don't talk to each other directly; they communicate through the residual stream.
+
+This perspective—seeing the transformer as components reading from and writing to a shared communication channel—is foundational for mechanistic interpretability. We'll develop it fully in the next article.
+
+## The Complete Forward Pass
+
+Let's put it all together. For a transformer with L layers:
+
+```
+1. Embed tokens → initial vectors
+2. Add positional encoding
+3. For each layer l = 1 to L:
+   a. Apply layer norm
+   b. Compute multi-head attention
+   c. Add attention output to residual stream
+   d. Apply layer norm
+   e. Compute MLP
+   f. Add MLP output to residual stream
+4. Apply final layer norm
+5. Multiply by "unembedding" matrix to get vocabulary logits
+6. Apply softmax to get next-token probabilities
+```
+
+Count the matrix multiplications:
+- Embedding: 1
+- Per layer: Q, K, V projections (3 per head × H heads), output projection (1), MLP (2) = 3H + 3 per layer
+- Unembedding: 1
+
+For a model with 12 layers and 12 attention heads, that's hundreds of matrix multiplications. For GPT-3 with 96 layers and 96 heads, it's thousands.
+
+And yet, it's *just* matrix multiplications (plus a few nonlinearities: softmax, ReLU/GELU, layer norm).
+
+## Why Linearity Matters
+
+This brings us to the key insight for interpretability: **linear operations preserve structure**.
+
+A matrix multiplication is a linear map. It can rotate, scale, and project vectors, but it does so in a geometrically predictable way. Lines map to lines. Planes map to planes. Distances might change, but relationships are preserved in a tractable way.
+
+This is why the "features as directions" hypothesis (coming in Article 5) has any hope of working. If the operations were arbitrary nonlinear transformations, internal representations could be uninterpretably tangled. But because they're mostly linear, geometric structure—directions, subspaces, projections—provides a language for understanding what's happening inside.
+
+The nonlinearities (softmax, ReLU) are essential for the model's expressiveness, but they're sparse and localized. Most of the computation is linear algebra, and linear algebra we understand.
+
+::: {.callout-note}
+## A Performance Engineering Perspective
+If you're familiar with GPU programming, you know that matrix multiplication is *the* operation that GPUs are optimized for. The transformer architecture isn't just mathematically elegant—it's computationally efficient. The same property that makes transformers fast (linear algebra primitives) makes them interpretable (geometric structure).
+:::
+
+## Polya's Perspective: Understanding the Substrate
+
+In Polya's framework, we're still in phase one: understanding the problem. The previous article asked "what are we trying to reverse engineer?" This article answers: a machine built from matrix multiplications.
+
+**What have we learned?**
+
+1. The transformer is a sequence of linear operations (matrix multiplications) interspersed with nonlinearities (softmax, ReLU)
+2. Attention routes information between positions via soft dictionary lookup
+3. MLPs store and retrieve knowledge via pattern-value associations
+4. The residual stream accumulates contributions from all components
+
+**What questions does this raise?**
+
+- If components communicate through the residual stream, what "language" do they use? (Article 3)
+- If representations live in high-dimensional vector spaces, what structure do they have? (Article 4)
+- What are the "atoms" of meaning in these spaces? (Article 5)
+
+We now know the computational substrate. Next, we'll examine how information flows through it.
+
+## Looking Ahead
+
+The residual stream—that shared workspace where all components read and write—is the key abstraction for mechanistic interpretability. It's not explicitly named in the original transformer paper, but it's implicit in the architecture, and making it explicit changes how we think about interpretation.
+
+In the next article, we'll explore the residual stream in depth. We'll see why it's more useful to think of a transformer as "components contributing to a shared stream" rather than "layers processing sequentially." This shift in perspective is foundational: once you see the residual stream, you can't unsee it.
+
+From there, we'll be ready to ask: what's actually represented in this stream? What structure do the vectors have? How do we find the "features" that the model has learned?
+
+The matrix multiplications are just the fabric. Now let's see what's woven into it.
+
+---
+
+## Further Reading
+
+1. **The Illustrated Transformer** — [Jay Alammar](https://jalammar.github.io/illustrated-transformer/): The classic visual walkthrough of transformer architecture.
+
+2. **A Mathematical Framework for Transformer Circuits** — [Anthropic](https://transformer-circuits.pub/2021/framework/index.html): The foundational paper for mechanistic interpretability, introducing the residual stream perspective.
+
+3. **Attention Is All You Need** — [Vaswani et al., 2017](https://arxiv.org/abs/1706.03762): The original transformer paper.
+
+4. **Transformer Feed-Forward Layers Are Key-Value Memories** — [Geva et al., 2021](https://arxiv.org/abs/2012.14913): Research showing MLPs function as pattern-value memory systems.
+
+5. **The Transformer Attention Mechanism** — [Machine Learning Mastery](https://machinelearningmastery.com/the-transformer-attention-mechanism/): Clear explanation of attention mechanics.

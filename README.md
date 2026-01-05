@@ -24,7 +24,7 @@ We use two guiding frameworks:
 *What are we trying to understand?*
 
 1. [Why Reverse Engineer Neural Networks?](articles/01-why-reverse-engineer.qmd)
-2. Transformers as Matrix Multiplication Machines *(coming soon)*
+2. [Transformers as Matrix Multiplication Machines](articles/02-transformers.qmd)
 3. The Residual Stream *(coming soon)*
 4. Activations as Geometry *(coming soon)*
 
