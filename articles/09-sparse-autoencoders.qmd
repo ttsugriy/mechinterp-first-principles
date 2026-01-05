@@ -1,0 +1,343 @@
+---
+title: "Sparse Autoencoders"
+subtitle: "Extracting features from superposition"
+author: "Taras Tsugrii"
+date: 2025-01-05
+categories: [techniques, sparse-autoencoders]
+description: "The primary tool for finding interpretable features in neural networks. Sparse autoencoders decompose polysemantic activations into monosemantic features."
+---
+
+## The Tool We Need
+
+We've established the problem: networks pack thousands of features into hundreds of dimensions (superposition), creating polysemantic neurons that are impossible to interpret directly.
+
+We need a tool that can *decompose* these compressed representations—that can take a polysemantic activation and separate it into its component monosemantic features.
+
+That tool is the **sparse autoencoder (SAE)**.
+
+SAEs have become the primary technique for feature discovery in mechanistic interpretability. When Anthropic found 2 million interpretable features in Claude 3 Sonnet, they used SAEs. When researchers discovered the "Golden Gate Bridge" feature, they used SAEs. The technique has transformed what's possible in interpretability research.
+
+::: {.callout-note}
+## The Core Idea
+A sparse autoencoder learns to represent each activation as a *sparse* combination of *many* learned features. By forcing sparsity, we recover monosemantic features from polysemantic neurons. We're not finding the neurons' meaning—we're finding the *features'* meaning.
+:::
+
+## What Is a Sparse Autoencoder?
+
+An autoencoder is a neural network trained to reconstruct its input. It has two parts:
+- **Encoder**: Maps input to a latent representation
+- **Decoder**: Maps latent representation back to input
+
+The training objective is simple: make the output match the input.
+
+A *sparse* autoencoder adds a crucial constraint: the latent representation must be *sparse*—most of its values must be zero.
+
+### The Architecture
+
+For a transformer with $d$ dimensions (say, 768), a sparse autoencoder might have:
+
+**Encoder**: Maps $d$-dimensional activation to $D$-dimensional latent space, where $D >> d$
+- Typical ratio: $D$ is 4-24× larger than $d$
+- For $d = 768$, we might have $D = 16,384$ or more
+
+**Sparsity mechanism**: Only a small number of latent dimensions activate (are non-zero) for any given input—typically fewer than 300 out of 16,384
+
+**Decoder**: Maps $D$-dimensional sparse representation back to $d$ dimensions
+
+```
+Activation (768) → Encoder → Sparse Latent (16,384) → Decoder → Reconstruction (768)
+                              [~300 non-zero]
+```
+
+### Why Overcomplete?
+
+Regular autoencoders use a *bottleneck*—a latent space smaller than the input, forcing compression. SAEs do the opposite: the latent space is *larger* than the input.
+
+This seems backwards. Why make the latent space bigger?
+
+Because we're not trying to compress—we're trying to *decompose*. We believe the 768-dimensional activation actually represents thousands of features in superposition. We give the SAE room to spread those features out into separate dimensions.
+
+The sparsity constraint ensures this expansion doesn't become trivial. The SAE can't just copy the input to random latent dimensions. It must find a sparse basis where each input activates only a few latent features.
+
+::: {.callout-tip}
+## A Performance Engineering Parallel
+Think of SAEs like profiler stack sampling, but for representations. A profiler takes a complex execution and decomposes it into individual function calls. An SAE takes a complex activation and decomposes it into individual features. Both reveal hidden structure through systematic decomposition.
+:::
+
+## The Training Objective
+
+SAEs are trained with two competing objectives:
+
+**1. Reconstruction**: The output should match the input
+$$\mathcal{L}_{\text{recon}} = ||x - \hat{x}||^2$$
+
+**2. Sparsity**: The latent representation should have mostly zeros
+$$\mathcal{L}_{\text{sparse}} = ||z||_1$$
+
+The total loss is:
+$$\mathcal{L} = \mathcal{L}_{\text{recon}} + \lambda \cdot \mathcal{L}_{\text{sparse}}$$
+
+where $\lambda$ controls the trade-off.
+
+### The Trade-off
+
+This is the fundamental tension:
+
+- **Low $\lambda$**: Accurate reconstruction, but dense (non-sparse) latents → less interpretable
+- **High $\lambda$**: Very sparse latents → more interpretable, but worse reconstruction
+
+In practice, we accept 10-40% reconstruction error to achieve sufficient sparsity. This means SAEs don't perfectly capture everything in the activation—but what they capture is interpretable.
+
+::: {.callout-important}
+## The Reconstruction-Interpretability Trade-off
+You cannot have both perfect reconstruction and perfect interpretability. Some information in neural network activations may be fundamentally non-sparse—distributed in ways that resist decomposition. SAEs give us interpretable features at the cost of missing some signal.
+:::
+
+## What SAEs Produce
+
+After training, an SAE gives you two things:
+
+### 1. A Feature Dictionary
+
+The decoder weights form a **dictionary** of feature directions. Each column of the decoder matrix is a feature vector—a direction in the original activation space.
+
+If the SAE has 16,384 latent dimensions, you get 16,384 feature vectors. Each represents a potential concept the model might use.
+
+### 2. Sparse Activations
+
+For any input activation, the SAE produces a sparse vector of feature activations. If features 47, 892, and 3,041 are active (non-zero), those are the features present in this input.
+
+The magnitude of each activation tells you how strongly that feature is present.
+
+## Interpreting Features
+
+How do you know what a feature means?
+
+### Max-Activating Examples
+
+The primary method: find inputs that maximally activate each feature.
+
+1. Run many inputs through the SAE
+2. For each feature, record which inputs caused it to activate most strongly
+3. Look at those inputs—what do they have in common?
+
+If feature 892 activates most strongly on text about cooking, mentions of recipes, and kitchen descriptions, it's probably a "cooking" feature.
+
+### Feature Steering
+
+A more rigorous test: artificially boost or suppress the feature and observe behavior changes.
+
+If amplifying feature 892 makes the model insert cooking references into unrelated text, you've verified it's causally connected to "cooking."
+
+The famous "Golden Gate Bridge" feature was discovered this way: amplifying it made Claude identify *as* the Golden Gate Bridge.
+
+### Automated Interpretation
+
+For millions of features, manual inspection doesn't scale. Researchers use:
+- LLM-based feature labeling (ask another model to describe max-activating examples)
+- Semantic clustering (group similar features)
+- Activation correlation analysis
+
+## Anthropic's Scaling Results
+
+In 2024, Anthropic applied SAEs to Claude 3 Sonnet at unprecedented scale, training SAEs with up to 16 million features.
+
+### What They Found
+
+- **Millions of interpretable features** across all layers
+- Features for concepts ranging from specific entities ("Golden Gate Bridge") to abstract properties ("deception," "uncertainty")
+- Features for code patterns, mathematical concepts, linguistic phenomena
+- Safety-relevant features: "backdoor," "unsafe code," "sycophancy"
+
+### Key Insights
+
+**Features cluster semantically**: Similar features are geometrically nearby. Safety-related features cluster together. Domain knowledge features cluster together.
+
+**Features split with scale**: Larger SAEs find finer-grained features. "Animals" might split into "mammals," "birds," "reptiles" with more capacity.
+
+**Features are sparse**: Fewer than 300 features active per token, out of millions available.
+
+**Features transfer**: Some features discovered on text also activate appropriately on images (for multimodal models).
+
+::: {.callout-note}
+## The Transformation
+Before SAEs: We knew polysemanticity existed but couldn't see through it
+After SAEs: We can decompose activations into millions of interpretable features
+
+This is the tool that makes large-scale interpretability research possible.
+:::
+
+## Practical Considerations
+
+### Where to Apply SAEs
+
+**Residual stream**: The most common target. Contains the accumulated signal that all components read from and write to. Features here are often highly interpretable.
+
+**Layer selection**: Different layers have different feature types:
+- Early layers: Syntactic features, token patterns, formatting
+- Middle layers: Semantic features, concepts, relationships
+- Late layers: Task-specific features, output-relevant information
+
+**Attention outputs**: Can also be productive, capturing input-output relationships specific to attention heads.
+
+### Computational Cost
+
+**Activation caching**: First, run the base model on a large dataset (billions of tokens) and save activations. This is a one-time cost.
+
+**SAE training**: With cached activations, training takes hours to days depending on SAE size. Recent work achieves training in under 30 minutes with optimized pipelines.
+
+**Memory**: Proportional to dictionary size. A 16M feature SAE requires substantial GPU memory.
+
+### Key Hyperparameters
+
+**Dictionary size ($D$)**: Larger dictionaries find more features but cost more and may have more "dead" features that never activate.
+
+**Sparsity coefficient ($\lambda$)**: Higher values produce sparser (more interpretable) features but worse reconstruction. Typical values: 1-100.
+
+**Training data**: Diverse data produces more general features. Billions of tokens recommended for convergence.
+
+## Limitations and Failure Modes
+
+SAEs aren't perfect. Understanding their limitations is essential.
+
+### Reconstruction Error
+
+SAEs typically achieve 60-90% reconstruction accuracy. The missing 10-40% represents:
+- Noise that doesn't correspond to interpretable features
+- Information that's truly distributed (not sparse)
+- Features the SAE failed to learn
+
+This limits what we can conclude from SAE features alone.
+
+### Dead Features
+
+Some latent dimensions never activate during training—they're "dead." Rates of 5-20% are common. These represent wasted capacity and may indicate the dictionary is too large.
+
+Recent approaches (TopK SAEs, auxiliary losses) reduce dead features.
+
+### Feature Splitting
+
+As you increase dictionary size, broad features split into finer-grained sub-features:
+- "Math" → "algebra," "geometry," "calculus"
+- "Animals" → "mammals," "birds," "reptiles"
+
+This is sometimes useful (more precision) but sometimes problematic (which granularity is "correct"?).
+
+### Feature Absorption
+
+A more concerning failure mode: when dictionary size increases, some features *absorb* others instead of splitting cleanly. A very common concept (like "Paris") might absorb a broader concept (like "European capitals"), causing the broader feature to stop firing where it should.
+
+This is an active area of research with no clean solution.
+
+### No Ground Truth
+
+The most fundamental limitation: we don't know what the "true" features are. We can't verify that SAE features are the same features the model "actually uses."
+
+Multiple SAEs trained on the same data produce somewhat different features. Which is right? We don't know.
+
+::: {.callout-important}
+## The Validation Problem
+SAEs produce interpretable features, but interpretability isn't proof of correctness. The features might be artifacts of the SAE training process rather than genuine properties of the original model. This is an open problem.
+:::
+
+## Alternatives and Improvements
+
+### TopK SAEs
+
+Instead of an L1 penalty that gradually suppresses activations, TopK SAEs keep exactly the $k$ largest activations and zero the rest.
+
+**Advantages**: Direct control over sparsity, cleaner thresholding
+**Disadvantages**: Non-differentiable, requires auxiliary losses for dead features
+
+Recent work shows TopK SAEs can achieve better reconstruction-sparsity trade-offs.
+
+### Gated SAEs
+
+Separate the decision "which features to use" from "how much to use each":
+- Gate network: Binary decision of which features activate
+- Magnitude network: How strongly each feature activates
+
+This eliminates "shrinkage" (systematic underestimation of feature magnitudes) and reduces active feature count.
+
+### Other Approaches
+
+- **Matryoshka SAEs**: Train across multiple sparsity levels simultaneously
+- **Contrastive losses**: Encourage features to be more distinct from each other
+- **Dictionary initialization**: Better starting points for learning
+
+## Using SAE Features
+
+Once you have features, what can you do with them?
+
+### Understanding
+
+The most basic use: look at what features activate for specific inputs. If you want to understand how the model processes "The capital of France is ___", examine which features fire.
+
+This provides a vocabulary for discussing model internals: "Features 47, 892, and 3,041 are active" is more meaningful than "Neuron 234 has value 0.72."
+
+### Steering
+
+Manipulate features during generation:
+- Amplify a feature → model emphasizes that concept
+- Suppress a feature → model avoids that concept
+
+More targeted than prompt engineering, because you're intervening on the model's internal representations.
+
+### Circuit Discovery
+
+SAE features provide a cleaner basis for tracing circuits:
+- Which features cause which downstream features?
+- How do features combine across layers?
+- What's the path from input features to output features?
+
+With monosemantic features, circuit discovery becomes more tractable than with polysemantic neurons.
+
+### Safety Applications
+
+Identify features related to:
+- Harmful content
+- Deception
+- Sycophancy
+- Unsafe code patterns
+
+Potentially suppress these features during deployment, or flag inputs where they activate strongly.
+
+## Polya's Perspective: Auxiliary Constructions
+
+In Polya's framework, the SAE is an **auxiliary construction**—something we add to make the problem tractable.
+
+The original problem: understand what's represented in a 768-dimensional activation vector packed with superposed features.
+
+The auxiliary construction: train an SAE that decomposes the vector into a sparse combination of learned features.
+
+The SAE isn't part of the original model. It's a tool we build to make the model's internals visible. Like adding a construction line in geometry, it doesn't change the underlying truth—it reveals structure that was always there.
+
+::: {.callout-tip}
+## Polya's Insight
+"Introduce auxiliary elements." When a problem is too hard to solve directly, add something that makes the structure visible. SAEs are auxiliary elements for interpretability: we add them to see what was hidden.
+:::
+
+## Looking Ahead
+
+We now have a tool for extracting features. But features in isolation don't explain model behavior. We need techniques for:
+- **Attribution**: Which features contributed to this output? (Article 10)
+- **Patching**: Is this feature *causally* necessary? (Article 11)
+- **Ablation**: What happens if we remove this component? (Article 12)
+
+SAEs give us the vocabulary (features). The next articles give us the grammar (how to trace, verify, and understand feature contributions).
+
+---
+
+## Further Reading
+
+1. **Towards Monosemanticity** — [Anthropic](https://transformer-circuits.pub/2023/monosemantic-features): The foundational paper introducing SAEs for interpretability.
+
+2. **Scaling Monosemanticity** — [Anthropic](https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html): Applying SAEs to Claude 3 Sonnet, finding millions of interpretable features.
+
+3. **Sparse Autoencoders Find Highly Interpretable Features** — [arXiv:2309.08600](https://arxiv.org/abs/2309.08600): Technical details on SAE training and evaluation.
+
+4. **A is for Absorption** — [arXiv:2409.14507](https://arxiv.org/abs/2409.14507): Analysis of feature splitting and absorption failure modes.
+
+5. **Improving Sparse Decomposition with Gated SAEs** — [NeurIPS 2024](https://openreview.net/forum?id=zLBlin2zvW): The gated SAE variant that reduces shrinkage.
+
+6. **Neuronpedia** — [neuronpedia.org](https://www.neuronpedia.org/): Interactive explorer for SAE features across various models.
