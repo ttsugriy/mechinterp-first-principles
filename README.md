@@ -25,7 +25,7 @@ We use two guiding frameworks:
 
 1. [Why Reverse Engineer Neural Networks?](articles/01-why-reverse-engineer.qmd)
 2. [Transformers as Matrix Multiplication Machines](articles/02-transformers.qmd)
-3. The Residual Stream *(coming soon)*
+3. [The Residual Stream](articles/03-residual-stream.qmd)
 4. Activations as Geometry *(coming soon)*
 
 ### Arc II: Core Theory

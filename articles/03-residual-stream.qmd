@@ -1,0 +1,278 @@
+---
+title: "The Residual Stream"
+subtitle: "A shared workspace for computation"
+author: "Taras Tsugrii"
+date: 2025-01-05
+categories: [foundations, architecture]
+description: "The residual stream is a simple architectural feature with profound implications for interpretability. Once you see the transformer as components reading from and writing to a shared workspace, everything changes."
+---
+
+## A Shift in Perspective
+
+In the previous article, we saw that transformers are matrix multiplication machines. Attention routes information between positions; MLPs store and retrieve knowledge. Layer by layer, the network transforms token embeddings into predictions.
+
+But there's a different way to think about what's happening—a perspective that turns out to be far more useful for mechanistic interpretability.
+
+Instead of thinking "layer 1 processes the input, then layer 2 processes layer 1's output, then layer 3 processes layer 2's output..." think this:
+
+> All components—every attention head and every MLP—read from and write to a single shared workspace called the **residual stream**.
+
+This isn't just a metaphor. It's a precise description of what the architecture computes. And it fundamentally changes how we approach interpretation.
+
+## The Architecture, Revisited
+
+Let's look at what actually happens in a transformer forward pass. After embedding, each token is represented as a vector. Let's call this initial vector $x_0$.
+
+Now, what does "layer 1" do? In the standard telling: it takes $x_0$ as input and produces some output $x_1$.
+
+But look more carefully at the equations:
+
+```
+attention_out = Attention(x_0)
+x_0.5 = x_0 + attention_out
+
+mlp_out = MLP(x_0.5)
+x_1 = x_0.5 + mlp_out
+```
+
+See those plus signs? The attention output isn't *replacing* $x_0$—it's being *added* to it. Same for the MLP output.
+
+Expanding this out:
+
+```
+x_1 = x_0 + attention_out + mlp_out
+```
+
+The vector after layer 1 is the *sum* of the original embedding plus contributions from attention plus contributions from the MLP.
+
+This continues through all layers:
+
+```
+x_L = x_0 + Σ(attention contributions) + Σ(MLP contributions)
+```
+
+The final representation is the original embedding plus accumulated contributions from every attention head and every MLP across the entire network.
+
+::: {.callout-important}
+## The Key Insight
+The transformer doesn't transform representations through a sequence of functions. It *accumulates* contributions from many components into a shared vector that flows through the network. This vector is the residual stream.
+:::
+
+## Components as Readers and Writers
+
+Let's make the reading-and-writing metaphor precise.
+
+Each component—whether an attention head or an MLP—does three things:
+
+1. **Read** from the residual stream (take the current vector as input)
+2. **Compute** something (apply its learned function)
+3. **Write** to the residual stream (add its output to the vector)
+
+The "residual stream" is just the vector that carries information through the network. At any point, it contains:
+- The original token embedding
+- Plus everything that all previous components have written
+
+Here's the crucial part: components don't talk to each other directly. Attention head 3.7 (layer 3, head 7) never sends a message directly to MLP 5. Instead:
+
+1. Head 3.7 writes something to the residual stream
+2. MLP 5 reads from the residual stream
+3. If MLP 5 uses information from head 3.7, it's because that information is sitting in the residual stream
+
+The residual stream is a **communication channel**. It's the only way components can interact.
+
+## Why This Matters
+
+This perspective has profound implications for interpretability.
+
+### Decomposition is Possible
+
+Because the final output is a *sum* of contributions, we can ask: "How much did each component contribute?"
+
+The output logits (before softmax) for predicting the next token are computed by multiplying the final residual stream by an unembedding matrix:
+
+```
+logits = x_L @ W_unembed
+```
+
+But $x_L$ is a sum:
+
+```
+logits = (x_0 + head_1_out + head_2_out + ... + mlp_1_out + ...) @ W_unembed
+```
+
+Matrix multiplication distributes over addition:
+
+```
+logits = x_0 @ W_unembed + head_1_out @ W_unembed + head_2_out @ W_unembed + ...
+```
+
+Each term is the contribution of that component to the final prediction. We can literally add up how much each attention head and each MLP contributed to the probability of any given token.
+
+This is the foundation of **attribution** methods in mechanistic interpretability.
+
+### Path Analysis
+
+The residual stream creates a notion of **paths** through the network.
+
+Consider: head 5.3 writes to the residual stream at layer 5. MLP 8 reads from the residual stream at layer 8. There's a "path" from head 5.3 to MLP 8—the information flows through the residual stream.
+
+We can think of the transformer as computing many paths simultaneously:
+
+- Direct path: embedding → unembedding (straight through)
+- Single-component paths: embedding → head 2.1 → unembedding
+- Multi-component paths: embedding → head 1.0 → head 3.4 → MLP 7 → unembedding
+- And exponentially many more...
+
+The final output is the sum of contributions from all paths.
+
+::: {.callout-note}
+## Path Explosion
+A model with L layers, H heads per layer, and MLP layers has on the order of $(H+2)^L$ paths per token position. For GPT-2 (12 layers, 12 heads), that's roughly $14^{12} \approx 10^{13}$ paths. In practice, most paths contribute negligibly, and the art of interpretation is finding the ones that matter.
+:::
+
+### Composition Becomes Visible
+
+The residual stream is how attention heads **compose** with each other.
+
+Consider the famous **induction head** circuit. An induction head performs in-context learning: if it sees "...Harry Potter... Harry" it predicts "Potter" because it saw that pattern before.
+
+This requires two heads working together:
+
+1. A **previous token head** (in an early layer) that copies information about what token came before each position
+2. An **induction head** (in a later layer) that looks for previous occurrences of the current token and retrieves what followed
+
+Here's how they compose through the residual stream:
+
+1. The previous token head writes "the token before position 15 was 'Harry'" to the residual stream
+2. This information sits in the stream
+3. The induction head reads from the stream at position 100 (current "Harry")
+4. It uses this information to attend back to position 15
+5. It retrieves the value at position 15 (which says "followed by 'Potter'")
+6. It writes this prediction to the residual stream
+
+Without the residual stream perspective, this looks like mysterious layer-to-layer processing. With it, we see two components communicating through a shared workspace. The circuit becomes visible.
+
+## Reading the Stream: The Logit Lens
+
+If the residual stream accumulates information toward a final prediction, can we peek at it midway? Can we see what the model is "thinking" at intermediate layers?
+
+Yes. The technique is called the **logit lens**.
+
+The idea is simple: at any layer, take the current residual stream vector and project it to vocabulary space as if it were the final layer. Pretend you're at the end of the network and decode what token would be predicted.
+
+```python
+# At layer 6 of a 12-layer model
+intermediate_logits = residual_stream_layer_6 @ W_unembed
+intermediate_probs = softmax(intermediate_logits)
+# What token does the model predict at this point?
+```
+
+What we see is fascinating: predictions *refine* through layers.
+
+For a prompt like "The Eiffel Tower is located in", early layers might vaguely predict location-related tokens. Middle layers might narrow to cities. Late layers converge on "Paris."
+
+The residual stream tells a story of progressive refinement. Early components write rough information; later components refine it. The logit lens lets us watch this process unfold.
+
+::: {.callout-tip}
+## Tuned Lens
+The basic logit lens can be noisy because early residual stream representations aren't aligned with the unembedding matrix. The **tuned lens** improves on this by learning a small affine transformation for each layer that better maps intermediate representations to vocabulary space. Same concept, cleaner signal.
+:::
+
+## What the Stream Contains
+
+So what's actually *in* the residual stream at any point?
+
+The answer isn't simple. The stream contains:
+
+- **Token identity**: What token is at this position
+- **Positional information**: Where in the sequence this token appears
+- **Contextual information**: What the attention heads have gathered from other positions
+- **Semantic features**: Concepts, relationships, patterns the model has detected
+- **Predictions in progress**: Proto-predictions that will be refined by later layers
+
+All of this is packed into a vector of perhaps 768 or 4096 dimensions. Different "features" occupy different directions in this space. We'll explore this geometric perspective fully in the next article.
+
+For now, the key point is: the residual stream is *dense with information*. It's not just a pipeline carrying data forward—it's a rich representational space where components store and retrieve information.
+
+## A Concrete Example
+
+Let's trace what might happen for a single token in the prompt "The capital of France is".
+
+**After embedding**: The residual stream at position 5 ("France") contains the France embedding—a 768-dimensional vector that encodes properties of the token.
+
+**After layer 1 attention**: Attention heads notice "capital of" precedes this token. They write information encoding "this is the object of 'capital of'" to the stream.
+
+**After layer 1 MLP**: The MLP recognizes this pattern and might strengthen features related to "country" or "nation."
+
+**After layer 4 attention**: Heads attend to the full context and write information encoding "we're asking about a capital city."
+
+**After layer 6 MLP**: The MLP retrieves associated knowledge, strengthening the "Paris" feature direction.
+
+**After layer 8**: At this point, the logit lens might already show "Paris" as a top prediction.
+
+**Final layers**: Refine the representation, handling edge cases, strengthening the prediction.
+
+The residual stream at position 5 has transformed from "France token embedding" to "France token embedding + context about capital cities + knowledge retrieval activating Paris + prediction sharpening."
+
+Each layer's contribution is *added* to what came before. Nothing is overwritten—information accumulates.
+
+## Implications for Interpretation
+
+The residual stream perspective changes how we approach mechanistic interpretability.
+
+### Localization
+We can ask: "Which components are responsible for this behavior?" By looking at what each component writes to the stream, we can identify the attention heads and MLPs that produce specific predictions.
+
+### Circuits
+We can trace information flow: "How does information get from the input to the output?" The residual stream makes explicit the paths through which computation happens.
+
+### Interventions
+We can test hypotheses: "What if we remove this component's contribution?" By subtracting a component's output from the residual stream, we can see if our understanding of its role is correct.
+
+### Decomposition
+We can break down predictions: "Why did the model predict this token?" By decomposing the logits into per-component contributions, we can attribute the prediction to specific parts of the network.
+
+::: {.callout-note}
+## The Stream as Bottleneck
+The residual stream is also a bottleneck. With only 768 or 4096 dimensions, it must represent everything the model knows and is computing. This constraint forces **superposition**—the representation of more features than there are dimensions. We'll explore this phenomenon in Arc II.
+:::
+
+## From Stream to Geometry
+
+We've established what the residual stream is and why it matters. But we've been vague about what's *in* it—talking about "features" and "directions" without precision.
+
+The residual stream is a vector space. At each position, for each layer, we have a point in $\mathbb{R}^{768}$ (or whatever the model dimension is). The "features" we've mentioned are directions in this space. The "predictions" are projections onto vocabulary directions.
+
+To understand what the model represents, we need to understand this geometry. What do the directions mean? How are features organized? How can we find them?
+
+This geometric perspective is the subject of the next article. Once we understand activations as geometry, we'll be ready to tackle the core questions: What are features? How do they compose? And why is interpretation both possible and hard?
+
+## Looking Ahead
+
+The residual stream reframes the transformer from "sequential layer processing" to "parallel component contributions." This isn't just a pedagogical shift—it's the foundation for mechanistic interpretability.
+
+With this framework, we can:
+- Decompose predictions into component contributions
+- Trace information flow through paths
+- Identify circuits by their reading and writing patterns
+- Test hypotheses by intervening on specific components
+
+In the next article, we'll zoom in on the geometry of the residual stream. What does it mean for features to be "directions"? How are concepts arranged in this high-dimensional space? And what tools do we have for navigating it?
+
+The residual stream gives us the architecture. Geometry will give us the language.
+
+---
+
+## Further Reading
+
+1. **A Mathematical Framework for Transformer Circuits** — [Anthropic](https://transformer-circuits.pub/2021/framework/index.html): The foundational paper introducing the residual stream perspective and path analysis.
+
+2. **In-context Learning and Induction Heads** — [Anthropic](https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html): Deep dive into induction heads, the canonical example of head composition through the residual stream.
+
+3. **AXRP Episode 19: Mechanistic Interpretability with Neel Nanda** — [AXRP](https://axrp.net/episode/2023/02/04/episode-19-mechanistic-interpretability-neel-nanda.html): Neel Nanda explains the residual stream, composition, and interpretability techniques.
+
+4. **Logit Lens** — [LessWrong](https://www.lesswrong.com/posts/AcKRB8wDpdaN6v6ru/interpreting-gpt-the-logit-lens): The original post introducing the logit lens technique for reading intermediate residual stream states.
+
+5. **Eliciting Latent Predictions from Transformers with the Tuned Lens** — [arXiv:2303.08112](https://arxiv.org/abs/2303.08112): Improving on the logit lens with learned per-layer transformations.
+
+6. **Exploring the Residual Stream of Transformers** — [arXiv:2312.12141](https://arxiv.org/abs/2312.12141): Recent work on interpreting residual stream contributions to predictions.
