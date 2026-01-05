@@ -16,7 +16,7 @@ book:
         - articles/01-why-reverse-engineer.qmd
         - articles/02-transformers.qmd
         - articles/03-residual-stream.qmd
-        # - articles/04-activations-geometry.qmd
+        - articles/04-geometry.qmd
     # - part: "Arc II: Core Theory"
     #   chapters:
     #     - articles/05-features.qmd
