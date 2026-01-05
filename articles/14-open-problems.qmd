@@ -1,0 +1,347 @@
+---
+title: "Open Problems"
+subtitle: "Where the field stands and where it needs to go"
+author: "Taras Tsugrii"
+date: 2025-01-05
+categories: [synthesis, open-problems]
+description: "An honest assessment of what mechanistic interpretability can and cannot do today, and the hard problems that remain unsolved."
+---
+
+## Intellectual Honesty
+
+We've built a compelling toolkit:
+- A theory of features, superposition, and circuits
+- Techniques for attribution, patching, ablation, and feature extraction
+- A complete case study (induction heads) showing these methods in action
+
+It would be easy to conclude that mechanistic interpretability is "solved"—that we just need to apply these techniques to larger models to understand AI systems completely.
+
+This conclusion would be wrong.
+
+The honest assessment: mechanistic interpretability has achieved meaningful successes, but fundamental problems remain unsolved. The gap between "understanding induction heads in GPT-2" and "understanding everything GPT-4 can do" is vast—and it's not clear our current methods can bridge it.
+
+This article surveys the open problems honestly. Some may be solved with incremental progress. Others may require fundamentally new ideas.
+
+::: {.callout-important}
+## The Responsible Claim
+We can understand *some* things about *some* models with *some* confidence. We cannot yet understand *all* things about *any* model with *high* confidence. The gap matters for safety.
+:::
+
+## The Scaling Problem
+
+Our best successes are on small models. GPT-2 Small (124M parameters) has yielded beautiful, complete circuits: IOI, induction heads, greater-than comparison.
+
+Large models (70B+ parameters) are different.
+
+### What Changes at Scale
+
+**More components**: GPT-2 Small has 12 layers × 12 heads = 144 attention heads. GPT-4 has an estimated 120 layers × 128 heads = 15,360+ heads. Manual inspection doesn't scale.
+
+**More redundancy**: Large models have backup circuits and distributed representations. Ablating one head has minimal effect because others compensate. This makes circuits harder to isolate.
+
+**More composition**: Complex behaviors emerge from many components working together. The IOI circuit had 26 heads in 7 functional groups. A reasoning circuit in GPT-4 might involve hundreds of components across dozens of layers.
+
+**Different algorithms**: Large models might implement qualitatively different algorithms than small models. The induction head that works beautifully in GPT-2 might be replaced by something more sophisticated in GPT-4.
+
+### Current Status
+
+SAEs have been applied to Claude 3 Sonnet (a production-scale model), finding millions of interpretable features. This is genuine progress.
+
+But feature extraction isn't circuit analysis. We don't have complete circuit diagrams for any complex capability in any large model. The scaling gap is real.
+
+### What's Needed
+
+- **Automated circuit discovery** that scales beyond thousands of components
+- **Abstraction methods** that summarize many components as single functional units
+- **Transfer learning** for interpretability (apply findings from small models to large ones)
+
+::: {.callout-note}
+## The Bitter Lesson Applied
+Compute has historically solved problems that manual effort couldn't. Perhaps interpretability will follow the same pattern: automated methods that scale with model size, rather than human-intensive analysis.
+:::
+
+## The Coverage Problem
+
+How much of model behavior can we explain?
+
+### Explained vs. Unexplained
+
+For induction heads: high coverage. We understand the algorithm, the components, the composition. The circuit explains ~70-85% of in-context learning performance.
+
+For general language modeling: low coverage. What circuit produces creative writing? What circuit decides whether a joke is funny? What circuit determines that a political statement might be controversial?
+
+Most of what language models do remains unexplained. The techniques work—but they've been applied to a tiny fraction of model capabilities.
+
+### The Long Tail
+
+Capabilities follow a long-tail distribution:
+- A few common patterns (copying, retrieval, pattern completion)
+- Many rare capabilities (specific facts, unusual reasoning, creative synthesis)
+
+Current interpretability succeeds on the head of the distribution—common, stereotyped behaviors. The tail is harder: each capability may have its own circuit, requiring individual analysis.
+
+**Implication**: Full interpretability might require understanding millions of circuits, not dozens.
+
+### The Compositionality Challenge
+
+Complex behaviors aren't single circuits—they're compositions of circuits:
+
+"Explain why the French Revolution happened" requires:
+- Historical knowledge retrieval
+- Causal reasoning
+- Narrative construction
+- Language generation
+- Audience modeling
+
+Each component might be its own circuit. Understanding the composition—how circuits interact to produce coherent explanations—is harder than understanding circuits in isolation.
+
+## The Validation Problem
+
+How do we know our interpretations are correct?
+
+### The Ground Truth Problem
+
+For toy models: we know the ground truth (we created it). We can verify that the network learned the intended features.
+
+For language models: there is no ground truth. We infer features from behavior, then check whether those features explain behavior. This is circular—confirmation bias is a constant risk.
+
+### Multiple SAEs, Different Features
+
+Train two SAEs on the same activations with different random seeds. They produce different features.
+
+Which is "right"? Both explain the activations. Both have interpretable features. But they're not identical.
+
+**Implication**: SAE features might be artifacts of the extraction process, not genuine properties of the model.
+
+### Causal vs. Correlational
+
+Patching and ablation provide causal tests. But even causal evidence has limits:
+
+- **Sufficiency vs. necessity**: A component might be sufficient for a behavior without being how the model normally does it. Backup circuits mean patching might restore behavior through abnormal paths.
+
+- **Distribution shift**: Interventions create out-of-distribution activations. The measured causal effect might differ from the natural effect under normal operation.
+
+- **Emergent effects**: Removing component A might change how component B behaves, confounding interpretation.
+
+### What Would Validation Look Like?
+
+Stronger validation might require:
+- **Predictions on held-out behaviors**: "This circuit should also explain X, Y, Z"
+- **Intervention success**: "Modifying this circuit should change behavior in predicted ways"
+- **Cross-model consistency**: "Similar models should have similar circuits"
+
+Current interpretability has some of these, but not systematically.
+
+::: {.callout-important}
+## The Falsifiability Question
+Is "the IOI circuit is the mechanism for indirect object identification" falsifiable? What evidence would prove it wrong? If we can't answer this clearly, interpretability risks being unfalsifiable—which would undermine its scientific status.
+:::
+
+## The Alignment Tax
+
+Interpretability is expensive. Is it worth it?
+
+### The Cost
+
+**Computational cost**: SAE training requires billions of tokens of cached activations. Patching requires many forward passes. Full circuit analysis takes weeks of GPU time.
+
+**Human cost**: Interpreting features requires human judgment. Circuit verification requires expert analysis. This doesn't scale to millions of features.
+
+**Capability cost**: Time spent on interpretability is time not spent on capability improvement. Organizations must choose.
+
+### The Benefit
+
+The safety case for interpretability:
+- Detect deceptive alignment before deployment
+- Identify unsafe behaviors at the representation level
+- Verify that safety training actually changed the right things
+- Enable targeted intervention on problematic behaviors
+
+But these benefits are theoretical. No major safety incident has been prevented by interpretability. The counterfactual is hard to establish.
+
+### The Alignment Tax Question
+
+If interpretability is very expensive and provides uncertain benefits, will organizations invest in it?
+
+Market pressures push toward capability. Interpretability is a cost with unclear return on investment. This creates incentives to skip or minimize interpretability work.
+
+**Policy implication**: External requirements (regulation, standards, liability) may be necessary to ensure interpretability investment.
+
+## Superposition: Friend or Enemy?
+
+Superposition is central to how neural networks work. It's also central to why interpretability is hard.
+
+### The Dilemma
+
+Superposition enables compression: millions of features in thousands of dimensions. This is why language models are so capable—they pack vast knowledge into manageable parameter counts.
+
+But superposition creates polysemanticity: each neuron, each activation dimension, encodes multiple features. This is why interpretability is hard—there's no clean mapping from components to concepts.
+
+### SAEs: The Current Solution
+
+Sparse autoencoders "undo" superposition, recovering monosemantic features from polysemantic activations.
+
+But SAEs are imperfect:
+- 10-40% reconstruction error means some information is lost or never captured
+- Features split and absorb as dictionary size changes
+- No ground truth for whether SAE features match "true" model features
+
+### Could We Train Without Superposition?
+
+What if we trained models to avoid superposition—to use monosemantic representations from the start?
+
+**Attempts**: Softmax linear units (SoLU), dictionary learning during training, sparsity constraints.
+
+**Results**: Promising in small experiments. Large-scale viability unknown.
+
+**Trade-off**: If superposition is computationally optimal (as toy models suggest), avoiding it might require larger models for the same capability—a capability tax for interpretability.
+
+## Emergent Capabilities
+
+Large language models exhibit capabilities that weren't explicitly trained:
+- Arithmetic (up to some limit)
+- Translation between languages not paired in training data
+- Reasoning about novel scenarios
+- Theory of mind (modeling other agents' beliefs)
+
+### The Emergence Problem
+
+Where do these capabilities come from? They weren't explicitly optimized. They emerged as side effects of language modeling.
+
+Current interpretability has trouble with emergence:
+- We can't predict which capabilities will emerge at which scale
+- We can't explain *why* language modeling produces arithmetic
+- We can't verify whether an emergent capability is robust or brittle
+
+### The Safety Implications
+
+If capabilities emerge unpredictably, so might:
+- Deceptive behaviors
+- Power-seeking tendencies
+- Goal generalization beyond training
+
+Interpretability would ideally detect these emergent problems. Currently, we can't—we don't know where to look until after the capability appears.
+
+::: {.callout-note}
+## The Detection Challenge
+Can we build interpretability tools that detect *unknown* capabilities or behaviors? This requires moving beyond "understand the circuit for X" to "find any circuits with concerning properties"—a harder problem.
+:::
+
+## Specific Open Questions
+
+Beyond these broad challenges, specific technical questions remain open:
+
+### 1. What's the Right Level of Abstraction?
+
+Circuits can be described at many levels:
+- Individual neurons
+- Feature directions
+- Attention head functions
+- Layer-wise transformations
+- Abstract algorithms
+
+Which level is "right"? Different levels may be appropriate for different questions. But we lack a principled way to choose.
+
+### 2. How Do We Handle Continuous Features?
+
+Toy models treat features as binary (on/off). Real features are continuous and graded. How do continuous features compose? When does "slightly active" become "importantly active"?
+
+### 3. What About Temporal Dynamics?
+
+Our techniques analyze single forward passes. But many capabilities develop over sequences:
+- Context building across dialogue
+- Refinement through iteration
+- Planning over multiple outputs
+
+How do we interpret dynamics, not just snapshots?
+
+### 4. Can We Interpret Training?
+
+Interpretability focuses on trained models. But safety might require understanding the *training process*:
+- Which examples teach which capabilities?
+- How do circuits form during training?
+- Can we predict training outcomes from early signals?
+
+Training dynamics are much less understood than forward pass dynamics.
+
+### 5. How Do We Scale Interpretation?
+
+Even with SAEs finding millions of features, interpreting them requires human attention. How do we:
+- Automatically label features (current LLM-based methods are imperfect)
+- Find features relevant to specific behaviors
+- Summarize feature sets at higher abstraction levels
+
+### 6. What's the Theory?
+
+We have empirical observations (polytopes, phase transitions, induction heads) but limited theoretical understanding:
+- Why do transformers represent features as directions?
+- What determines which circuits emerge during training?
+- Is there a computational theory of interpretation?
+
+## The Path Forward
+
+Despite these problems, progress is possible.
+
+### Near-Term
+
+**Automated circuit discovery**: Tools like ACDC that scale patching to larger models.
+
+**Better SAEs**: Architectures with lower reconstruction error, less absorption, more consistent features.
+
+**Benchmark development**: Standardized evaluations for interpretability methods—like ImageNet for circuit analysis.
+
+### Medium-Term
+
+**End-to-end interpretability**: Training models with built-in interpretability constraints.
+
+**Formal verification**: Mathematical proofs of model properties, not just empirical observations.
+
+**Integration with safety**: Using interpretability for practical safety applications (detecting deception, verifying alignment).
+
+### Long-Term
+
+**Complete model understanding**: The ability to fully explain any model output in terms of interpretable features and circuits.
+
+**Predictive interpretability**: Understanding training well enough to predict model properties before training.
+
+**Interpretability by design**: AI architectures that are interpretable from the start, without post-hoc analysis.
+
+## Polya's Perspective: Acknowledging Unknowns
+
+Polya emphasizes: **"Understand what you don't understand."**
+
+Intellectual progress requires honestly identifying gaps. This article maps the gaps in mechanistic interpretability—not to discourage work, but to focus it.
+
+The problems are real. The problems are hard. But problems clearly stated are problems that can be worked on.
+
+::: {.callout-tip}
+## Polya's Insight
+"What is unknown?" is as important as "what is known." Honest acknowledgment of limitations guides research toward the most important problems. The open questions in this article are the research agenda for the field.
+:::
+
+## Looking Ahead
+
+The final article offers a **Practice Regime**—concrete guidance for actually doing interpretability research:
+
+- How to choose problems
+- How to structure experiments
+- How to debug circuits that don't work
+- How to publish and share findings
+
+This series has been theory and concepts. The next article is about practice.
+
+---
+
+## Further Reading
+
+1. **200 Concrete Open Problems in Mechanistic Interpretability** — [Neel Nanda](https://www.neelnanda.io/mechanistic-interpretability/200-concrete-problems): Exhaustive list of specific research questions.
+
+2. **Towards Monosemanticity (Limitations Section)** — [Anthropic](https://transformer-circuits.pub/2023/monosemantic-features): Honest discussion of SAE limitations by the developers.
+
+3. **Causal Scrubbing: Rigorous Circuit Evaluation** — [Redwood Research](https://www.lesswrong.com/posts/JvZhhzycHu2Yd57RN/causal-scrubbing-a-method-for-rigorously-testing): Attempts to address the validation problem.
+
+4. **Interp Benchmarks (Proposal)** — [Various](https://www.lesswrong.com/posts/dPpPvwEqDMxMvGKhP/interp-benchmarks-proposal): Efforts toward standardized interpretability evaluation.
+
+5. **Softmax Linear Units for Interpretability** — [Anthropic](https://transformer-circuits.pub/2022/solu/index.html): Attempts to train more interpretable models from scratch.
+
+6. **Scaling Interpretability Research** — [MATS](https://www.matsprogram.org/): Programs for training interpretability researchers and scaling the field.
