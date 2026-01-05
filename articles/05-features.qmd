@@ -1,0 +1,300 @@
+---
+title: "Features: The Atoms of Representation"
+subtitle: "What neural networks actually represent"
+author: "Taras Tsugrii"
+date: 2025-01-05
+categories: [core-theory, features]
+description: "A feature is a property of the input that the network represents internally. Finding features—not neurons—is the key to understanding what neural networks have learned."
+---
+
+## The Neuron That Liked Cats and Cars
+
+In 2017, researchers at Google were trying to understand what individual neurons in an image classifier had learned. The approach seemed natural: look at which images maximally activate each neuron, and you'll learn what that neuron "means."
+
+For some neurons, this worked beautifully. One neuron activated strongly for dog faces. Another for horizontal lines. Another for the color orange. These were *interpretable*—you could describe what they detected.
+
+Then they found a neuron that activated for:
+
+- Cat faces
+- Cat legs
+- The fronts of cars
+
+These are not related concepts. There's no obvious property shared by cat anatomy and automobile design. The researchers tested whether the neuron might be detecting some abstract quality like "curvedness" or "sleekness." It wasn't—curved objects like snakes and ferrets didn't activate it.
+
+The neuron simply responded to cat parts *and* car fronts. It was **polysemantic**—encoding multiple unrelated features in a single unit.
+
+::: {.callout-important}
+## The Core Problem
+This isn't a rare bug. It's the common case. Most neurons in trained neural networks are polysemantic—they respond to multiple, semantically unrelated features. The neuron is not the right unit of analysis.
+:::
+
+This article introduces the concept that replaces the neuron: the **feature**. Understanding what features are, why they matter, and why they're hard to find is the foundation of mechanistic interpretability.
+
+## Why Neurons Fail
+
+Let's understand *why* polysemanticity exists before defining what replaces it.
+
+Consider a simple thought experiment. Suppose you're training a network to recognize 10,000 different concepts: animals, objects, colors, textures, emotions, actions, and so on. Your network has 1,000 neurons in a given layer.
+
+If each neuron encoded exactly one concept, you could represent at most 1,000 concepts. But you need 10,000.
+
+What does the network do? It **shares neurons across concepts**. Multiple features get encoded in overlapping patterns of neuron activations. A single neuron might participate in representing "cat," "car," "curve," and "corporate logo"—not because these are related, but because the network needs to pack more information than it has dedicated slots for.
+
+This is efficient. It works because most features rarely co-occur: you don't often see cat faces and car fronts in the same image, so using the same neuron for both doesn't cause problems during inference. The network gets away with the overlap.
+
+But it's a disaster for interpretation. When you ask "what does neuron 847 mean?", the answer is "it means cat faces *and* car fronts *and* probably several other things." The neuron doesn't have a single meaning. It's a superposition of meanings.
+
+::: {.callout-note}
+## Incidental Polysemanticity
+Recent research has revealed something even more striking: polysemanticity can emerge even when there's no capacity pressure. Networks sometimes assign multiple unrelated features to the same neuron purely due to random initialization and training dynamics. Polysemanticity isn't just about efficiency—it's a fundamental property of how neural networks learn.
+:::
+
+## What Is a Feature?
+
+If neurons aren't the right unit, what is?
+
+A **feature** is a property of the input that the network represents internally.
+
+Let's unpack this:
+
+- **Property of the input**: Features describe something about what the network is processing. "Is this an animal?" "Is this code?" "Is this sentence expressing anger?" "Does this image contain curves?"
+
+- **Represented internally**: The network has learned to detect this property. When the property is present, something specific happens in the network's activations. When it's absent, that something doesn't happen.
+
+Examples of features:
+- "This text is in French"
+- "This image contains a face"
+- "This code has a bug"
+- "This sentence is sarcastic"
+- "The current token follows the pattern [A][B]...[A], predicting [B]"
+
+Features range from low-level ("this is a curve," "this token starts with 'S'") to high-level ("this text discusses deception," "this image is the Golden Gate Bridge").
+
+::: {.callout-tip}
+## A Performance Engineering Parallel
+Features are like the concepts in a profiler's ontology. When you profile a system, you don't think about individual CPU cycles—you think about "database queries," "network I/O," "garbage collection." These are higher-level features of the computation. Similarly, mechanistic interpretability seeks the higher-level features of neural computation, not the individual neuron activations.
+:::
+
+## Features as Directions
+
+In Article 4, we established that neural network activations are vectors in high-dimensional space, and that geometric structure carries meaning.
+
+Here's the key claim: **features are directions in activation space**.
+
+This is the **linear representation hypothesis**. When a network represents "this text is in French," it does so by having the activation vector point (at least partially) in the "French" direction. The more French-like the input, the more the vector points that way.
+
+More precisely:
+- Each feature corresponds to a direction (a unit vector) in activation space
+- The *presence* of a feature means the activation has a positive component along that direction
+- The *intensity* of a feature corresponds to the magnitude of that component
+
+If you want to detect whether an activation encodes "French-ness," you project the activation onto the French direction and check if the result is positive (and how large it is).
+
+**Why directions, not individual dimensions?**
+
+Because neurons are just one arbitrary basis for the space. The network doesn't "know" which dimension is which—it just learns to produce useful activation vectors. The meaningful structure is in the geometry, not in the axis labels.
+
+Think of it like coordinates on a map. You can use latitude/longitude, or UTM coordinates, or any rotated coordinate system. The cities don't move—only the numbers you use to describe them change. Features are like cities: they're geometric facts about the space, independent of which coordinate system you choose.
+
+## Evidence for Linear Features
+
+The linear representation hypothesis isn't just elegant—it's empirically supported.
+
+### Linear Probes Succeed
+
+If you train a simple linear classifier on neural network activations to predict some property (is this text toxic? is this image a dog? is this code correct?), it often works remarkably well.
+
+A linear classifier draws a hyperplane through activation space. Points on one side are "yes," points on the other are "no." High accuracy means the property is **linearly separable**—which means it corresponds to a direction (the normal to the hyperplane).
+
+If features weren't linear, linear probes would fail. They don't.
+
+### Steering Works
+
+When researchers at Anthropic identified a "Golden Gate Bridge" direction in Claude's activation space and added to it during inference, the model started obsessing over the Golden Gate Bridge. It would bring up the bridge in unrelated contexts, even identify *as* the bridge when asked about itself.
+
+This worked because the feature is linear: adding to that direction increases the feature's influence on the model's behavior. If features were encoded nonlinearly, vector addition wouldn't have predictable effects.
+
+### Vector Arithmetic Works
+
+As we saw in Article 4, word embeddings support arithmetic: king - man + woman ≈ queen. This works because gender is a linear direction—you can add and subtract it.
+
+The same holds in transformer hidden states. Researchers have found directions for concepts like "truthfulness," "refusal," and "helpfulness." Adding these directions to activations shifts model behavior in the expected direction.
+
+## Monosemantic vs. Polysemantic
+
+With features defined, we can be precise about the problem we face.
+
+A **monosemantic** neuron or feature corresponds to a single, interpretable concept. It activates when that concept is present and doesn't activate when it's absent. The cat-face neuron that *only* responds to cat faces would be monosemantic.
+
+A **polysemantic** neuron corresponds to multiple unrelated concepts. It activates for cat faces *and* car fronts *and* maybe several other things. Most neurons in trained networks are polysemantic.
+
+Here's the key insight: **even when neurons are polysemantic, features can be monosemantic**.
+
+The features are directions in activation space. Multiple features can be encoded in overlapping patterns across neurons. Each feature, as a direction, might be interpretable—"this direction means cat faces," "that direction means car fronts." But any individual neuron participates in multiple features, so looking at neurons individually gives you the confusing polysemantic picture.
+
+::: {.callout-note}
+## The Decomposition Goal
+The goal of mechanistic interpretability is to decompose polysemantic neurons into monosemantic features. We want to find the directions that correspond to interpretable concepts, even though the neurons that encode those directions are a tangled mess.
+:::
+
+## Concrete Examples: Features in the Wild
+
+Let's look at actual features discovered in real models.
+
+### The Golden Gate Bridge
+
+In 2024, Anthropic researchers trained sparse autoencoders (more on these in Article 9) on Claude 3 Sonnet and discovered millions of interpretable features. One was "The Golden Gate Bridge."
+
+This feature:
+- Activated strongly on text mentioning the Golden Gate Bridge
+- Activated on images of the bridge (despite being trained only on text!)
+- When amplified, caused the model to insert the bridge into unrelated conversations
+- When measured for downstream effects, produced exactly the behavioral changes you'd expect
+
+This is a monosemantic feature: one concept, one direction.
+
+### Safety Features
+
+The same research discovered features related to safety and alignment:
+- "Backdoor" (activates on discussions of hidden malicious functionality)
+- "Unsafe code" (activates on code with security vulnerabilities)
+- "Deception" (activates on text involving lies or manipulation)
+- "Sycophancy" (activates when the model is being excessively agreeable)
+
+These features cluster together in activation space—they're geometrically nearby, suggesting the model has learned a "safety-relevant" region of its representation space.
+
+### Domain Knowledge Features
+
+Features also capture specialized knowledge:
+- Immunology features that activate on discussions of immune responses
+- Legal features that activate on contract language
+- Programming features that activate on specific coding patterns
+
+These features show that the model's "knowledge" is organized geometrically, with related concepts nearby.
+
+### Induction Features
+
+Some features correspond to computational patterns, not just content:
+- Features that activate when the model detects a repeated sequence
+- Features that activate when the model is about to copy from earlier in the context
+- Features that signal "this is the kind of situation where I should look back at previous examples"
+
+These are features about *how* to process, not just *what* is being processed.
+
+## Feature Hierarchies
+
+Features don't exist in isolation. They form hierarchies and families.
+
+### Feature Splitting
+
+When you train larger sparse autoencoders (with more capacity to represent features), broader features "split" into more specific ones.
+
+A small autoencoder might have a single feature for "text starting with S." A larger one might split this into:
+- "Text starting with uppercase S"
+- "Text starting with lowercase s"
+- "The specific word 'short'"
+- "The specific word 'system'"
+
+The broader feature isn't wrong—it's just less specific. More capacity reveals finer-grained structure.
+
+### Feature Absorption
+
+The reverse also happens: specific features can "absorb" broader ones. A very specific feature for the word "Paris" might absorb the broader feature for "European capitals" because Paris is so common that it gets its own dedicated direction.
+
+### Compositional Structure
+
+Features combine. "French text about cooking" might activate both a "French" feature and a "cooking" feature. The linear representation hypothesis predicts that the activation vector is (roughly) the sum of the individual feature vectors.
+
+This compositional structure is what makes features useful: you don't need a separate feature for every possible combination. You need base features that combine.
+
+::: {.callout-tip}
+## Like Atoms, But Fuzzier
+The "atoms of representation" metaphor is apt but imperfect. Atoms combine in precise ways; features combine approximately. Atoms are countable; the number of features is unclear. But the basic idea—simple units that compose into complex structures—transfers.
+:::
+
+## The Ontology Question
+
+Here's a deep question the field is still grappling with: **does the network have a "natural" set of features, or is the feature decomposition observer-dependent?**
+
+### The Case for Natural Features
+
+Some features seem obviously real:
+- The "Golden Gate Bridge" feature transfers across modalities (text to images)
+- Manipulating features produces predictable behavioral changes
+- Similar features cluster together without being told to
+
+This suggests features aren't arbitrary—they reflect something genuine about how the network represents information.
+
+### The Case for Observer-Dependence
+
+But there are troubling observations:
+- Different analysis methods (different sparse autoencoders, different training objectives) yield different features
+- Feature splitting means the "right" granularity depends on your analysis capacity
+- We optimize for human interpretability—are we finding *our* concepts or *the network's* concepts?
+
+A skeptic might argue: any high-dimensional space can be decomposed into directions. We're finding directions that *we* find meaningful, but the network might not "care" about those specific directions.
+
+### The Pragmatic View
+
+The honest answer is: we don't fully know.
+
+What we *can* say:
+- *Some* features are clearly real—they have causal power, transfer across contexts, cluster meaningfully
+- *Some* features may be artifacts of our analysis methods
+- The distinction between "natural" and "observer-dependent" may be a spectrum, not a binary
+
+For practical purposes, we work with features that:
+1. Activate consistently on semantically related inputs
+2. Produce predictable effects when manipulated
+3. Compose in expected ways
+
+These are the features that matter for interpretation, regardless of metaphysical status.
+
+::: {.callout-important}
+## A Foundational Uncertainty
+The field of mechanistic interpretability is built on a concept—"feature"—that lacks a rigorous formal definition. This is uncomfortable. But it's also where we are. Progress has been made with working definitions; deeper foundations may come later.
+:::
+
+## Polya's Perspective: Identifying the Unknown
+
+In Polya's framework, we've now identified what we're looking for.
+
+Article 1 asked: what are we trying to understand? (The algorithm.)
+Articles 2-4 established: what's the computational substrate? (Matrix multiplications in a shared residual stream with geometric structure.)
+
+Now, Article 5 answers: **what are the atoms of that structure?** Features.
+
+This is Polya's step of "identifying the unknown." We don't yet know *which* features a network uses, or *how* to find them efficiently, or *how* they combine into algorithms. But we know what we're looking for: directions in activation space that correspond to interpretable properties.
+
+::: {.callout-tip}
+## Polya's Heuristic: Name the Unknown
+Polya emphasized naming things precisely. "A problem well-stated is half-solved." By defining features—and distinguishing them from neurons—we've clarified what success looks like: finding the monosemantic directions that the network uses to represent information.
+:::
+
+## Looking Ahead
+
+We've defined features and established that they're directions in activation space. But we've also seen a problem: networks seem to represent more features than they have dimensions. A 768-dimensional residual stream encodes thousands (maybe millions) of features.
+
+How is this possible?
+
+The answer is **superposition**: features are *almost* orthogonal directions, packed more densely than true orthogonality would allow. The geometry of high dimensions makes this work—but it also makes interpretation hard.
+
+The next article dives into superposition: what it is, why it exists, and why it's the central obstacle to mechanistic interpretability.
+
+Here's the question to carry forward: if the network packs more features than dimensions by using almost-orthogonal directions, what happens when features *do* interfere? When does superposition break down, and what are the consequences?
+
+---
+
+## Further Reading
+
+1. **Neel Nanda's Mechanistic Interpretability Glossary** — [neelnanda.io](https://www.neelnanda.io/mechanistic-interpretability/glossary): The definitive reference for terminology, including the working definition of "feature."
+
+2. **Scaling Monosemanticity** — [Anthropic](https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html): Anthropic's landmark 2024 paper discovering millions of interpretable features in Claude 3 Sonnet, including the Golden Gate Bridge feature.
+
+3. **Toy Models of Superposition** — [Anthropic](https://transformer-circuits.pub/2022/toy_model/index.html): The foundational paper explaining why polysemanticity exists and how features pack into limited dimensions.
+
+4. **Sparse Autoencoders Find Highly Interpretable Features** — [arXiv:2309.08600](https://arxiv.org/abs/2309.08600): Technical introduction to using sparse autoencoders for feature discovery.
+
+5. **A is for Absorption: Studying Feature Splitting and Absorption** — [arXiv:2409.14507](https://arxiv.org/abs/2409.14507): Recent work on how features split and merge depending on analysis capacity.
+
+6. **Open Problems in Mechanistic Interpretability** — [arXiv:2501.16496](https://arxiv.org/abs/2501.16496): Survey of foundational questions, including the lack of a formal feature definition.

@@ -17,12 +17,12 @@ book:
         - articles/02-transformers.qmd
         - articles/03-residual-stream.qmd
         - articles/04-geometry.qmd
-    # - part: "Arc II: Core Theory"
-    #   chapters:
-    #     - articles/05-features.qmd
-    #     - articles/06-superposition.qmd
-    #     - articles/07-toy-models.qmd
-    #     - articles/08-circuits.qmd
+    - part: "Arc II: Core Theory"
+      chapters:
+        - articles/05-features.qmd
+        # - articles/06-superposition.qmd
+        # - articles/07-toy-models.qmd
+        # - articles/08-circuits.qmd
     # - part: "Arc III: Techniques"
     #   chapters:
     #     - articles/09-sparse-autoencoders.qmd
