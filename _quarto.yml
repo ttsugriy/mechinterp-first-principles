@@ -33,7 +33,7 @@ book:
       chapters:
         - articles/13-induction-heads.qmd
         - articles/14-open-problems.qmd
-        # - articles/15-practice-regime.qmd
+        - articles/15-practice-regime.qmd
     - PLAN.qmd
 
 format:

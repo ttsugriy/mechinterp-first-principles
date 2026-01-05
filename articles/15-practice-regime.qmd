@@ -1,0 +1,505 @@
+---
+title: "A Practice Regime"
+subtitle: "From reading to research"
+author: "Taras Tsugrii"
+date: 2025-01-05
+categories: [synthesis, practice]
+description: "Concrete guidance for actually doing mechanistic interpretability research: choosing problems, running experiments, debugging, and contributing to the field."
+---
+
+## From Theory to Practice
+
+You've read fourteen articles. You understand:
+- What we're trying to do (reverse-engineer neural networks)
+- Why it's hard (superposition, scale, composition)
+- The concepts (features, circuits, the residual stream)
+- The techniques (SAEs, attribution, patching, ablation)
+- The case study (induction heads)
+- The open problems (scaling, validation, coverage)
+
+Now what?
+
+This final article is about *doing*—turning conceptual understanding into research practice. How do you actually find features, trace circuits, and contribute to the field?
+
+::: {.callout-note}
+## The Goal
+By the end of this article, you should have a concrete plan for your first interpretability project—and the debugging skills to carry it through.
+:::
+
+## Starting From Zero
+
+If you've never run an interpretability experiment, start here.
+
+### Week 1: Environment Setup
+
+**1. Install TransformerLens**
+
+The standard library for transformer interpretability:
+
+```python
+pip install transformer-lens
+```
+
+Load a model:
+
+```python
+from transformer_lens import HookedTransformer
+
+model = HookedTransformer.from_pretrained("gpt2-small")
+```
+
+**2. Run your first forward pass with caching**
+
+```python
+text = "The capital of France is"
+tokens = model.to_tokens(text)
+logits, cache = model.run_with_cache(tokens)
+
+# What does the model predict?
+next_token = logits[0, -1].argmax()
+print(model.to_string(next_token))  # Should be " Paris"
+```
+
+**3. Explore the cache**
+
+```python
+# What's cached?
+print(cache.keys())
+
+# Look at residual stream at layer 5
+residual = cache["blocks.5.hook_resid_post"]
+print(residual.shape)  # [batch, seq_len, d_model]
+
+# Look at attention patterns for head 3.2
+attn = cache["blocks.3.attn.hook_pattern"]
+print(attn.shape)  # [batch, n_heads, seq_len, seq_len]
+```
+
+**4. Visualize an attention pattern**
+
+```python
+import circuitsvis as cv
+
+# Show attention for head 3.2
+cv.attention.attention_patterns(
+    tokens=model.to_str_tokens(text),
+    attention=cache["blocks.3.attn.hook_pattern"][0]
+)
+```
+
+Spend time exploring. Poke at different cache keys. Visualize different heads. Get comfortable with the API.
+
+### Week 2: Replicate a Known Result
+
+Before discovering anything new, replicate something known. This verifies your setup works and builds intuition.
+
+**Suggested replication: Find an induction head**
+
+1. Create repeated sequences:
+```python
+text = "AB CD EF AB CD"
+```
+
+2. Find heads where position "CD" (second occurrence) attends to "CD" (first occurrence):
+
+```python
+tokens = model.to_tokens(text)
+_, cache = model.run_with_cache(tokens)
+
+# For each head, measure induction pattern
+for layer in range(model.cfg.n_layers):
+    for head in range(model.cfg.n_heads):
+        pattern = cache[f"blocks.{layer}.attn.hook_pattern"][0, head]
+        # Check if position 6 attends to position 2 (both are "CD" tokens)
+        induction_score = pattern[6, 2].item()
+        if induction_score > 0.3:
+            print(f"Potential induction head: {layer}.{head}, score: {induction_score:.2f}")
+```
+
+If you find heads in layers 1-3 with high scores, you've found induction heads. Compare with known results to verify.
+
+**Why replication matters**: You'll make mistakes. Replication catches bugs before they matter—you know what the answer should be.
+
+### Week 3: Your First Original Observation
+
+Make one small observation nobody has made before.
+
+**Suggestions**:
+- Find what head activates most on your name
+- Trace what happens when you type your favorite programming language
+- Find the attention pattern on a specific meme or phrase
+
+The observation doesn't need to be important. It needs to be *yours*—something you discovered through exploration.
+
+::: {.callout-tip}
+## The Exploration Mindset
+Interpretability research is exploration. The most important skill is curiosity: "What happens if I...?" Run the experiment. See what happens. Follow surprises.
+:::
+
+## Choosing a Research Problem
+
+After exploration, you need focus. How do you choose what to work on?
+
+### The Problem Selection Framework
+
+Evaluate problems on three dimensions:
+
+**1. Tractability**: Can this actually be solved with current methods?
+
+- Good: "Find the circuit for three-digit addition in GPT-2"
+- Bad: "Fully explain GPT-4's reasoning capabilities"
+
+Start with narrow, well-defined behaviors.
+
+**2. Importance**: Does the solution matter?
+
+- Good: "Understand how models represent deception" (safety-relevant)
+- Good: "Find circuits that transfer across model sizes" (methodological)
+- Mediocre: "Catalog every attention pattern in layer 3" (low insight)
+
+**3. Personal fit**: Is this something you can uniquely contribute to?
+
+- Your background (performance engineering? linguistics? mathematics?)
+- Your interests (what do you find fascinating?)
+- Your resources (compute? collaborators? time?)
+
+### Concrete Problem Types
+
+**Feature discovery**: What features exist?
+- Train SAEs on unexplored layers/models
+- Find features for specific domains (code, math, safety)
+- Study feature geometry and clustering
+
+**Circuit analysis**: How does capability X work?
+- Pick a narrow behavior (parenthesis matching, country-capital, etc.)
+- Apply the full methodology: attribution → ablation → patching → diagram
+
+**Methodology development**: Better tools
+- Improved SAE architectures
+- Faster patching methods
+- Better visualization tools
+
+**Scaling studies**: What changes with size?
+- Compare circuits across model sizes
+- Study how features evolve during training
+- Test whether small-model findings transfer
+
+### Neel Nanda's 200 Problems
+
+Neel Nanda maintains a list of 200 concrete open problems. Each is:
+- Specific enough to start on
+- Open enough to be original
+- Calibrated for difficulty
+
+This is the best starting point for finding a project.
+
+## The Research Workflow
+
+Once you have a problem, how do you make progress?
+
+### Phase 1: Hypothesis Formation
+
+Before running experiments, write down your hypothesis:
+
+"I believe that [capability X] is implemented by [component Y] because [reasoning Z]."
+
+Example: "I believe that parenthesis matching is implemented by attention heads that track nesting depth, because this requires sequential counting across positions."
+
+Be specific. Vague hypotheses lead to vague experiments.
+
+### Phase 2: Baseline Measurements
+
+Establish what you're measuring:
+
+1. **Behavioral baseline**: What does the model actually do?
+   - Accuracy on your task
+   - Logit differences between correct/incorrect answers
+   - Edge cases and failure modes
+
+2. **Attribution baseline**: What components seem involved?
+   - Run logit attribution on several examples
+   - Note which heads/layers have consistent high attribution
+   - Form preliminary hypotheses
+
+### Phase 3: Intervention Experiments
+
+Test your hypotheses with causal interventions:
+
+**Ablation sweep**: Ablate each suspected component individually
+```python
+for component in suspected_components:
+    ablated_accuracy = run_with_ablation(component)
+    print(f"{component}: {ablated_accuracy}")
+```
+
+**Patching validation**: For the most important components, run patching to confirm causality
+
+**Path patching**: Trace connections between important components
+
+### Phase 4: Circuit Synthesis
+
+If your experiments succeed:
+- Draw the circuit diagram
+- Label each component's function
+- Write the algorithm in pseudocode
+- List predictions your circuit makes
+
+### Phase 5: Verification
+
+Test your circuit's predictions:
+- Does ablating the circuit break the behavior?
+- Does the circuit explain variations in behavior?
+- Does it generalize to held-out examples?
+
+::: {.callout-important}
+## The Iteration Loop
+Research rarely follows this sequence linearly. You'll form a hypothesis, run experiments, find surprising results, revise the hypothesis, run more experiments. This is normal. The structure is a guide, not a prescription.
+:::
+
+## Debugging Interpretability Experiments
+
+Things will go wrong. Here's how to debug.
+
+### Problem: "Nothing has high attribution"
+
+**Possible causes**:
+- Task isn't actually hard (model gets it "for free")
+- Attribution distributed across many components
+- Looking at wrong layer
+
+**Fixes**:
+- Choose a harder prompt where the model barely succeeds
+- Sum attribution across component groups (all layer 5 heads)
+- Try different layers
+
+### Problem: "Ablation has no effect"
+
+**Possible causes**:
+- Backup circuits compensating
+- Wrong ablation type (zero vs. mean)
+- Component not actually used for this task
+
+**Fixes**:
+- Ablate multiple components simultaneously
+- Try different ablation methods
+- Verify the component has high attribution first
+
+### Problem: "Patching results are noisy"
+
+**Possible causes**:
+- Bad clean/corrupted pair (too different or too similar)
+- Distribution shift from patching
+- Small effect size
+
+**Fixes**:
+- Construct cleaner minimal pairs
+- Use resample ablation instead of zero
+- Average over many examples
+
+### Problem: "Can't find the circuit"
+
+**Possible causes**:
+- Behavior is distributed (no clean circuit)
+- Looking at wrong level (need features, not heads)
+- Behavior is too complex for current methods
+
+**Fixes**:
+- Try SAE feature-level analysis
+- Simplify the behavior (narrower task)
+- Accept partial understanding (important components without full circuit)
+
+### Problem: "Results don't replicate"
+
+**Possible causes**:
+- Random seed sensitivity
+- Prompt sensitivity
+- Bugs in code
+
+**Fixes**:
+- Run with multiple seeds
+- Test on many prompts
+- Review code carefully (or get someone else to)
+
+::: {.callout-tip}
+## The Cardinal Rule
+When confused, simplify. Reduce to the smallest example that shows the phenomenon. If you can't replicate on a simple example, you probably don't understand the phenomenon.
+:::
+
+## Tools and Infrastructure
+
+### Essential Libraries
+
+**TransformerLens**: Core library for hooked model execution
+- `run_with_cache()` for activation access
+- `run_with_hooks()` for interventions
+- Built-in support for common models
+
+**SAELens**: Sparse autoencoder training and analysis
+- Train SAEs on cached activations
+- Analyze feature activations
+- Feature visualization tools
+
+**CircuitsVis**: Visualization library
+- Attention pattern visualization
+- Activation plots
+- Interactive exploration
+
+### Compute Considerations
+
+**Minimum**: Laptop with 8GB RAM
+- GPT-2 Small experiments
+- Small-scale SAE training
+- Visualization and exploration
+
+**Recommended**: GPU with 16GB+ VRAM (or cloud equivalent)
+- GPT-2 Medium/Large experiments
+- Production SAE training
+- Systematic sweeps
+
+**Ideal**: Multiple GPUs or cloud compute
+- Large model experiments
+- Full circuit discovery
+- Parameter sweeps
+
+Cloud options: Google Colab (free tier for exploration), Modal, Lambda Labs
+
+### Experiment Tracking
+
+Track your experiments systematically:
+- What hypothesis were you testing?
+- What exact code did you run?
+- What were the results?
+- What did you learn?
+
+Tools: W&B, MLflow, or even a simple lab notebook. The format matters less than consistency.
+
+## Publishing and Community
+
+### Where to Share
+
+**LessWrong/AF**: The primary venue for interpretability results
+- Conceptual pieces and research writeups
+- Active community feedback
+- Low barrier to entry
+
+**arXiv/Conferences**: For more polished work
+- ICML, NeurIPS, ICLR for major results
+- Mechanistic interpretability workshops
+
+**Twitter/X**: For quick results and discussion
+- Build visibility
+- Get fast feedback
+- Connect with researchers
+
+### What Makes a Good Post
+
+**Clear claim**: What did you discover?
+**Reproducible methods**: Code or detailed procedure
+**Honest limitations**: What doesn't this show?
+**Connection to context**: How does this fit with prior work?
+
+### The Community
+
+Mechanistic interpretability has an unusually collaborative culture:
+- Researchers share work in progress
+- Code is typically open source
+- Feedback is constructive
+
+Engage genuinely. Ask questions. Share your work even when preliminary.
+
+## The Learning Progression
+
+### Stage 1: Replication (1-3 months)
+- Replicate 2-3 known results
+- Get comfortable with tools
+- Build intuition for what results "look like"
+
+### Stage 2: Extension (3-6 months)
+- Take a known result and extend it
+- "What happens if we do the same analysis on a different task?"
+- "Does this circuit exist in a different model?"
+
+### Stage 3: Original Research (6+ months)
+- Find your own circuits
+- Develop new methods
+- Contribute to open problems
+
+### Stage 4: Field Building (ongoing)
+- Mentor newcomers
+- Build tools
+- Set research agendas
+
+Most people take 3-6 months to make their first original contribution. This is normal.
+
+## A Sample Curriculum
+
+**Week 1-2**: Environment setup, basic exploration
+
+**Week 3-4**: Replicate induction head finding
+
+**Week 5-6**: Replicate IOI circuit (simplified version)
+
+**Week 7-8**: Train your first SAE on a small model
+
+**Week 9-10**: Choose a problem from Neel Nanda's list
+
+**Week 11-12**: Run initial experiments, debug, iterate
+
+**Week 13+**: Continue research, write up findings
+
+Adjust based on your pace. Some finish faster; some need more time. Both are fine.
+
+## Polya's Perspective: Learning by Doing
+
+Polya's central thesis: you learn problem-solving by solving problems—not by reading about solving problems.
+
+This entire series has been reading. Essential reading—you need concepts to think with. But reading is preparation, not the destination.
+
+The destination is practice. Real experiments on real models, finding real results.
+
+::: {.callout-tip}
+## Polya's Insight
+"Mathematics is not a spectator sport." Neither is interpretability. You understand transformer circuits by analyzing transformer circuits—not by reading articles about analyzing transformer circuits. This article ends; your practice begins.
+:::
+
+## Conclusion: The Journey Ahead
+
+You now have everything you need to start:
+- Conceptual foundation
+- Technical toolkit
+- Research methodology
+- Debugging heuristics
+- Community resources
+
+What you don't have—what you can only get through practice—is intuition. The sense of what's worth investigating. The pattern recognition that spots anomalies. The judgment that knows when to push deeper and when to pivot.
+
+These come with time and experience. There's no shortcut.
+
+Mechanistic interpretability is a young field working on hard problems with uncertain methods. You will get stuck. You will find bugs. You will have weeks where nothing works.
+
+This is normal. It's also what makes the field exciting. The open problems from Article 14 are genuinely open. Contributions are genuinely possible. Insights that matter are within reach—not only for senior researchers at big labs, but for newcomers with fresh perspectives.
+
+The transformer's circuits are waiting. Go find them.
+
+---
+
+## Resources
+
+### Getting Started
+
+- **TransformerLens Documentation** — [GitHub](https://github.com/TransformerLensOrg/TransformerLens)
+- **SAELens Documentation** — [GitHub](https://github.com/jbloomAus/SAELens)
+- **Neel Nanda's 200 Problems** — [neelnanda.io](https://www.neelnanda.io/mechanistic-interpretability/200-concrete-problems)
+- **ARENA Curriculum** — [GitHub](https://github.com/callummcdougall/ARENA_2.0): Structured exercises for learning interpretability
+
+### Community
+
+- **EleutherAI Discord** — Active interpretability channels
+- **Alignment Forum** — Interpretability research discussions
+- **MATS Program** — Mentored Alignment Theory Scholars: structured research mentorship
+
+### Reference
+
+- **TransformerLens Docs** — Complete API reference
+- **Anthropic's Circuits Papers** — [transformer-circuits.pub](https://transformer-circuits.pub/)
+- **Neuronpedia** — [neuronpedia.org](https://www.neuronpedia.org/): Interactive feature explorer
