@@ -53,7 +53,7 @@ We use two guiding frameworks:
 
 ## Reading Online
 
-This book is published at: **[GitHub Pages URL - Coming Soon]**
+This book is published at: **https://ttsugriy.github.io/mechinterp-first-principles/**
 
 The series is also available on [Software Bits](https://softwarebits.substack.com/) on Substack.
 
