@@ -26,7 +26,7 @@ book:
     - part: "Arc III: Techniques"
       chapters:
         - articles/09-sparse-autoencoders.qmd
-        # - articles/10-attribution.qmd
+        - articles/10-attribution.qmd
         # - articles/11-patching.qmd
         # - articles/12-ablation.qmd
     # - part: "Arc IV: Synthesis"

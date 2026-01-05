@@ -1,0 +1,318 @@
+---
+title: "Attribution"
+subtitle: "Working backwards from the output"
+author: "Taras Tsugrii"
+date: 2025-01-05
+categories: [techniques, attribution]
+description: "Attribution traces which components contributed to the model's output. It's the starting point for understanding—but not the endpoint."
+---
+
+## Starting from the Answer
+
+In Article 9, we learned how to extract features from superposition using sparse autoencoders. We now have a vocabulary: monosemantic features that correspond to interpretable concepts.
+
+But having features isn't the same as understanding *how* they produce outputs. When the model predicts "Paris" after "The capital of France is", which features were involved? Which attention heads mattered? Which layers did the real work?
+
+To answer these questions, we use **attribution**: the technique of decomposing an output into contributions from individual components.
+
+::: {.callout-note}
+## Polya's Heuristic: Work Backwards
+Attribution embodies one of Polya's most powerful problem-solving strategies: start from the answer and work backwards. Instead of tracing forward from input to output (which is computationally expensive and conceptually overwhelming), we start from the output we want to explain and ask: "What contributed to this?"
+:::
+
+## The Residual Stream Enables Attribution
+
+Attribution is possible because of the residual stream architecture we covered in Article 3.
+
+Recall: the final output is a *sum* of contributions. Each attention head and each MLP adds its output to the residual stream. The final logits are computed by multiplying this accumulated stream by the unembedding matrix:
+
+$$\text{logits} = x_L \cdot W_{\text{unembed}}$$
+
+But $x_L$ is a sum:
+
+$$x_L = x_0 + \sum_{\text{heads}} h_i + \sum_{\text{MLPs}} m_j$$
+
+Since matrix multiplication distributes over addition:
+
+$$\text{logits} = x_0 \cdot W_{\text{unembed}} + \sum_{\text{heads}} h_i \cdot W_{\text{unembed}} + \sum_{\text{MLPs}} m_j \cdot W_{\text{unembed}}$$
+
+Each term is a component's **contribution to the logits**. We can literally measure how much each attention head and each MLP pushed the prediction toward or away from any particular token.
+
+::: {.callout-important}
+## The Key Insight
+Because transformers accumulate contributions additively, we can decompose the output into per-component contributions. This is what makes attribution tractable.
+:::
+
+## Logit Attribution
+
+The most basic form of attribution: for a given output token, measure how much each component contributed to that token's logit.
+
+### The Procedure
+
+1. Run a forward pass, caching each component's output
+2. For each component (attention head or MLP), compute:
+   $$\text{contribution}_i = h_i \cdot W_{\text{unembed}}[:, \text{token}]$$
+   This is the component's output projected onto the direction that increases the target token's logit
+3. Rank components by contribution magnitude
+
+### What It Shows
+
+If the model predicts "Paris", logit attribution might show:
+- MLP layer 8: contributed +2.3 to "Paris" logit
+- Attention head 7.4: contributed +1.8
+- Attention head 5.2: contributed +0.9
+- Attention head 6.1: contributed -0.3 (pushed *away* from "Paris")
+
+This immediately tells you where to look: MLP 8 and head 7.4 are the major contributors.
+
+### A Concrete Example
+
+For the prompt "The capital of France is ___":
+
+| Component | Contribution to "Paris" |
+|-----------|------------------------|
+| MLP Layer 8 | +2.31 |
+| Head 7.4 | +1.84 |
+| Head 5.2 | +0.92 |
+| Embedding | +0.45 |
+| Head 6.1 | -0.28 |
+| ... | ... |
+
+The model's confidence in "Paris" is the sum of all contributions. We can now ask: what is MLP 8 doing? What pattern is head 7.4 attending to?
+
+## The Logit Lens: Peeking at Intermediate Predictions
+
+Attribution tells you which components contributed. But *when* did the model "know" the answer?
+
+The **logit lens** lets you peek at the model's "best guess" at each layer.
+
+### How It Works
+
+At any layer $L$, take the current residual stream state and apply the unembedding matrix—as if this were the final layer:
+
+$$\text{logits}_L = x_L \cdot W_{\text{unembed}}$$
+
+This gives you: "If we stopped at layer $L$ and predicted right now, what would the model say?"
+
+### What It Reveals
+
+For "The capital of France is ___":
+
+| Layer | Top Prediction | Probability |
+|-------|---------------|-------------|
+| 0-2 | "the" | 0.12 |
+| 3-5 | "France" | 0.18 |
+| 6-8 | "Paris" | 0.45 |
+| 9-11 | "Paris" | 0.72 |
+| 12 | "Paris" | 0.89 |
+
+The model's prediction *refines* through layers. Early layers don't know the answer. Middle layers start to guess. Late layers are confident.
+
+This reveals that knowledge retrieval happens in the middle layers (6-8 in this example), and later layers sharpen the prediction.
+
+### Implementation
+
+```python
+for layer in range(n_layers):
+    intermediate_logits = residual_stream[layer] @ unembed_matrix
+    top_token = intermediate_logits.argmax()
+    print(f"Layer {layer}: predicts '{tokenizer.decode(top_token)}'")
+```
+
+## The Tuned Lens: A Refinement
+
+The basic logit lens has a problem: the unembedding matrix is trained to work on *final* layer representations, not intermediate ones. Intermediate layers have different statistical properties, so applying the unembedding directly is noisy.
+
+The **tuned lens** fixes this by learning a small transformation for each layer:
+
+$$\text{logits}_L = (x_L \cdot A_L + b_L) \cdot W_{\text{unembed}}$$
+
+where $A_L$ and $b_L$ are learned per-layer parameters that "translate" the intermediate representation into the format the unembedding expects.
+
+### The Improvement
+
+With the tuned lens:
+- Intermediate predictions are cleaner and more reliable
+- You see sharper transitions between "don't know" and "know"
+- Layer-by-layer progression is more interpretable
+
+### What It Learns
+
+The learned matrices reveal something about each layer's representational format—how each layer "stores" information and what transformation is needed to read it.
+
+## Head-Level Attribution
+
+Beyond layer-level analysis, we can break down contributions by individual attention heads.
+
+Each transformer layer has multiple attention heads (often 12 or more). Each head adds its own contribution to the residual stream. We can measure each head's contribution separately.
+
+### Why This Matters
+
+Different heads specialize in different tasks:
+- **Copy heads**: Move information from one position to another
+- **Induction heads**: Detect and continue patterns
+- **Inhibition heads**: Suppress incorrect predictions
+- **Name mover heads**: Move names from mentioned positions to output
+
+Head-level attribution identifies which heads are active and in what direction they push the prediction.
+
+### Patterns Across Inputs
+
+Running attribution across many inputs reveals head specialization:
+- Head 7.4 consistently has high attribution on factual recall tasks
+- Head 5.2 activates mainly for syntactic pattern completion
+- Head 3.1 seems to matter only for specific domains (code, math)
+
+This guides circuit discovery: heads with consistently high attribution for a task are candidates for that task's circuit.
+
+## Feature Attribution with SAEs
+
+With sparse autoencoders (Article 9), we can go beyond heads to *features*.
+
+Instead of asking "which heads contributed?", we ask "which *concepts* contributed?"
+
+### The Procedure
+
+1. Run the activation through a trained SAE to get feature activations
+2. Each feature has a direction and an activation magnitude
+3. Compute each feature's contribution:
+   $$\text{contribution}_f = \text{activation}_f \times (d_f \cdot W_{\text{unembed}}[:, \text{token}])$$
+   where $d_f$ is the feature's direction (decoder column)
+
+### What It Shows
+
+Instead of "MLP layer 8 contributed +2.3", we might see:
+- "France-capital" feature: +1.2
+- "European cities" feature: +0.8
+- "Proper noun" feature: +0.3
+
+This is *interpretable attribution*: we can understand the *concepts* that drove the prediction, not just the components.
+
+### The Power of Feature Attribution
+
+Feature attribution enables:
+- Understanding *what* the model is thinking, not just where computation happens
+- Finding when the model uses unexpected features (potential errors or biases)
+- Tracing how concepts flow through the network
+
+::: {.callout-tip}
+## A Performance Engineering Parallel
+Feature attribution is like semantic profiling. Regular profiling tells you "this function took 50ms." Semantic profiling would tell you "50ms were spent computing customer discounts." Feature attribution does the semantic version for neural networks: not just *where* computation happens, but *what* it's about.
+:::
+
+## The Critical Limitation: Correlation vs. Causation
+
+Here's the most important thing to understand about attribution:
+
+**Attribution shows correlation, not causation.**
+
+When we find that head 7.4 contributed +1.84 to the "Paris" logit, we've learned:
+- Head 7.4's output, when projected to vocabulary space, points toward "Paris"
+- This contribution was added to the residual stream
+
+We have *not* learned:
+- Whether head 7.4 is *necessary* for predicting "Paris"
+- Whether removing head 7.4 would change the prediction
+- Whether the same information might flow through other paths
+
+### Why This Matters
+
+Consider two scenarios:
+
+**Scenario A**: Head 7.4 computes the answer and writes it to the residual stream. Without head 7.4, the model would fail.
+
+**Scenario B**: Head 7.4 reads the answer from the residual stream (computed by something earlier) and passes it along. Without head 7.4, other heads would still carry the answer.
+
+In both scenarios, head 7.4 has high attribution. But in scenario A, it's causally necessary; in scenario B, it's redundant.
+
+Attribution can't distinguish these cases.
+
+::: {.callout-important}
+## The Fundamental Limitation
+Attribution is like a profiler. It tells you where the compute goes—not *why* it goes there, or what would happen if you changed it. To understand causation, you need to *intervene*, not just *observe*. This is the subject of the next article.
+:::
+
+## The Profiling Analogy
+
+If you've done performance engineering, attribution should feel familiar.
+
+| Performance Profiling | Attribution |
+|----------------------|-------------|
+| "Function F used 30% of CPU time" | "Head H contributed 30% to the logit" |
+| Shows where time is spent | Shows what contributes to output |
+| Doesn't explain *why* it's slow | Doesn't explain *why* it matters |
+| Might reflect redundant work | Might reflect redundant paths |
+| Requires follow-up investigation | Requires follow-up intervention |
+
+The profiling mindset applies directly:
+
+1. **Measure first**: Attribution gives you the lay of the land
+2. **Form hypotheses**: "Head 7.4 seems to be the key contributor"
+3. **Don't stop there**: Profiling can lie; attribution can mislead
+4. **Test with intervention**: Actually modify the system and measure impact
+
+### Never Trust Unvalidated Attribution
+
+Just as an experienced performance engineer knows that profiler output requires interpretation, an interpretability researcher knows that high attribution doesn't prove importance.
+
+The hot function in a profile might be:
+- Actually slow (optimize it!)
+- Called redundantly (fix the caller)
+- Waiting on I/O (not CPU-bound at all)
+
+The high-attribution head might be:
+- Actually necessary (it computes the answer)
+- Redundant (other paths carry the same info)
+- A passthrough (it reads and forwards, doesn't compute)
+
+You need intervention to distinguish these cases.
+
+## From Attribution to Patching
+
+Attribution narrows your search space. Instead of investigating 144 attention heads, you focus on the 5-10 with high attribution.
+
+But attribution is a hypothesis, not a conclusion.
+
+The next article introduces **activation patching**: the technique for testing whether attributed components are actually causally necessary. Patching is to attribution what controlled experiments are to observation.
+
+Together, they form a complete methodology:
+1. **Attribution**: What *did* contribute? (observation)
+2. **Patching**: What *must* contribute? (intervention)
+3. **Ablation**: What happens if we remove it? (Article 12)
+
+## Polya's Perspective: Working Backwards
+
+Attribution is Polya's "work backwards" heuristic in action.
+
+The forward problem—trace information from input to output—is overwhelming. There are billions of paths through the network, and most are irrelevant.
+
+The backward problem—start from the output and ask "what caused this?"—is tractable. Attribution tells us which components matter for *this specific output*, cutting the search space dramatically.
+
+::: {.callout-tip}
+## Polya's Insight
+"Start from what you want to prove." In mathematics, this means assuming the result and working backwards to the premises. In interpretability, it means starting from the output and tracing back to the components. Both approaches tame otherwise intractable forward searches.
+:::
+
+## Looking Ahead
+
+Attribution gives us hypotheses: "Head 7.4 matters for this prediction."
+
+But hypotheses need testing. The next article covers **activation patching**—the technique for interventional verification. We'll learn to ask not just "what correlates with the output?" but "what *causes* the output?"
+
+This is the difference between observational and experimental science. Attribution is observation. Patching is experiment.
+
+---
+
+## Further Reading
+
+1. **A Mathematical Framework for Transformer Circuits** — [Anthropic](https://transformer-circuits.pub/2021/framework/index.html): The foundational paper on logit attribution and residual stream decomposition.
+
+2. **Eliciting Latent Predictions with the Tuned Lens** — [arXiv:2303.08112](https://arxiv.org/abs/2303.08112): The definitive paper on improving the logit lens with learned transformations.
+
+3. **Interpreting GPT: The Logit Lens** — [LessWrong](https://www.lesswrong.com/posts/AcKRB8wDpdaN6v6ru/interpreting-gpt-the-logit-lens): The original post introducing the logit lens technique.
+
+4. **Attribution Patching** — [Neel Nanda](https://www.neelnanda.io/mechanistic-interpretability/attribution-patching): How to scale from attribution to patching efficiently.
+
+5. **An Adversarial Example for Direct Logit Attribution** — [arXiv:2310.07325](https://arxiv.org/abs/2310.07325): Important paper showing limitations and failure modes of naive attribution.
+
+6. **TransformerLens Documentation** — [GitHub](https://github.com/TransformerLensOrg/TransformerLens): The primary library for running attribution experiments on transformers.
