@@ -1,0 +1,309 @@
+---
+title: "The Superposition Hypothesis"
+subtitle: "Why interpretability is fundamentally hard"
+author: "Taras Tsugrii"
+date: 2025-01-05
+categories: [core-theory, superposition]
+description: "Neural networks represent far more features than they have dimensions. This compression scheme—superposition—is why polysemanticity exists and why mechanistic interpretability is hard."
+---
+
+## The Capacity Puzzle
+
+In the previous article, we established that features are directions in activation space. A 768-dimensional residual stream can represent features as directions—unit vectors pointing in meaningful orientations.
+
+Here's the puzzle: how many directions can you fit in 768 dimensions?
+
+Naively, the answer is 768. You can have 768 orthogonal directions—that's what "768-dimensional" means. Each direction is perpendicular to all others, so they don't interfere. Clean, simple, interpretable.
+
+But when Anthropic researchers analyzed Claude 3 Sonnet's activations, they found something startling: **over 2 million interpretable features** in a single 4,096-dimensional layer. That's a ratio of roughly 500 features per dimension.
+
+This isn't a mistake. This is **superposition**—the central phenomenon that makes neural networks both powerful and hard to interpret.
+
+::: {.callout-note}
+## The Core Claim
+The superposition hypothesis states that neural networks encode far more features than they have dimensions by storing multiple sparse features in overlapping representations. The features are *almost* orthogonal—close enough that interference is manageable when features rarely co-occur.
+:::
+
+This article explains what superposition is, why it works, and why it's the fundamental obstacle to mechanistic interpretability.
+
+## The Efficiency Argument
+
+Why would a network use superposition? Because it's efficient.
+
+Consider a language model that needs to represent millions of concepts: every word, every grammatical pattern, every fact about the world, every style of writing, every domain of knowledge. If each concept required a dedicated dimension, you'd need a model with millions of dimensions per layer.
+
+But here's the key observation: **most features are sparse**.
+
+- The "French" feature activates on maybe 2% of text
+- The "cooking" feature activates on maybe 3% of text
+- The "Golden Gate Bridge" feature activates on maybe 0.05% of text
+- Most specialized features activate on less than 0.1% of inputs
+
+At any given moment, only a tiny fraction of features are active. The model doesn't need to represent all features simultaneously—it just needs to represent the few that matter for the current input.
+
+This creates an opportunity. If features rarely co-occur, you can pack them into overlapping representations. The overlap only causes problems when multiple superimposed features activate together—which, by assumption, is rare.
+
+::: {.callout-tip}
+## A Performance Engineering Parallel
+Superposition is like memory overcommitment in operating systems. The OS promises more virtual memory than physical RAM exists, betting that not all processes will use their full allocation simultaneously. Most of the time, this works. Occasionally, you get swapping. Neural networks make the same bet: pack more features than dimensions, accept occasional interference.
+:::
+
+## The Geometry of Almost-Orthogonal
+
+How does superposition actually work geometrically?
+
+In Article 4, we noted that high-dimensional spaces have a surprising property: random vectors are almost always nearly perpendicular. In 768 dimensions, two random unit vectors have a dot product with standard deviation of about 0.036—their angle is almost certainly between 88° and 92°.
+
+This is the geometric foundation of superposition. You don't need features to be *perfectly* orthogonal. You just need them to be *almost* orthogonal—close enough that interference is small.
+
+### The Interference Trade-off
+
+When two features have directions with cosine similarity $c$ (where $c = 0$ is orthogonal and $c = 1$ is parallel), their interference cost is roughly proportional to $c^2$.
+
+- Cosine similarity 0.05 → 0.25% interference
+- Cosine similarity 0.1 → 1% interference
+- Cosine similarity 0.3 → 9% interference
+
+Small deviations from orthogonality have small costs. This is why superposition works: you can pack thousands of features with cosine similarities around 0.03-0.05, and the interference remains manageable.
+
+### Packing More Than Dimensions
+
+Here's the mathematical punch line: in $d$ dimensions, you can fit roughly $e^{O(d)}$ almost-orthogonal vectors—exponentially more than $d$.
+
+This isn't just theoretical. The Johnson-Lindenstrauss lemma, which we mentioned in Article 4, guarantees that high-dimensional projections approximately preserve distances. The same mathematics applies here: high-dimensional spaces have *far more room* for nearly-independent directions than low-dimensional intuition suggests.
+
+A 768-dimensional space can comfortably hold tens of thousands of nearly-orthogonal directions. A 4,096-dimensional space can hold millions. This is why superposition is so effective—the geometry allows it.
+
+## Polytope Arrangements
+
+When researchers study superposition in toy models, they find that networks don't just pack features randomly. They arrange them with elegant geometric structure.
+
+Consider a minimal case: representing 4 sparse features in 2 dimensions. You can't fit 4 orthogonal directions in 2D (only 2 are possible). But you *can* arrange 4 directions as the corners of a square:
+
+```
+       Feature 2
+           ↑
+           |
+Feature 1 ←+→ Feature 3
+           |
+           ↓
+       Feature 4
+```
+
+Each pair of adjacent features is at 90°—perfectly orthogonal. Each pair of opposite features is at 180°—maximally separated. This is the optimal arrangement for 4 features in 2D.
+
+For 6 features in 2D, the optimal arrangement is a regular hexagon. For more features, you get regular polytopes (higher-dimensional generalizations of polygons). The network learns to maximize the minimum angle between any two features, minimizing worst-case interference.
+
+::: {.callout-note}
+## Emergent Structure
+Networks discover these polytope arrangements through gradient descent, not through explicit programming. The geometry is optimal, and optimization finds it. This suggests superposition isn't an accident—it's the natural solution to the problem of representing sparse features in limited dimensions.
+:::
+
+## How Superposition Creates Polysemanticity
+
+Now we can explain the polysemantic neuron from Article 5—the one that activated for cat faces *and* car fronts.
+
+In a world without superposition:
+- The "cat face" feature would have its own dedicated neurons
+- The "car front" feature would have its own dedicated neurons
+- Each neuron would be monosemantic
+
+In a world with superposition:
+- The "cat face" feature is a direction in activation space
+- The "car front" feature is a different direction
+- These directions are *almost* orthogonal—say, 87° apart
+- Both directions pass through some of the same neurons
+- When you look at neuron 847, it participates in both directions
+- Neuron 847 activates for cat faces *and* car fronts
+
+The neuron is polysemantic because it's the intersection of multiple feature directions. Each feature, as a direction, is monosemantic. But the neuron, as a point where multiple directions overlap, appears polysemantic.
+
+::: {.callout-important}
+## The Key Insight
+Polysemanticity is a *symptom* of superposition, not a separate phenomenon. The network is packing multiple monosemantic features into overlapping representations. Individual neurons look confusing because they're the cross-section of a higher-dimensional structure we can't see directly.
+:::
+
+## The Sparsity Requirement
+
+Superposition only works when features are sparse. Here's why.
+
+If two features with cosine similarity 0.1 both activate simultaneously, you get 1% interference. Not great, but manageable.
+
+But if they *always* activate simultaneously, you *always* get that interference. The "features" become indistinguishable—the network can't tell them apart.
+
+Sparsity makes superposition viable:
+- Feature A activates 2% of the time
+- Feature B activates 3% of the time
+- If independent, they co-occur only 0.06% of the time
+- Interference happens rarely → superposition is worth it
+
+The sparser the features, the more you can superimpose. This is why models can pack millions of features: most real-world concepts are rare enough that their co-occurrence is negligible.
+
+### What Happens at High Density?
+
+When features become less sparse (more frequently active), superposition becomes less beneficial:
+
+- At 50% activation (not sparse at all), interference is constant
+- The cost of packing outweighs the benefit
+- Networks allocate dedicated capacity instead
+
+This creates a **phase transition**: as sparsity crosses a threshold, the optimal representation strategy suddenly changes from superimposed to dedicated.
+
+## Phase Transitions
+
+The phase transition is one of the most striking findings from superposition research.
+
+In toy models, researchers can control the sparsity of features and observe what representation the network learns. Here's what happens:
+
+**High sparsity (rare features)**:
+- Network uses heavy superposition
+- Features arranged as polytope vertices
+- Many more features than dimensions
+- High compression, occasional interference
+
+**Critical sparsity threshold**:
+- Sharp transition
+- Representation structure changes qualitatively
+- Loss drops or jumps suddenly
+
+**Low sparsity (common features)**:
+- Network uses minimal superposition
+- Features get dedicated dimensions
+- Fewer features than could fit
+- Clean representation, no interference
+
+The transition is *sharp*, not gradual. Small changes in sparsity near the threshold cause large changes in learned representation.
+
+::: {.callout-tip}
+## Why Phase Transitions Matter
+Phase transitions tell us that superposition isn't a dial—it's a switch. Networks either use superposition heavily or barely at all, depending on the sparsity of their features. Understanding where real models sit relative to the threshold helps us understand how hard interpretation will be.
+:::
+
+Modern language models appear to operate deep in the high-sparsity regime. Their features are sparse enough that superposition is heavily advantageous. This is why they can represent millions of features in thousands of dimensions—and why they're so hard to interpret.
+
+## Evidence for Superposition
+
+Is superposition real, or just a theoretical possibility? The evidence is strong.
+
+### Toy Model Experiments
+
+The foundational work by Anthropic (2022) trained simple networks to store sparse features explicitly. The findings:
+- Networks consistently learned superposed representations
+- Feature directions matched theoretically optimal polytope arrangements
+- Interference patterns matched predictions
+- Phase transitions occurred at predicted sparsity thresholds
+
+### Scaling Monosemanticity
+
+When Anthropic applied sparse autoencoders to Claude 3 Sonnet (2024), they found:
+- Over 2 million interpretable features in one layer
+- Features were sparse (most activate < 0.1% of the time)
+- Features were monosemantic (each corresponds to one concept)
+- Features had causal power (manipulating them changed behavior)
+
+This is only possible if the original activations were superposed. The sparse autoencoder is *decomposing* superposition into individual features.
+
+### Cross-Modal Transfer
+
+The "Golden Gate Bridge" feature, discovered on text, also activated on images of the bridge—even though the model was trained only on text. This transfer only makes sense if the feature is a genuine direction in activation space, not an artifact of specific neurons.
+
+### Steering Experiments
+
+Adding feature directions to activations shifts model behavior predictably. The "honesty" direction makes models more honest. The "refusal" direction makes them refuse more. This works because features are linear directions, exactly as superposition predicts.
+
+## Why This Makes Interpretation Hard
+
+Superposition is the fundamental obstacle to mechanistic interpretability. Here's why.
+
+### The Alignment Problem
+
+The network's natural basis (neurons) is misaligned with the features' natural basis (superposed directions). When you look at a neuron, you see a confusing mix of unrelated concepts. When you look at activations, you see a superposition of many features.
+
+To interpret the network, you have to *undo* the superposition—find the monosemantic directions hidden in the polysemantic neurons. This is computationally expensive and conceptually difficult.
+
+### The Haystack Problem
+
+In a 768-dimensional space with potentially millions of features, finding a specific feature is like finding a needle in a haystack the size of a stadium. Which direction corresponds to "truthfulness"? Which to "code quality"? Which to "French cuisine"?
+
+There's no label. You have to discover features through probing, pattern matching, and verification—one at a time.
+
+### Interference Noise
+
+Even when you find a feature, its signal is noisy. Other superimposed features add interference. Distinguishing "this activation is strongly feature A with weak feature B interference" from "this activation is weakly feature A with no interference" is genuinely hard.
+
+### The Scale Problem
+
+Modern models have:
+- Hundreds of layers
+- Thousands of dimensions per layer
+- Millions of features per layer
+- Different features at different layers
+
+Fully interpreting a frontier model would require discovering and cataloging billions of features. Current tools can handle thousands. The gap is enormous.
+
+::: {.callout-important}
+## The Core Challenge
+Superposition transforms the interpretation problem from "read the neurons" to "decompose a compressed representation into its component features." This is much harder. It's the difference between reading a file and decompressing a heavily compressed archive whose compression scheme you don't fully understand.
+:::
+
+## Limits and Open Questions
+
+Superposition isn't universal. There are exceptions and unknowns.
+
+### When Superposition Doesn't Apply
+
+- **Very common features** (activation > 30-50%) may get dedicated dimensions
+- **Safety-critical features** may be encoded more cleanly for reliability
+- **Very large models** may have enough capacity to avoid superposition for some features
+
+### Incidental Polysemanticity
+
+Recent research shows polysemanticity can emerge even without capacity pressure. Networks sometimes assign multiple features to the same neuron purely due to initialization and training dynamics. This suggests superposition isn't the *only* cause of polysemanticity—though it's probably the primary cause.
+
+### The Ontology Question Redux
+
+We still don't know if the features we discover through sparse autoencoders are the network's "natural" features or artifacts of our analysis method. Superposition makes this harder: there are infinitely many ways to decompose a superposed representation, and we might be finding our preferred decomposition rather than the network's.
+
+### Do Very Large Models Escape?
+
+An open question: as models scale to trillions of parameters, do they eventually have enough capacity that superposition becomes unnecessary? Or does the number of features scale with model size, maintaining the pressure? Current evidence suggests the latter, but it's not certain.
+
+## Polya's Perspective: Understanding the Obstacle
+
+In Polya's framework, we've now understood why the problem is hard.
+
+Article 1: What are we trying to do? (Reverse engineer the algorithm.)
+Articles 2-4: What's the substrate? (Matrix multiplication in a geometric space.)
+Article 5: What are we looking for? (Features—directions in that space.)
+Article 6: What's the obstacle? (**Superposition—features are packed densely, hiding in polysemantic neurons.**)
+
+This is Polya's approach: before devising a solution, fully understand the difficulty. Superposition isn't just a nuisance; it's a fundamental property of how neural networks compress information. Any successful interpretation method must deal with it.
+
+::: {.callout-tip}
+## Polya's Heuristic: What Makes This Hard?
+Good problem-solving requires understanding *why* a problem is difficult, not just *that* it's difficult. Superposition tells us: the difficulty is compression. The network has encoded exponentially more features than it has dimensions, and we have to decompress.
+:::
+
+## Looking Ahead
+
+We've established that superposition is why interpretation is hard. But can we study superposition in a controlled setting? Can we build a model simple enough to fully understand, that still exhibits superposition?
+
+Yes. The next article covers **toy models**—simplified networks that exhibit superposition clearly and completely. By studying these toy models, we can verify our understanding, build intuition, and prepare for the messier reality of real networks.
+
+This is Polya's heuristic in action: **solve a simpler problem first**. If we can understand superposition in a 2-dimensional network with 5 features, we're better prepared to understand it in a 4,096-dimensional network with 2 million features.
+
+---
+
+## Further Reading
+
+1. **Toy Models of Superposition** — [Anthropic](https://transformer-circuits.pub/2022/toy_model/index.html): The foundational paper on superposition, introducing the mathematical framework and toy model experiments. Essential reading.
+
+2. **Scaling Monosemanticity** — [Anthropic](https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html): Finding millions of features in Claude 3 Sonnet, demonstrating superposition at scale.
+
+3. **Taking Features Out of Superposition with Sparse Autoencoders** — [LessWrong](https://www.greaterwrong.com/posts/z6QQJbtpkEAX3Aojj/interim-research-report-taking-features-out-of-superposition): Practical introduction to decomposing superposition.
+
+4. **Dynamical versus Bayesian Phase Transitions in Toy Models of Superposition** — [arXiv:2310.06301](https://arxiv.org/abs/2310.06301): Deep dive into the phase transition phenomenon.
+
+5. **Incidental Polysemanticity** — [LessWrong](https://www.lesswrong.com/posts/sEyWufriufTnBKnTG/incidental-polysemanticity): Evidence that polysemanticity can emerge even without capacity pressure.
+
+6. **Superposition Yields Robust Neural Scaling** — [arXiv:2505.10465](https://arxiv.org/abs/2505.10465): Recent work on why superposition may be advantageous beyond just efficiency.
