@@ -21,7 +21,7 @@ book:
       chapters:
         - articles/05-features.qmd
         - articles/06-superposition.qmd
-        # - articles/07-toy-models.qmd
+        - articles/07-toy-models.qmd
         # - articles/08-circuits.qmd
     # - part: "Arc III: Techniques"
     #   chapters:
