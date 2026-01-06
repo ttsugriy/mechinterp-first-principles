@@ -312,6 +312,59 @@ Here's the question to carry forward: if the network packs more features than di
 
 ---
 
+## Key Takeaways
+
+::: {.callout-tip}
+## 📋 Summary Card
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  FEATURES: THE ATOMS OF REPRESENTATION                     │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  NEURON ≠ FEATURE                                          │
+│    • Neurons are polysemantic (respond to many concepts)   │
+│    • Features are monosemantic (one interpretable concept) │
+│                                                            │
+│  FEATURES ARE DIRECTIONS                                   │
+│    • Each feature = a direction in activation space        │
+│    • Presence = positive projection onto that direction    │
+│    • Intensity = magnitude of projection                   │
+│                                                            │
+│  EVIDENCE IT WORKS:                                        │
+│    ✓ Linear probes succeed (features are linear)           │
+│    ✓ Steering works (add direction → change behavior)      │
+│    ✓ Vector arithmetic works (king - man + woman ≈ queen)  │
+│                                                            │
+│  THE GOAL: Decompose polysemantic neurons into             │
+│            monosemantic feature directions                 │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+:::
+
+## Check Your Understanding
+
+::: {.callout-note collapse="true"}
+## Question 1: A neuron activates for both "cat faces" and "car fronts." Why isn't this neuron a good unit of analysis?
+
+**Answer**: Because it's *polysemantic*—it responds to multiple unrelated concepts. Looking at this neuron tells you a confusing mix of information. The neuron participates in representing multiple features (a "cat" feature and a "car" feature), but each feature is a *direction* in the full activation space, not a single neuron. To understand what the network represents, we need to find the feature directions, not study individual neurons.
+:::
+
+::: {.callout-note collapse="true"}
+## Question 2: What does it mean for a feature to be a "direction" in activation space?
+
+**Answer**: A feature corresponds to a unit vector (a direction) in the high-dimensional space of activations. When an input has that feature, the activation vector points partially in that direction—it has a positive component when projected onto the feature direction. The magnitude of this projection indicates how strongly the feature is present. This is the *linear representation hypothesis*: semantic properties are encoded as linear directions.
+:::
+
+::: {.callout-note collapse="true"}
+## Question 3: Why does "steering" (adding a feature direction to activations) change model behavior predictably?
+
+**Answer**: Because features are linearly encoded. If the "Golden Gate Bridge" feature is a direction in activation space, then adding to that direction increases the activation's component along it—making the model act as if the Golden Gate Bridge concept is more present. This only works because of linearity: if features were nonlinearly tangled, simple addition wouldn't have predictable effects.
+:::
+
+---
+
 ## Further Reading
 
 1. **Neel Nanda's Mechanistic Interpretability Glossary** — [neelnanda.io](https://www.neelnanda.io/mechanistic-interpretability/glossary): The definitive reference for terminology, including the working definition of "feature."

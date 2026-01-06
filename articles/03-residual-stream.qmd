@@ -306,6 +306,64 @@ The residual stream gives us the architecture. Geometry will give us the languag
 
 ---
 
+## Key Takeaways
+
+::: {.callout-tip}
+## 📋 Summary Card
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  THE RESIDUAL STREAM                                       │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  WHAT IT IS:    A shared vector that flows through the     │
+│                 entire network, accumulating information   │
+│                                                            │
+│  KEY INSIGHT:   Output = embedding + Σ(all contributions)  │
+│                 Everything is ADDITIVE, not sequential     │
+│                                                            │
+│  WHY IT MATTERS:                                           │
+│    ✓ Enables decomposition (who contributed what?)         │
+│    ✓ Enables intervention (what if we change this?)        │
+│    ✓ Enables path tracing (how did info flow?)             │
+│                                                            │
+│  MENTAL MODEL:  Shared whiteboard - components read        │
+│                 from it and write to it, never erasing     │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+:::
+
+## Check Your Understanding
+
+::: {.callout-note collapse="true"}
+## Question 1: Why can we decompose the final prediction into per-component contributions?
+
+**Answer**: Because the residual stream uses *addition*. Each component's output is added to the stream, and matrix multiplication (used for the final unembedding) distributes over addition. So:
+
+`logits = (embedding + head1 + head2 + ... + mlp1 + ...) × W_unembed`
+
+becomes:
+
+`logits = embedding×W + head1×W + head2×W + ...`
+
+Each term is one component's contribution.
+:::
+
+::: {.callout-note collapse="true"}
+## Question 2: Head 5.3 writes to the residual stream at layer 5. MLP 8 reads from it at layer 8. How do they "communicate"?
+
+**Answer**: They communicate *through the residual stream*. Head 5.3 writes its output (a vector) by adding it to the stream. That information persists in the stream. When MLP 8 reads from the stream three layers later, Head 5.3's contribution is still there as part of the accumulated sum. Components never communicate directly—only through this shared workspace.
+:::
+
+::: {.callout-note collapse="true"}
+## Question 3: What does the logit lens reveal, and why does it work?
+
+**Answer**: The logit lens shows what the model would predict if we stopped at an intermediate layer and decoded immediately. It works because the residual stream maintains linear structure relative to the vocabulary throughout the forward pass. Early layers show vague predictions; later layers show refined, confident predictions. This reveals the *progressive refinement* of information as it flows through the network.
+:::
+
+---
+
 ## Further Reading
 
 1. **A Mathematical Framework for Transformer Circuits** — [Anthropic](https://transformer-circuits.pub/2021/framework/index.html): The foundational paper introducing the residual stream perspective and path analysis.

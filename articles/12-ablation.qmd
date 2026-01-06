@@ -84,6 +84,103 @@ $$h_{\text{ablated}} = h(\text{random other input})$$
 
 Each method answers a slightly different question. Mean ablation is the most common default because it balances interpretability with reduced distribution shift.
 
+### Interactive: Simulate Ablation
+
+See how different ablation types affect a component's contribution. Adjust the ablation type and see how the "signal" (what we want) and "noise" (distribution shift) change.
+
+```{ojs}
+//| label: fig-ablation-interactive
+//| fig-cap: "Interactive ablation simulation: compare how zero, mean, and resample ablation affect signal preservation and distribution shift."
+
+viewof ablationType = Inputs.radio(["Zero", "Mean", "Resample"], {value: "Mean", label: "Ablation type"})
+viewof componentImportance = Inputs.range([0, 100], {step: 5, value: 60, label: "Component importance (%)"})
+
+// Calculate effects based on ablation type
+signalRemoved = componentImportance
+distributionShift = ablationType === "Zero" ? 80 : ablationType === "Mean" ? 30 : 15
+noiseIntroduced = ablationType === "Resample" ? 40 : 0
+effectiveSignal = Math.max(0, 100 - signalRemoved)
+reliability = Math.max(0, 100 - distributionShift - noiseIntroduced)
+
+{
+  const width = 500;
+  const height = 320;
+  const barWidth = 60;
+  const gap = 100;
+
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, width, height])
+    .attr("width", width)
+    .attr("height", height);
+
+  // Title
+  svg.append("text").attr("x", width/2).attr("y", 25).attr("text-anchor", "middle")
+    .attr("font-size", "16px").attr("font-weight", "bold")
+    .text(`${ablationType} Ablation Effect`);
+
+  const metrics = [
+    {label: "Signal\nRemoved", value: signalRemoved, color: "#e41a1c", x: 80},
+    {label: "Distribution\nShift", value: distributionShift, color: "#ff7f00", x: 200},
+    {label: "Noise\nIntroduced", value: noiseIntroduced, color: "#984ea3", x: 320},
+    {label: "Result\nReliability", value: reliability, color: "#4daf4a", x: 440}
+  ];
+
+  const maxHeight = 180;
+  const baseY = 250;
+
+  metrics.forEach(m => {
+    const barHeight = (m.value / 100) * maxHeight;
+
+    // Bar
+    svg.append("rect")
+      .attr("x", m.x - barWidth/2)
+      .attr("y", baseY - barHeight)
+      .attr("width", barWidth)
+      .attr("height", barHeight)
+      .attr("fill", m.color)
+      .attr("rx", 4);
+
+    // Value label
+    svg.append("text")
+      .attr("x", m.x)
+      .attr("y", baseY - barHeight - 8)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "14px")
+      .attr("font-weight", "bold")
+      .attr("fill", m.color)
+      .text(`${m.value.toFixed(0)}%`);
+
+    // Axis label (multi-line)
+    const lines = m.label.split("\n");
+    lines.forEach((line, i) => {
+      svg.append("text")
+        .attr("x", m.x)
+        .attr("y", baseY + 20 + i * 14)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "11px")
+        .text(line);
+    });
+  });
+
+  // Baseline
+  svg.append("line")
+    .attr("x1", 40).attr("y1", baseY)
+    .attr("x2", width - 20).attr("y2", baseY)
+    .attr("stroke", "#ccc");
+
+  return svg.node();
+}
+```
+
+```{ojs}
+//| echo: false
+md`**Interpretation**: ${ablationType === "Zero" ?
+  "⚠️ Zero ablation removes signal completely but causes HIGH distribution shift. Downstream components may behave unpredictably." :
+  ablationType === "Mean" ?
+  "✓ Mean ablation removes input-specific signal while keeping activations in a realistic range. Best balance of signal removal and reliability." :
+  "↔️ Resample ablation has LOW distribution shift but introduces noise from the random sample. Good for testing if backup circuits exist."}`
+```
+
 ::: {.callout-tip}
 ## A Software Analogy
 Zero ablation is like removing a function and replacing all calls with `null`. Mean ablation is like replacing it with a stub that returns a default value. Resample ablation is like redirecting calls to a random different implementation. Each tests different aspects of the system's robustness.

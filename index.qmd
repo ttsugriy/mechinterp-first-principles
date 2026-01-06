@@ -15,6 +15,93 @@ A 15-article journey from foundations to practice:
 - **Arc III: Techniques** (Articles 9-12) — Sparse autoencoders, attribution, activation patching, and ablation. The tools of the trade.
 - **Arc IV: Synthesis** (Articles 13-15) — Induction heads as a complete case study, open problems in the field, and a practical guide to doing research.
 
+## How the Articles Connect
+
+The diagram below shows how concepts build on each other across the four arcs:
+
+```{mermaid}
+%%| fig-cap: "Concept map showing how articles build on each other. Arrows indicate conceptual dependencies."
+%%| fig-width: 10
+flowchart TB
+    subgraph ARC1["<b>Arc I: Foundations</b>"]
+        A1["1. Why Reverse<br/>Engineer?"]
+        A2["2. Transformers"]
+        A3["3. Residual<br/>Stream"]
+        A4["4. Geometry"]
+    end
+
+    subgraph ARC2["<b>Arc II: Core Theory</b>"]
+        A5["5. Features"]
+        A6["6. Superposition"]
+        A7["7. Toy Models"]
+        A8["8. Circuits"]
+    end
+
+    subgraph ARC3["<b>Arc III: Techniques</b>"]
+        A9["9. Sparse<br/>Autoencoders"]
+        A10["10. Attribution"]
+        A11["11. Patching"]
+        A12["12. Ablation"]
+    end
+
+    subgraph ARC4["<b>Arc IV: Synthesis</b>"]
+        A13["13. Induction<br/>Heads"]
+        A14["14. Open<br/>Problems"]
+        A15["15. Practice<br/>Regime"]
+    end
+
+    %% Arc I flow
+    A1 --> A2
+    A2 --> A3
+    A3 --> A4
+
+    %% Arc I to Arc II
+    A4 --> A5
+    A3 --> A5
+
+    %% Arc II flow
+    A5 --> A6
+    A6 --> A7
+    A5 --> A8
+    A7 --> A8
+
+    %% Arc II to Arc III
+    A6 --> A9
+    A3 --> A10
+    A8 --> A11
+    A8 --> A12
+
+    %% Arc III flow
+    A9 --> A10
+    A10 --> A11
+    A11 --> A12
+
+    %% All techniques feed into synthesis
+    A12 --> A13
+    A9 --> A13
+    A8 --> A13
+
+    %% Synthesis flow
+    A13 --> A14
+    A14 --> A15
+
+    %% Styling
+    style ARC1 fill:#e3f2fd,stroke:#1976d2
+    style ARC2 fill:#f3e5f5,stroke:#7b1fa2
+    style ARC3 fill:#e8f5e9,stroke:#388e3c
+    style ARC4 fill:#fff3e0,stroke:#f57c00
+```
+
+::: {.callout-tip}
+## Reading Paths
+
+**Linear path**: Read articles 1-15 in order for the complete learning journey.
+
+**Quick start for practitioners**: If you're already familiar with transformers, start at Article 5 (Features) and continue from there.
+
+**Techniques-focused**: Jump to Article 9 (SAEs) after reading Articles 3-5 for the core prerequisites.
+:::
+
 ## Who This Is For
 
 - Software engineers curious about ML internals
