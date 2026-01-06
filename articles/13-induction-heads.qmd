@@ -116,6 +116,284 @@ flowchart LR
     IH --> OUT["Predict: B"]
 ```
 
+### Interactive: Watch the Induction Algorithm
+
+Step through the induction head algorithm to see how two layers work together. The **Previous Token Head** records what follows each token, and the **Induction Head** uses this to predict continuations when tokens repeat.
+
+```{ojs}
+//| label: fig-induction-interactive
+//| fig-cap: "Step through the induction head algorithm. Watch how Layer 1 records patterns and Layer 2 retrieves them."
+
+viewof currentStep = Inputs.range([0, 5], {step: 1, value: 0, label: "Algorithm step"})
+
+tokens = ["the", "quick", "brown", "fox", "the", "?"]
+positions = [0, 1, 2, 3, 4, 5]
+
+stepDescriptions = [
+  "Initial sequence: We see 'the quick brown fox the ?' — What should follow the second 'the'?",
+  "Layer 1: Previous Token Head processes the sequence, recording what follows each token.",
+  "At position 1, it records: 'quick follows the' into the residual stream.",
+  "Layer 2: When we reach position 4 (second 'the'), the Induction Head searches...",
+  "It finds position 0 where 'the' appeared before, and checks what followed (position 1).",
+  "Result: 'quick' followed 'the' before, so predict 'quick' again! ✓"
+]
+
+// Visualization
+{
+  const width = 700;
+  const height = 380;
+
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, width, height])
+    .attr("width", width)
+    .attr("height", height);
+
+  // Token display area
+  const tokenY = 60;
+  const tokenSpacing = 90;
+  const startX = 80;
+
+  // Draw tokens
+  tokens.forEach((token, i) => {
+    const x = startX + i * tokenSpacing;
+
+    // Highlight based on step
+    let fillColor = "#f5f5f5";
+    let strokeColor = "#999";
+    let strokeWidth = 1;
+
+    if (currentStep >= 1 && i <= 1) {
+      // Recording phase - highlight first "the" and "quick"
+      if (currentStep === 2 && (i === 0 || i === 1)) {
+        fillColor = "#e3f2fd";
+        strokeColor = "#1976d2";
+        strokeWidth = 2;
+      }
+    }
+    if (currentStep >= 3 && i === 4) {
+      // Searching phase - highlight second "the"
+      fillColor = "#fff3e0";
+      strokeColor = "#f57c00";
+      strokeWidth = 2;
+    }
+    if (currentStep >= 4 && i === 0) {
+      // Found match
+      fillColor = "#e8f5e9";
+      strokeColor = "#388e3c";
+      strokeWidth = 2;
+    }
+    if (currentStep >= 5 && i === 1) {
+      // Retrieving "quick"
+      fillColor = "#c8e6c9";
+      strokeColor = "#2e7d32";
+      strokeWidth = 3;
+    }
+    if (currentStep >= 5 && i === 5) {
+      // Prediction slot
+      fillColor = "#c8e6c9";
+      strokeColor = "#2e7d32";
+      strokeWidth = 3;
+    }
+
+    // Token box
+    svg.append("rect")
+      .attr("x", x - 35)
+      .attr("y", tokenY - 18)
+      .attr("width", 70)
+      .attr("height", 36)
+      .attr("rx", 6)
+      .attr("fill", fillColor)
+      .attr("stroke", strokeColor)
+      .attr("stroke-width", strokeWidth);
+
+    // Token text
+    svg.append("text")
+      .attr("x", x)
+      .attr("y", tokenY + 5)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "14px")
+      .attr("font-weight", "bold")
+      .attr("fill", "#333")
+      .text(i === 5 && currentStep >= 5 ? "quick" : token);
+
+    // Position number
+    svg.append("text")
+      .attr("x", x)
+      .attr("y", tokenY + 28)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "10px")
+      .attr("fill", "#666")
+      .text(`pos ${i}`);
+  });
+
+  // Draw arrows for pattern matching (step 4+)
+  if (currentStep >= 4) {
+    // Arrow from position 4 back to position 0
+    svg.append("path")
+      .attr("d", `M ${startX + 4*tokenSpacing} ${tokenY + 40}
+                  Q ${startX + 2*tokenSpacing} ${tokenY + 90}
+                  ${startX + 0*tokenSpacing} ${tokenY + 40}`)
+      .attr("fill", "none")
+      .attr("stroke", "#f57c00")
+      .attr("stroke-width", 2)
+      .attr("marker-end", "url(#arrowhead)");
+
+    svg.append("text")
+      .attr("x", startX + 2*tokenSpacing)
+      .attr("y", tokenY + 100)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "11px")
+      .attr("fill", "#f57c00")
+      .text("'the' matches! Check what followed...");
+  }
+
+  // Draw retrieval arrow (step 5)
+  if (currentStep >= 5) {
+    // Arrow from position 1 to prediction
+    svg.append("path")
+      .attr("d", `M ${startX + 1*tokenSpacing} ${tokenY - 30}
+                  Q ${startX + 3*tokenSpacing} ${tokenY - 70}
+                  ${startX + 5*tokenSpacing} ${tokenY - 30}`)
+      .attr("fill", "none")
+      .attr("stroke", "#388e3c")
+      .attr("stroke-width", 2)
+      .attr("marker-end", "url(#arrowhead-green)");
+
+    svg.append("text")
+      .attr("x", startX + 3*tokenSpacing)
+      .attr("y", tokenY - 75)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "11px")
+      .attr("fill", "#388e3c")
+      .text("Copy 'quick' to prediction!");
+  }
+
+  // Arrow markers
+  svg.append("defs").append("marker")
+    .attr("id", "arrowhead")
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 8)
+    .attr("markerWidth", 6)
+    .attr("markerHeight", 6)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M0,-5L10,0L0,5")
+    .attr("fill", "#f57c00");
+
+  svg.append("defs").append("marker")
+    .attr("id", "arrowhead-green")
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 8)
+    .attr("markerWidth", 6)
+    .attr("markerHeight", 6)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M0,-5L10,0L0,5")
+    .attr("fill", "#388e3c");
+
+  // Layer indicators
+  const layerY = 180;
+
+  // Layer 1 box
+  const layer1Active = currentStep >= 1 && currentStep <= 2;
+  svg.append("rect")
+    .attr("x", 50)
+    .attr("y", layerY)
+    .attr("width", 280)
+    .attr("height", 70)
+    .attr("rx", 8)
+    .attr("fill", layer1Active ? "#e3f2fd" : "#fafafa")
+    .attr("stroke", layer1Active ? "#1976d2" : "#ddd")
+    .attr("stroke-width", layer1Active ? 2 : 1);
+
+  svg.append("text")
+    .attr("x", 190)
+    .attr("y", layerY + 20)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .attr("font-weight", "bold")
+    .attr("fill", layer1Active ? "#1976d2" : "#666")
+    .text("Layer 1: Previous Token Head");
+
+  svg.append("text")
+    .attr("x", 190)
+    .attr("y", layerY + 40)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "11px")
+    .attr("fill", "#666")
+    .text("Records: \"B follows A\"");
+
+  if (currentStep >= 2) {
+    svg.append("text")
+      .attr("x", 190)
+      .attr("y", layerY + 55)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "11px")
+      .attr("fill", "#1976d2")
+      .text("→ \"quick follows the\"");
+  }
+
+  // Layer 2 box
+  const layer2Active = currentStep >= 3;
+  svg.append("rect")
+    .attr("x", 370)
+    .attr("y", layerY)
+    .attr("width", 280)
+    .attr("height", 70)
+    .attr("rx", 8)
+    .attr("fill", layer2Active ? "#fff3e0" : "#fafafa")
+    .attr("stroke", layer2Active ? "#f57c00" : "#ddd")
+    .attr("stroke-width", layer2Active ? 2 : 1);
+
+  svg.append("text")
+    .attr("x", 510)
+    .attr("y", layerY + 20)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .attr("font-weight", "bold")
+    .attr("fill", layer2Active ? "#f57c00" : "#666")
+    .text("Layer 2: Induction Head");
+
+  svg.append("text")
+    .attr("x", 510)
+    .attr("y", layerY + 40)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "11px")
+    .attr("fill", "#666")
+    .text("Searches for matching previous token");
+
+  if (currentStep >= 5) {
+    svg.append("text")
+      .attr("x", 510)
+      .attr("y", layerY + 55)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "11px")
+      .attr("fill", "#388e3c")
+      .text("→ Predicts: \"quick\"");
+  }
+
+  // Step description
+  svg.append("rect")
+    .attr("x", 30)
+    .attr("y", 290)
+    .attr("width", 640)
+    .attr("height", 60)
+    .attr("rx", 8)
+    .attr("fill", "#f5f5f5")
+    .attr("stroke", "#ddd");
+
+  svg.append("text")
+    .attr("x", 350)
+    .attr("y", 325)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "13px")
+    .attr("fill", "#333")
+    .text(stepDescriptions[currentStep]);
+
+  return svg.node();
+}
+```
+
 ### Why Two Layers?
 
 Transformers can't implement induction in a single layer because attention is computed from the current residual stream state. At position $j$, the model needs to:
@@ -476,6 +754,85 @@ But interpretability research is incomplete. Many fundamental questions remain o
 These questions are the subject of the next article: **Open Problems in Mechanistic Interpretability**.
 
 After that, we'll close with **A Practice Regime**—concrete advice for how to actually do interpretability research, from choosing problems to debugging circuits to publishing results.
+
+---
+
+## Key Takeaways
+
+::: {.callout-tip}
+## 📋 Summary Card
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  INDUCTION HEADS: A Complete Case Study                    │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  WHAT THEY DO:   Enable in-context learning (few-shot)     │
+│                  Pattern: [A][B]...[A] → predict [B]       │
+│                                                            │
+│  THE CIRCUIT (2 layers):                                   │
+│    Layer 1: Previous Token Head                            │
+│             → Records "B follows A" in residual stream     │
+│    Layer 2: Induction Head                                 │
+│             → Finds where A appeared, retrieves what       │
+│               followed, predicts it will repeat            │
+│                                                            │
+│  KEY FINDINGS:                                             │
+│    • Phase transition: emerges SUDDENLY during training    │
+│    • Found in ALL transformer LLMs tested                  │
+│    • K-composition: Layer 1 output → Layer 2 keys          │
+│                                                            │
+│  VERIFICATION CHECKLIST:                                   │
+│    ✓ Attribution (high logit contribution)                 │
+│    ✓ Attention pattern (diagonal stripe)                   │
+│    ✓ Ablation (removing breaks the circuit)                │
+│    ✓ Patching (restoring recovers behavior)                │
+│    ✓ Features (interpretable SAE features)                 │
+│                                                            │
+│  WHY IT MATTERS:                                           │
+│    Best-understood circuit in transformers                 │
+│    Template for reverse-engineering other capabilities     │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+:::
+
+## Check Your Understanding
+
+::: {.callout-note collapse="true"}
+## Question 1: Why can't induction be implemented in a single layer?
+
+**Answer**: At any position, attention is computed based on the current residual stream state. To implement induction, the model needs to:
+1. Look backward for previous occurrences of the current token
+2. Know what the *previous* token was at each earlier position
+
+But the residual stream at position $i$ doesn't natively contain "what was the previous token?" information. **Layer 1 writes this information** into the stream, enabling Layer 2 to use it. This is K-composition: Layer 1's output modifies Layer 2's keys, changing what Layer 2 attends to. Single-layer transformers would need exponentially larger models to solve induction tasks.
+:::
+
+::: {.callout-note collapse="true"}
+## Question 2: What is the "diagonal stripe" pattern and why does it indicate an induction head?
+
+**Answer**: When you visualize an induction head's attention, you see positions attending to earlier positions with a **constant offset**. For example:
+- Position 5 attends to position 1 (offset -4)
+- Position 6 attends to position 2 (offset -4)
+- Position 7 attends to position 3 (offset -4)
+
+This creates diagonal stripes across the attention matrix. The pattern emerges because the head is looking for "positions where the previous token matches my previous token"—and in repeated sequences, these matches occur at consistent offsets. Researchers use an **induction score** (measuring this diagonal pattern) to automatically detect induction heads.
+:::
+
+::: {.callout-note collapse="true"}
+## Question 3: What does the "phase transition" during training tell us about induction heads?
+
+**Answer**: Induction heads don't exist at initialization—they **emerge suddenly** around a specific training step. Both the diagonal attention pattern and in-context learning performance spike simultaneously within just a few thousand steps, not gradually.
+
+This tells us:
+1. Induction heads are a **discrete algorithmic solution**, not a gradual improvement
+2. Gradient descent "discovers" this algorithm once conditions are right (useful features in early layers, sufficient capacity)
+3. Before the transition: model uses simple heuristics (unigram frequencies)
+4. After: genuine in-context learning via pattern matching
+
+The sharpness suggests induction heads are a qualitative leap in capability, not just quantitative improvement.
+:::
 
 ---
 

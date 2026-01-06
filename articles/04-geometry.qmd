@@ -450,6 +450,62 @@ The geometry gives us the framework. Now we need to find the atoms of meaning wi
 
 ---
 
+## Key Takeaways
+
+::: {.callout-tip}
+## 📋 Summary Card
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  ACTIVATIONS AS GEOMETRY                                   │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  CORE INSIGHT:   Activations are points in high-dim space  │
+│                  Features are DIRECTIONS, not neurons      │
+│                                                            │
+│  KEY PROPERTIES:                                           │
+│    • Distance → semantic similarity                        │
+│    • Direction → semantic properties (gender, royalty...)  │
+│    • Cosine similarity → how related two concepts are      │
+│                                                            │
+│  LINEAR REPRESENTATION HYPOTHESIS:                         │
+│    Properties are encoded as linear directions             │
+│    → Enables probing, steering, interpretation             │
+│                                                            │
+│  HIGH-DIM SURPRISE:                                        │
+│    Random vectors are ~90° apart (nearly orthogonal)       │
+│    → Can pack MANY more features than dimensions           │
+│    → Foundation for superposition (Article 6)              │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+:::
+
+## Check Your Understanding
+
+::: {.callout-note collapse="true"}
+## Question 1: Why does "king - man + woman ≈ queen" work?
+
+**Answer**: Because semantic properties like gender are encoded as *consistent directions* in the embedding space. The vector from "man" to "woman" represents the "gender direction." This same direction, when applied to "king," moves it to "queen" because the direction is consistent across different concepts. This is evidence for the **linear representation hypothesis**—that semantic properties correspond to linear directions in activation space.
+:::
+
+::: {.callout-note collapse="true"}
+## Question 2: Why do random vectors in high dimensions tend to be nearly perpendicular?
+
+**Answer**: As dimensionality increases, the dot product between random unit vectors (which equals the cosine of the angle between them) has a distribution that concentrates around zero with variance 1/d. For d=768, the standard deviation is only ~0.036, meaning angles are almost always between 88° and 92°. This is a mathematical consequence of high-dimensional geometry, not intuition from 2D/3D. It's crucial because **orthogonal vectors don't interfere**—this property enables superposition.
+:::
+
+::: {.callout-note collapse="true"}
+## Question 3: What does it mean to "project onto a feature direction" and why is it useful?
+
+**Answer**: Projecting a vector onto a feature direction computes the dot product between the activation vector and the unit vector representing that feature. The result tells you **how strongly that feature is present** in the activation. For example, if you know the "truthfulness" direction, projecting any activation onto it tells you how much "truthfulness" the model is encoding at that point. This is useful for:
+1. **Feature detection**: Check if a property is present
+2. **Attribution**: Measure how much a component contributed to a prediction
+3. **Intervention**: Add to or subtract from feature directions to steer behavior
+:::
+
+---
+
 ## Further Reading
 
 1. **Word2Vec Explained** — [Towards Data Science](https://towardsdatascience.com/word2vec-explained-49c52b4ccb71): Accessible introduction to word embeddings and the king - man + woman = queen phenomenon.

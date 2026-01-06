@@ -519,6 +519,71 @@ This is Polya's heuristic in action: **solve a simpler problem first**. If we ca
 
 ---
 
+## Key Takeaways
+
+::: {.callout-tip}
+## 📋 Summary Card
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  THE SUPERPOSITION HYPOTHESIS                              │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  WHAT IT IS:    Networks pack MORE features than dimensions│
+│                 by using almost-orthogonal directions      │
+│                                                            │
+│  WHY IT WORKS:                                             │
+│    • Sparse features rarely co-occur                       │
+│    • Almost-orthogonal ≈ low interference                  │
+│    • High-dim spaces have MANY near-orthogonal directions  │
+│                                                            │
+│  THE CONSEQUENCE:                                          │
+│    Polysemanticity = neurons participate in MULTIPLE       │
+│    feature directions → look confusing when examined       │
+│                                                            │
+│  WHY IT'S HARD:                                            │
+│    • Neuron basis ≠ feature basis (misaligned)             │
+│    • Must decompose compressed representations             │
+│    • Millions of features to discover                      │
+│                                                            │
+│  KEY FINDING:    Phase transition at sparsity threshold    │
+│                  Superposition switches on/off sharply     │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+:::
+
+## Check Your Understanding
+
+::: {.callout-note collapse="true"}
+## Question 1: Why does a neuron activate for "cat faces" AND "car fronts"?
+
+**Answer**: The neuron is polysemantic because it sits at the intersection of multiple superimposed feature directions. The "cat face" feature is one direction in activation space, and the "car front" feature is a different (but not perfectly orthogonal) direction. Both directions pass through this neuron's activation axis. When either feature is present, the neuron activates. The neuron isn't confused—it's just a cross-section of a higher-dimensional structure where multiple meaningful directions overlap.
+:::
+
+::: {.callout-note collapse="true"}
+## Question 2: Why is sparsity essential for superposition to work?
+
+**Answer**: Superposition introduces interference when multiple features activate simultaneously. If two features with cosine similarity 0.1 both activate, you get ~1% interference. If they always activated together, you'd always have that interference, and the features would become indistinguishable.
+
+But if Feature A activates 2% of the time and Feature B activates 3% of the time (and independently), they only co-occur 0.06% of the time. Interference is rare enough that the compression benefit outweighs the cost. **The sparser the features, the more you can superimpose.**
+:::
+
+::: {.callout-note collapse="true"}
+## Question 3: What is the "phase transition" in superposition, and why does it matter?
+
+**Answer**: The phase transition is a sharp change in representation strategy at a critical sparsity threshold:
+- **Above threshold** (sparse features): Network uses heavy superposition, packing many features as polytope vertices
+- **Below threshold** (common features): Network gives features dedicated dimensions, avoiding interference
+
+The transition is *sudden*, not gradual—small changes in sparsity cause large changes in representation structure. This matters because:
+1. It tells us superposition is a discrete strategy, not a dial
+2. Real language models operate deep in the high-sparsity regime (heavy superposition)
+3. Understanding the threshold helps predict how hard interpretation will be
+:::
+
+---
+
 ## Further Reading
 
 1. **Toy Models of Superposition** — [Anthropic](https://transformer-circuits.pub/2022/toy_model/index.html): The foundational paper on superposition, introducing the mathematical framework and toy model experiments. Essential reading.
