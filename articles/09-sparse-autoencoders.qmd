@@ -44,11 +44,6 @@ For a transformer with $d$ dimensions (say, 768), a sparse autoencoder might hav
 
 **Decoder**: Maps $D$-dimensional sparse representation back to $d$ dimensions
 
-```
-Activation (768) → Encoder → Sparse Latent (16,384) → Decoder → Reconstruction (768)
-                              [~300 non-zero]
-```
-
 ```{mermaid}
 %%| fig-cap: "SAE architecture: activations are expanded to a large sparse space, then reconstructed. Most latent dimensions are zero."
 %%| fig-width: 8
