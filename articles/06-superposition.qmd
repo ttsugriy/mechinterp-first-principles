@@ -7,6 +7,19 @@ categories: [core-theory, superposition]
 description: "Neural networks represent far more features than they have dimensions. This compression scheme—superposition—is why polysemanticity exists and why mechanistic interpretability is hard."
 ---
 
+::: {.callout-tip}
+## What You'll Learn
+- Why networks can pack more features than dimensions
+- The geometry of "almost orthogonal" and why it enables compression
+- How superposition creates polysemanticity
+- The phase transition between superposed and dedicated representations
+:::
+
+::: {.callout-warning}
+## Prerequisites
+**Required**: [Article 5: Features](05-features.qmd) — understanding what features are and why neurons are polysemantic
+:::
+
 ## The Capacity Puzzle
 
 In the previous article, we established that features are directions in activation space. A 768-dimensional residual stream can represent features as directions—unit vectors pointing in meaningful orientations.

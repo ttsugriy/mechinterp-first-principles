@@ -7,6 +7,19 @@ categories: [foundations, architecture]
 description: "The residual stream is a simple architectural feature with profound implications for interpretability. Once you see the transformer as components reading from and writing to a shared workspace, everything changes."
 ---
 
+::: {.callout-tip}
+## What You'll Learn
+- Why the "residual stream" perspective changes everything for interpretability
+- How components read from and write to a shared workspace
+- Why the additive structure enables decomposition
+- The logit lens technique for reading intermediate predictions
+:::
+
+::: {.callout-warning}
+## Prerequisites
+**Required**: [Article 2: Transformers](02-transformers.qmd) — understanding attention and MLP layers
+:::
+
 ## A Shift in Perspective
 
 In the previous article, we saw that transformers are matrix multiplication machines. Attention routes information between positions; MLPs store and retrieve knowledge. Layer by layer, the network transforms token embeddings into predictions.

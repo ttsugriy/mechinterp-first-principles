@@ -7,6 +7,19 @@ categories: [core-theory, features]
 description: "A feature is a property of the input that the network represents internally. Finding features—not neurons—is the key to understanding what neural networks have learned."
 ---
 
+::: {.callout-tip}
+## What You'll Learn
+- Why neurons are the wrong unit of analysis (polysemanticity)
+- What features actually are (directions, not neurons)
+- The difference between monosemantic and polysemantic representations
+- The feature ontology problem: what features "should" exist?
+:::
+
+::: {.callout-warning}
+## Prerequisites
+**Required**: [Article 4: Geometry](04-geometry.qmd) — understanding activations as vectors in high-dimensional space
+:::
+
 ## The Neuron That Liked Cats and Cars
 
 In 2017, researchers at Google were trying to understand what individual neurons in an image classifier had learned. The approach seemed natural: look at which images maximally activate each neuron, and you'll learn what that neuron "means."

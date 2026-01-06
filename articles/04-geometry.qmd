@@ -7,6 +7,19 @@ categories: [foundations, geometry]
 description: "The residual stream is a vector space. Understanding its geometry—what directions mean, how concepts are arranged, why high dimensions behave strangely—is the key to understanding what neural networks represent."
 ---
 
+::: {.callout-tip}
+## What You'll Learn
+- Why activations should be thought of as points in high-dimensional space
+- What "king - man + woman = queen" reveals about representations
+- The linear representation hypothesis and why it enables interpretability
+- Why high dimensions are both a curse (distance noise) and blessing (near-orthogonality)
+:::
+
+::: {.callout-warning}
+## Prerequisites
+**Required**: [Article 3: The Residual Stream](03-residual-stream.qmd) — understanding the shared workspace model
+:::
+
 ## A Famous Equation
 
 In 2013, researchers at Google trained a neural network on billions of words and discovered something remarkable. The network learned to represent words as vectors—points in a 300-dimensional space. That much was expected.

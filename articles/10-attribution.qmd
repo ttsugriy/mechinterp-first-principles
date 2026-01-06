@@ -7,6 +7,20 @@ categories: [techniques, attribution]
 description: "Attribution traces which components contributed to the model's output. It's the starting point for understanding—but not the endpoint."
 ---
 
+::: {.callout-tip}
+## What You'll Learn
+- How the residual stream's additive structure enables attribution
+- Logit attribution: measuring per-component contributions to predictions
+- Attention pattern analysis: what does each head look at?
+- The limitations of attribution (correlation ≠ causation)
+:::
+
+::: {.callout-warning}
+## Prerequisites
+**Required**: [Article 3: Residual Stream](03-residual-stream.qmd) — understanding additive contributions
+**Recommended**: [Article 8: Circuits](08-circuits.qmd) — understanding what we're trying to find
+:::
+
 ## Starting from the Answer
 
 In Article 9, we learned how to extract features from superposition using sparse autoencoders. We now have a vocabulary: monosemantic features that correspond to interpretable concepts.

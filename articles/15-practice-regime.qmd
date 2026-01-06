@@ -7,6 +7,19 @@ categories: [synthesis, practice]
 description: "Concrete guidance for actually doing mechanistic interpretability research: choosing problems, running experiments, debugging, and contributing to the field."
 ---
 
+::: {.callout-tip}
+## What You'll Learn
+- How to set up your environment (TransformerLens, SAELens)
+- A week-by-week practice curriculum for building skills
+- How to choose good research problems
+- Common pitfalls and debugging strategies
+:::
+
+::: {.callout-warning}
+## Prerequisites
+**Recommended**: The entire series, especially [Article 13: Induction Heads](13-induction-heads.qmd) for seeing techniques in action
+:::
+
 ## From Theory to Practice
 
 You've read fourteen articles. You understand:

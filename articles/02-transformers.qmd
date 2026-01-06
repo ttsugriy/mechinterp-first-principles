@@ -7,6 +7,19 @@ categories: [foundations, transformers]
 description: "Before we can reverse engineer what a transformer learns, we need to understand what it computes. The answer is surprisingly simple: matrix multiplications, all the way down."
 ---
 
+::: {.callout-tip}
+## What You'll Learn
+- How transformers convert text to numbers (tokenization and embedding)
+- The attention mechanism as "soft dictionary lookup"
+- How MLPs process and transform information
+- Why understanding the architecture matters for interpretability
+:::
+
+::: {.callout-warning}
+## Prerequisites
+**Recommended background**: Basic linear algebra (matrix multiplication, vectors). No prior deep learning knowledge required—we build from first principles.
+:::
+
 ## The Machine We're Trying to Understand
 
 In the previous article, we saw a neural network discover Fourier transforms for modular arithmetic—an algorithm no one taught it. We established that mechanistic interpretability is the project of reverse engineering such discoveries: finding the *how* behind the *what*.

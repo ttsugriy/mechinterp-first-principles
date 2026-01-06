@@ -7,6 +7,20 @@ categories: [synthesis, circuits, case-study]
 description: "Induction heads enable in-context learning—the ability to learn patterns from examples without weight updates. They're the best-understood circuit in transformers."
 ---
 
+::: {.callout-tip}
+## What You'll Learn
+- How induction heads enable in-context learning (few-shot prompting)
+- The two-layer circuit: previous-token head + induction head
+- The phase transition: how induction heads emerge suddenly during training
+- How to apply attribution, patching, and ablation to verify a circuit
+:::
+
+::: {.callout-warning}
+## Prerequisites
+**Required**: All of Arc II (Features, Superposition, Circuits) and Arc III (SAEs, Attribution, Patching, Ablation)
+This article synthesizes everything you've learned.
+:::
+
 ## The Complete Picture
 
 We've built a complete interpretability toolkit:

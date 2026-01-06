@@ -8,6 +8,8 @@ book:
   date: today
   repo-url: https://github.com/ttsugriy/mechinterp-first-principles
   repo-actions: [edit, issue]
+  search: true
+  reader-mode: true
 
   chapters:
     - index.qmd
@@ -34,6 +36,9 @@ book:
         - articles/13-induction-heads.qmd
         - articles/14-open-problems.qmd
         - articles/15-practice-regime.qmd
+    - part: "Reference"
+      chapters:
+        - glossary.qmd
 
 format:
   html:

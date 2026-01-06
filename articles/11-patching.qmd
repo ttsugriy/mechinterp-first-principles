@@ -7,6 +7,19 @@ categories: [techniques, patching]
 description: "Attribution shows correlation. Patching proves causation. By surgically replacing activations, we test whether components are actually necessary for a behavior."
 ---
 
+::: {.callout-tip}
+## What You'll Learn
+- The clean/corrupted paradigm for causal intervention
+- How activation patching isolates component contributions
+- Path patching: tracing specific information flows
+- Why patching proves causation where attribution only shows correlation
+:::
+
+::: {.callout-warning}
+## Prerequisites
+**Required**: [Article 10: Attribution](10-attribution.qmd) — understanding how to identify candidate components
+:::
+
 ## From Observation to Experiment
 
 In Article 10, we learned to ask: "What contributed to this output?" Attribution decomposes the logit into per-component contributions, showing which attention heads and MLPs pushed the prediction in which direction.

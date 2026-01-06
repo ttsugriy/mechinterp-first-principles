@@ -7,6 +7,19 @@ categories: [techniques, ablation]
 description: "Ablation removes components entirely to reveal what the network truly needs. It's the interpretability equivalent of knockout experiments in biology."
 ---
 
+::: {.callout-tip}
+## What You'll Learn
+- The three types of ablation: zero, mean, and resample
+- How ablation reveals necessary vs. redundant components
+- Finding minimal circuits through iterative ablation
+- The challenge of causal entanglement and backup circuits
+:::
+
+::: {.callout-warning}
+## Prerequisites
+**Required**: [Article 11: Patching](11-patching.qmd) — understanding causal intervention methodology
+:::
+
 ## The Simplest Intervention
 
 We've now built a complete interpretability pipeline:

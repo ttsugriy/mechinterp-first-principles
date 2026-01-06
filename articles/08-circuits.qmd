@@ -7,6 +7,19 @@ categories: [core-theory, circuits]
 description: "Features are atoms. Circuits are molecules—how individual features compose into algorithms that perform understandable computations."
 ---
 
+::: {.callout-tip}
+## What You'll Learn
+- What circuits are: subnetworks that perform identifiable computations
+- The three types of head composition (Q-, K-, V-composition)
+- A real circuit example: indirect object identification (IOI) in GPT-2
+- Why the circuits hypothesis matters for interpretability
+:::
+
+::: {.callout-warning}
+## Prerequisites
+**Required**: [Articles 5-7](05-features.qmd) — understanding features, superposition, and how they work in toy models
+:::
+
 ## From Atoms to Molecules
 
 We've spent the last three articles building up the atomic theory of neural network representations:

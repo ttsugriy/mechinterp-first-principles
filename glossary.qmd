@@ -1,0 +1,144 @@
+---
+title: "Glossary"
+subtitle: "Key terms in mechanistic interpretability"
+---
+
+A reference guide to the core terminology used throughout this book. Terms are organized by the arc where they're introduced.
+
+## Arc I: Foundations
+
+**Transformer**
+: A neural network architecture that processes sequences using attention mechanisms and MLPs. The dominant architecture for modern language models. ([Article 2](articles/02-transformers.qmd))
+
+**Attention**
+: A mechanism that routes information between positions in a sequence. Each position computes query, key, and value vectors; attention weights are determined by query-key similarity. ([Article 2](articles/02-transformers.qmd))
+
+**MLP (Multi-Layer Perceptron)**
+: The feedforward component of a transformer layer. Applies learned nonlinear transformations to each position independently. Often hypothesized to store factual knowledge. ([Article 2](articles/02-transformers.qmd))
+
+**Residual Stream**
+: The vector that flows through a transformer, accumulating contributions from each attention head and MLP. All components read from and write to this shared workspace. ([Article 3](articles/03-residual-stream.qmd))
+
+**Logit Lens**
+: A technique for reading intermediate predictions by projecting the residual stream at any layer to vocabulary space using the unembedding matrix. Shows how predictions refine through layers. ([Article 3](articles/03-residual-stream.qmd))
+
+**Linear Representation Hypothesis**
+: The hypothesis that semantic properties are encoded as linear directions in activation space, enabling simple extraction and manipulation of features. ([Article 4](articles/04-geometry.qmd))
+
+**Cosine Similarity**
+: A measure of the angle between two vectors, ranging from -1 (opposite) to 1 (same direction). Used to quantify how related two representations are. ([Article 4](articles/04-geometry.qmd))
+
+## Arc II: Core Theory
+
+**Feature**
+: A property of the input that a network represents internally. Features are directions in activation space, not individual neurons. The fundamental unit of meaning in neural representations. ([Article 5](articles/05-features.qmd))
+
+**Monosemantic**
+: A neuron or feature that corresponds to a single, interpretable concept. The ideal case for interpretation. ([Article 5](articles/05-features.qmd))
+
+**Polysemantic**
+: A neuron that responds to multiple unrelated concepts (e.g., "cat faces" AND "car fronts"). The common case in trained networks, caused by superposition. ([Article 5](articles/05-features.qmd))
+
+**Superposition**
+: The phenomenon where networks pack more features than dimensions by using almost-orthogonal directions. Enables efficient representation of sparse features but creates polysemanticity. ([Article 6](articles/06-superposition.qmd))
+
+**Sparsity**
+: The property that most features activate rarely (e.g., <1% of inputs). Sparsity enables superposition because features rarely co-occur and interfere. ([Article 6](articles/06-superposition.qmd))
+
+**Phase Transition**
+: The sharp change in representation strategy at a critical sparsity threshold. Networks switch from dedicated dimensions to heavy superposition as sparsity increases. ([Article 6](articles/06-superposition.qmd))
+
+**Toy Model**
+: A simplified network designed to exhibit superposition in a controlled, fully-analyzable setting. Typically an autoencoder compressing n features into d < n dimensions. ([Article 7](articles/07-toy-models.qmd))
+
+**Circuit**
+: A subnetwork that performs an identifiable computation by connecting features through learned weights. The "molecules" built from feature "atoms." ([Article 8](articles/08-circuits.qmd))
+
+**K-Composition**
+: When one attention head's output modifies another head's keys, changing what the second head attends to. The mechanism underlying induction head circuits. ([Article 8](articles/08-circuits.qmd))
+
+**Q-Composition**
+: When one attention head's output modifies another head's queries, changing what the second head searches for. ([Article 8](articles/08-circuits.qmd))
+
+**V-Composition**
+: When one attention head's output modifies another head's values, changing what information the second head copies. ([Article 8](articles/08-circuits.qmd))
+
+## Arc III: Techniques
+
+**Sparse Autoencoder (SAE)**
+: A neural network trained to decompose activations into a sparse set of interpretable features. The primary tool for extracting monosemantic features from superposed representations. ([Article 9](articles/09-sparse-autoencoders.qmd))
+
+**Reconstruction Loss**
+: The component of SAE training that encourages accurate reconstruction of the original activation. Trades off against sparsity loss. ([Article 9](articles/09-sparse-autoencoders.qmd))
+
+**Sparsity Loss (L1)**
+: The component of SAE training that encourages most latent features to be zero. Higher sparsity penalty yields fewer active features per input. ([Article 9](articles/09-sparse-autoencoders.qmd))
+
+**Attribution**
+: The technique of decomposing an output into per-component contributions. Measures how much each attention head and MLP pushed toward a particular prediction. ([Article 10](articles/10-attribution.qmd))
+
+**Logit Attribution**
+: Measuring each component's contribution to the logit of a specific output token by projecting its output onto the unembedding direction. ([Article 10](articles/10-attribution.qmd))
+
+**Activation Patching**
+: A causal intervention technique that replaces a component's activation from one input with its activation from a different input, measuring the effect on output. ([Article 11](articles/11-patching.qmd))
+
+**Clean/Corrupted Paradigm**
+: The standard patching setup using two inputs: a "clean" input producing the target behavior and a "corrupted" input producing different behavior. ([Article 11](articles/11-patching.qmd))
+
+**Path Patching**
+: Patching along specific computational paths (e.g., head A's contribution to head B's keys) to isolate information flow between components. ([Article 11](articles/11-patching.qmd))
+
+**Ablation**
+: Removing a component's contribution entirely (setting to zero, mean, or resampled value) to test whether it's necessary for a behavior. ([Article 12](articles/12-ablation.qmd))
+
+**Zero Ablation**
+: Setting a component's output to zero. Simple but can cause distribution shift. ([Article 12](articles/12-ablation.qmd))
+
+**Mean Ablation**
+: Replacing a component's output with its average value across a dataset. Reduces distribution shift but removes all input-dependent information. ([Article 12](articles/12-ablation.qmd))
+
+**Resample Ablation**
+: Replacing a component's output with its value from a random different input. Preserves marginal distribution but breaks input-specific computation. ([Article 12](articles/12-ablation.qmd))
+
+## Arc IV: Synthesis
+
+**Induction Head**
+: An attention head that implements in-context learning by finding previous occurrences of the current token and predicting what followed. Part of a two-layer circuit with a previous-token head. ([Article 13](articles/13-induction-heads.qmd))
+
+**Previous Token Head**
+: An attention head that copies information about the previous token at each position. Enables induction heads to search for matching patterns. ([Article 13](articles/13-induction-heads.qmd))
+
+**In-Context Learning (ICL)**
+: The ability to learn from examples in the prompt without weight updates. Enabled primarily by induction heads. ([Article 13](articles/13-induction-heads.qmd))
+
+**Grokking**
+: The phenomenon where a network suddenly generalizes after extended training past the point of memorization. Often involves discovering efficient algorithms like induction. ([Article 1](articles/01-why-reverse-engineer.qmd))
+
+## Tools & Libraries
+
+**TransformerLens**
+: The standard Python library for mechanistic interpretability, providing hooks for accessing intermediate activations and running interventions. ([Article 15](articles/15-practice-regime.qmd))
+
+**SAELens**
+: A library for training and analyzing sparse autoencoders on transformer activations. ([Article 15](articles/15-practice-regime.qmd))
+
+**Neuronpedia**
+: An interactive platform for exploring SAE features, visualizing their activating examples, and sharing interpretations. ([Article 15](articles/15-practice-regime.qmd))
+
+---
+
+::: {.callout-tip}
+## Quick Reference
+
+| Term | One-Line Definition |
+|------|---------------------|
+| Feature | A direction in activation space encoding a semantic property |
+| Superposition | Packing more features than dimensions using near-orthogonality |
+| Circuit | A subnetwork implementing an identifiable algorithm |
+| SAE | Tool for decomposing polysemantic neurons into monosemantic features |
+| Attribution | Measuring per-component contributions to outputs |
+| Patching | Causal intervention by swapping activations between inputs |
+| Ablation | Testing necessity by removing component contributions |
+| Induction Head | Attention head enabling in-context pattern completion |
+:::

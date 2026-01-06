@@ -7,6 +7,14 @@ categories: [foundations, motivation]
 description: "Neural networks discover algorithms we didn't teach them. Understanding how they work is one of the most important scientific challenges of our time."
 ---
 
+::: {.callout-tip}
+## What You'll Learn
+- Why neural networks are "black boxes" despite our having all the weights
+- The scientific, safety, and capability arguments for interpretability
+- How mechanistic interpretability differs from other approaches
+- The key techniques available (overview for the series)
+:::
+
 ## The Mystery
 
 In 2022, researchers at OpenAI were training a small neural network to do modular arithmetic—computing sums like (23 + 47) mod 97. The task is trivial for a pocket calculator, but the researchers wanted to understand how neural networks learn such algorithmic tasks.

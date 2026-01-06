@@ -7,6 +7,19 @@ categories: [synthesis, open-problems]
 description: "An honest assessment of what mechanistic interpretability can and cannot do today, and the hard problems that remain unsolved."
 ---
 
+::: {.callout-tip}
+## What You'll Learn
+- The scaling problem: why techniques that work on GPT-2 may not work on GPT-4
+- The coverage problem: how much of model behavior can we actually explain?
+- The validation problem: how do we know our interpretations are correct?
+- Where the field needs breakthrough ideas vs. incremental progress
+:::
+
+::: {.callout-warning}
+## Prerequisites
+**Required**: [Article 13: Induction Heads](13-induction-heads.qmd) — seeing the full interpretability pipeline in action
+:::
+
 ## Intellectual Honesty
 
 We've built a compelling toolkit:
