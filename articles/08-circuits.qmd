@@ -98,6 +98,34 @@ Researchers at Redwood Research discovered that GPT-2 Small solves this task usi
 
 **MLPs**: Compose and refine the final decision
 
+```{mermaid}
+%%| fig-cap: "The IOI circuit: 7 functional groups of attention heads work together to identify and output the indirect object."
+flowchart TD
+    subgraph "Early Layers (1-2)"
+        PT[Previous Token Heads]
+        DT[Duplicate Token Heads]
+    end
+
+    subgraph "Middle Layers (3-6)"
+        IND[Induction Heads]
+        SI[S-Inhibition Heads]
+    end
+
+    subgraph "Late Layers (7-10)"
+        NM[Name Mover Heads]
+        NNM[Negative Name Movers]
+        BNM[Backup Name Movers]
+    end
+
+    PT -->|"position info"| IND
+    DT -->|"subject marked"| SI
+    IND -->|"IO position"| NM
+    SI -->|"suppress subject"| NM
+    NM -->|"boost 'Mary'"| Output[Predict: Mary]
+    NNM -->|"suppress 'John'"| Output
+    BNM -.->|"backup path"| Output
+```
+
 This is a circuit: a specific set of components working together to perform a well-defined computation (identify the indirect object and predict it).
 
 ### Why This Is Remarkable

@@ -180,6 +180,35 @@ Let's put it all together. For a transformer with L layers:
 6. Apply softmax to get next-token probabilities
 ```
 
+Here's the same process as a visual diagram:
+
+```{mermaid}
+%%| fig-cap: "The transformer forward pass: tokens flow through embedding, repeated attention+MLP blocks, and unembedding to produce predictions."
+flowchart TB
+    subgraph Input
+        T[Tokens] --> E[Embedding]
+        E --> P[+ Position]
+    end
+
+    subgraph Layer["Layer (repeated L times)"]
+        P --> LN1[Layer Norm]
+        LN1 --> ATT[Multi-Head Attention]
+        ATT --> ADD1((+))
+        P --> ADD1
+        ADD1 --> LN2[Layer Norm]
+        LN2 --> MLP[MLP / FFN]
+        MLP --> ADD2((+))
+        ADD1 --> ADD2
+    end
+
+    subgraph Output
+        ADD2 --> LNF[Final Layer Norm]
+        LNF --> UE[Unembedding]
+        UE --> SM[Softmax]
+        SM --> PRED[Next Token Probabilities]
+    end
+```
+
 Count the matrix multiplications:
 - Embedding: 1
 - Per layer: Q, K, V projections (3 per head × H heads), output projection (1), MLP (2) = 3H + 3 per layer

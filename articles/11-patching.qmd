@@ -45,6 +45,27 @@ The corrupted input is carefully constructed: it's minimally different from the 
 
 If patching a component restores the clean output, that component carries information necessary for the behavior.
 
+```{mermaid}
+%%| fig-cap: "Activation patching: run clean and corrupted inputs, then patch one component's activation from clean into corrupted to measure causal effect."
+flowchart TB
+    subgraph "Clean Run"
+        CI[Clean Input] --> CM1[Layer 1] --> CM2[Layer 2] --> CM3[Layer 3] --> CO["Output: Mary ✓"]
+        style CM2 fill:#90EE90
+    end
+
+    subgraph "Corrupted Run"
+        XI[Corrupted Input] --> XM1[Layer 1] --> XM2[Layer 2] --> XM3[Layer 3] --> XO["Output: John ✗"]
+        style XM2 fill:#FFB6C1
+    end
+
+    subgraph "Patched Run"
+        PI[Corrupted Input] --> PM1[Layer 1] --> PM2["Layer 2<br/>(PATCHED)"] --> PM3[Layer 3] --> PO["Output: Mary? ✓"]
+        style PM2 fill:#90EE90
+    end
+
+    CM2 -.->|"copy activation"| PM2
+```
+
 ```python
 # Pseudocode for activation patching
 def patch_and_measure(model, clean_input, corrupted_input, patch_location):

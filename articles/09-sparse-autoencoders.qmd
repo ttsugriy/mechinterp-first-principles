@@ -49,6 +49,32 @@ Activation (768) → Encoder → Sparse Latent (16,384) → Decoder → Reconstr
                               [~300 non-zero]
 ```
 
+```{mermaid}
+%%| fig-cap: "SAE architecture: a small activation is expanded into a large sparse latent, then reconstructed. The sparse latent contains interpretable features."
+flowchart LR
+    subgraph Input
+        A["Activation<br/>(768 dims)"]
+    end
+
+    subgraph Encoder
+        E["W_enc × x + b<br/>+ ReLU"]
+    end
+
+    subgraph "Sparse Latent"
+        L["16,384 dims<br/>~300 non-zero<br/>⬛⬛⬜⬜⬜⬜⬛⬜⬜⬛⬜⬜..."]
+    end
+
+    subgraph Decoder
+        D["W_dec × z"]
+    end
+
+    subgraph Output
+        R["Reconstruction<br/>(768 dims)"]
+    end
+
+    A --> E --> L --> D --> R
+```
+
 ### Why Overcomplete?
 
 Regular autoencoders use a *bottleneck*—a latent space smaller than the input, forcing compression. SAEs do the opposite: the latent space is *larger* than the input.

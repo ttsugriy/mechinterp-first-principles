@@ -90,6 +90,56 @@ Feature 1 ←+→ Feature 3
        Feature 4
 ```
 
+Here's what this looks like geometrically—4 features arranged as a square, and 6 features arranged as a hexagon:
+
+```{python}
+#| label: fig-polytopes
+#| fig-cap: "Optimal arrangements for features in 2D: 4 features form a square (left), 6 features form a hexagon (right). Each feature is a direction (arrow) from the origin."
+#| code-fold: true
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))
+
+# 4 features as a square
+angles_4 = np.linspace(0, 2*np.pi, 5)[:-1]  # 0, 90, 180, 270 degrees
+for i, angle in enumerate(angles_4):
+    ax1.annotate('', xy=(np.cos(angle), np.sin(angle)), xytext=(0, 0),
+                arrowprops=dict(arrowstyle='->', color=f'C{i}', lw=2))
+    ax1.text(1.15*np.cos(angle), 1.15*np.sin(angle), f'F{i+1}',
+             ha='center', va='center', fontsize=12, fontweight='bold')
+
+ax1.set_xlim(-1.4, 1.4)
+ax1.set_ylim(-1.4, 1.4)
+ax1.set_aspect('equal')
+ax1.axhline(y=0, color='gray', linestyle='--', alpha=0.3)
+ax1.axvline(x=0, color='gray', linestyle='--', alpha=0.3)
+ax1.set_title('4 Features in 2D (Square)', fontsize=12)
+ax1.set_xlabel('Dimension 1')
+ax1.set_ylabel('Dimension 2')
+
+# 6 features as a hexagon
+angles_6 = np.linspace(0, 2*np.pi, 7)[:-1]  # 60-degree spacing
+for i, angle in enumerate(angles_6):
+    ax2.annotate('', xy=(np.cos(angle), np.sin(angle)), xytext=(0, 0),
+                arrowprops=dict(arrowstyle='->', color=f'C{i}', lw=2))
+    ax2.text(1.15*np.cos(angle), 1.15*np.sin(angle), f'F{i+1}',
+             ha='center', va='center', fontsize=12, fontweight='bold')
+
+ax2.set_xlim(-1.4, 1.4)
+ax2.set_ylim(-1.4, 1.4)
+ax2.set_aspect('equal')
+ax2.axhline(y=0, color='gray', linestyle='--', alpha=0.3)
+ax2.axvline(x=0, color='gray', linestyle='--', alpha=0.3)
+ax2.set_title('6 Features in 2D (Hexagon)', fontsize=12)
+ax2.set_xlabel('Dimension 1')
+ax2.set_ylabel('Dimension 2')
+
+plt.tight_layout()
+plt.show()
+```
+
 Each pair of adjacent features is at 90°—perfectly orthogonal. Each pair of opposite features is at 180°—maximally separated. This is the optimal arrangement for 4 features in 2D.
 
 For 6 features in 2D, the optimal arrangement is a regular hexagon. For more features, you get regular polytopes (higher-dimensional generalizations of polygons). The network learns to maximize the minimum angle between any two features, minimizing worst-case interference.

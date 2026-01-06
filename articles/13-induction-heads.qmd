@@ -104,6 +104,34 @@ Induction head: "Find where this token appeared before and copy what followed"
 Together: pattern matching and retrieval.
 :::
 
+```{mermaid}
+%%| fig-cap: "The induction circuit: a two-layer mechanism where the previous token head enables the induction head to find and copy patterns."
+flowchart LR
+    subgraph "Sequence: A B ... A ?"
+        P1["Position i<br/>Token: A"]
+        P2["Position i+1<br/>Token: B"]
+        P3["..."]
+        P4["Position j<br/>Token: A"]
+        P5["Position j+1<br/>Predict: ?"]
+    end
+
+    subgraph "Layer 1"
+        PTH["Previous Token Head"]
+    end
+
+    subgraph "Layer 2"
+        IH["Induction Head"]
+    end
+
+    P1 --> PTH
+    P2 --> PTH
+    PTH -->|"writes: 'B follows A'"| RS["Residual Stream"]
+    RS --> IH
+    P4 -->|"query: 'where was A before?'"| IH
+    IH -->|"finds position i, copies B"| P5
+    P5 -->|"Output: B"| OUT[Prediction]
+```
+
 ### Why Two Layers?
 
 Transformers can't implement induction in a single layer because attention is computed from the current residual stream state. At position $j$, the model needs to:

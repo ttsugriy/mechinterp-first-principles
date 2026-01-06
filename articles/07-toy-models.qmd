@@ -97,6 +97,55 @@ We can verify the pentagon arrangement directly:
 
 The network has found the mathematically optimal arrangement without being told what it is. This is gradient descent discovering geometry.
 
+```{python}
+#| label: fig-pentagon
+#| fig-cap: "5 features arranged as a pentagon in 2D. Adjacent features are 72° apart—the optimal arrangement that minimizes interference."
+#| code-fold: true
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(6, 6))
+
+# 5 features as a pentagon (72° spacing)
+n_features = 5
+angles = np.linspace(np.pi/2, np.pi/2 + 2*np.pi, n_features + 1)[:-1]  # Start from top
+
+colors = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00']
+
+for i, angle in enumerate(angles):
+    # Draw arrow
+    ax.annotate('', xy=(np.cos(angle), np.sin(angle)), xytext=(0, 0),
+                arrowprops=dict(arrowstyle='->', color=colors[i], lw=3))
+    # Label
+    ax.text(1.2*np.cos(angle), 1.2*np.sin(angle), f'Feature {i+1}',
+            ha='center', va='center', fontsize=11, fontweight='bold', color=colors[i])
+
+# Draw the pentagon outline
+pentagon_x = [np.cos(a) for a in angles] + [np.cos(angles[0])]
+pentagon_y = [np.sin(a) for a in angles] + [np.sin(angles[0])]
+ax.plot(pentagon_x, pentagon_y, 'k--', alpha=0.3, lw=1)
+
+# Angle annotation
+ax.annotate('', xy=(0.4*np.cos(angles[0]), 0.4*np.sin(angles[0])),
+            xytext=(0.4*np.cos(angles[1]), 0.4*np.sin(angles[1])),
+            arrowprops=dict(arrowstyle='<->', color='gray', lw=1))
+ax.text(0.5, 0.35, '72°', fontsize=10, color='gray')
+
+ax.set_xlim(-1.5, 1.5)
+ax.set_ylim(-1.5, 1.5)
+ax.set_aspect('equal')
+ax.axhline(y=0, color='gray', linestyle='-', alpha=0.2)
+ax.axvline(x=0, color='gray', linestyle='-', alpha=0.2)
+ax.set_title('Pentagon Arrangement: 5 Features in 2D', fontsize=14)
+ax.set_xlabel('Dimension 1')
+ax.set_ylabel('Dimension 2')
+ax.grid(True, alpha=0.2)
+
+plt.tight_layout()
+plt.show()
+```
+
 ## Phase Transitions
 
 The most striking finding from toy model experiments is the **phase transition**.
@@ -129,6 +178,55 @@ Between these regimes, there's a **sharp threshold**. At some critical sparsity 
 - Above $S^*$: dedicated representation (subset of features)
 
 The transition isn't gradual. Small changes in sparsity near the threshold cause the network to completely reorganize its representation.
+
+```{python}
+#| label: fig-phase-transition
+#| fig-cap: "Phase transition in superposition: as sparsity decreases (features become more common), the network suddenly switches from superposed representation to dedicated representation."
+#| code-fold: true
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+
+# Simulated phase transition curve
+sparsity = np.linspace(0.01, 0.5, 100)
+# Sigmoid-like sharp transition around S* = 0.15
+features_represented = 5 / (1 + np.exp(25 * (sparsity - 0.15))) + 2 * (1 - 1/(1 + np.exp(25 * (sparsity - 0.15))))
+
+ax1.plot(sparsity, features_represented, 'b-', lw=2.5)
+ax1.axvline(x=0.15, color='red', linestyle='--', alpha=0.7, label='Critical sparsity S*')
+ax1.fill_between(sparsity[sparsity < 0.15], 0, 5.5, alpha=0.1, color='green')
+ax1.fill_between(sparsity[sparsity >= 0.15], 0, 5.5, alpha=0.1, color='orange')
+ax1.text(0.07, 4.8, 'Superposition\n(all 5 features)', fontsize=9, ha='center', color='green')
+ax1.text(0.32, 2.5, 'Dedicated\n(2 features)', fontsize=9, ha='center', color='orange')
+ax1.set_xlabel('Feature Activation Probability (S)', fontsize=11)
+ax1.set_ylabel('Features Represented', fontsize=11)
+ax1.set_title('Phase Transition: Features vs Sparsity', fontsize=12)
+ax1.set_ylim(0, 5.5)
+ax1.set_xlim(0, 0.5)
+ax1.legend(loc='upper right')
+ax1.grid(True, alpha=0.3)
+
+# Reconstruction loss
+loss_superposed = 0.02 + 0.5 * sparsity**2  # Low base + interference at high density
+loss_dedicated = 0.15 * np.ones_like(sparsity)  # Constant (3/5 features missing)
+optimal_loss = np.minimum(loss_superposed, loss_dedicated)
+
+ax2.plot(sparsity, loss_superposed, 'g--', lw=2, label='Superposition strategy', alpha=0.7)
+ax2.plot(sparsity, loss_dedicated, 'orange', linestyle='--', lw=2, label='Dedicated strategy', alpha=0.7)
+ax2.plot(sparsity, optimal_loss, 'b-', lw=2.5, label='Optimal (network chooses)')
+ax2.axvline(x=0.15, color='red', linestyle='--', alpha=0.7)
+ax2.set_xlabel('Feature Activation Probability (S)', fontsize=11)
+ax2.set_ylabel('Reconstruction Loss', fontsize=11)
+ax2.set_title('Why the Transition Happens', fontsize=12)
+ax2.set_xlim(0, 0.5)
+ax2.legend(loc='upper left', fontsize=9)
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+```
 
 ::: {.callout-tip}
 ## A Physical Analogy
