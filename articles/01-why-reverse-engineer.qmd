@@ -2,7 +2,7 @@
 title: "Why Reverse Engineer Neural Networks?"
 subtitle: "The case for mechanistic interpretability"
 author: "Taras Tsugrii"
-date: 2025-01-04
+date: 2025-01-05
 categories: [foundations, motivation]
 description: "Neural networks discover algorithms we didn't teach them. Understanding how they work is one of the most important scientific challenges of our time."
 ---

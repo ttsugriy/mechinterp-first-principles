@@ -10,10 +10,10 @@ This is a first-principles exploration of **mechanistic interpretability** — t
 
 A 15-article journey from foundations to practice:
 
-- **Arc I: Foundations** — What are we trying to understand?
-- **Arc II: Core Theory** — Features, superposition, circuits
-- **Arc III: Techniques** — The tools of the trade
-- **Arc IV: Synthesis** — Putting it all together
+- **Arc I: Foundations** (Articles 1-4) — What are we trying to understand? The transformer architecture, residual stream, and geometric structure of representations.
+- **Arc II: Core Theory** (Articles 5-8) — Features, superposition, toy models, and circuits. The conceptual framework for interpretation.
+- **Arc III: Techniques** (Articles 9-12) — Sparse autoencoders, attribution, activation patching, and ablation. The tools of the trade.
+- **Arc IV: Synthesis** (Articles 13-15) — Induction heads as a complete case study, open problems in the field, and a practical guide to doing research.
 
 ## Who This Is For
 
@@ -38,4 +38,4 @@ This series is also available on [Software Bits](https://softwarebits.substack.c
 
 ---
 
-*This book is a work in progress. New articles are added as they're completed.*
+*Last updated: January 2025*

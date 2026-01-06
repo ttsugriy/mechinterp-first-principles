@@ -68,16 +68,15 @@ Here's what happens when you train this toy model with 5 sparse features in 2 di
 The network learns to represent the 5 features as 5 directions arranged in a **regular pentagon**.
 
 ```
-            Feature 2
-               ↗
-              /
-Feature 1 ←--+--→ Feature 3
-              \
-               ↘
-            Feature 5
-               |
-               ↓
-            Feature 4
+          Feature 1
+             ↑
+            / \
+           /   \
+Feature 5←     →Feature 2
+           \   /
+            \ /
+             ↓
+     Feature 4←→Feature 3
 ```
 
 Each feature gets a direction. Adjacent features are 72° apart (360° / 5). No two features are orthogonal, but they're spread as far apart as possible.
