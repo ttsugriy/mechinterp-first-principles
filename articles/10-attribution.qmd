@@ -43,6 +43,19 @@ Each term is a component's **contribution to the logits**. We can literally meas
 Because transformers accumulate contributions additively, we can decompose the output into per-component contributions. This is what makes attribution tractable.
 :::
 
+```{mermaid}
+%%| fig-cap: "Attribution decomposes the final logit into per-component contributions. Each component's output projects onto the vocabulary direction."
+%%| fig-width: 8
+flowchart LR
+    E["Embedding<br/>+0.5"] --> SUM(("+"))
+    H1["Head 5.2<br/>+0.9"] --> SUM
+    H2["Head 7.4<br/>+1.8"] --> SUM
+    M1["MLP 8<br/>+2.3"] --> SUM
+    H3["Head 6.1<br/>-0.3"] --> SUM
+    OTHER["Other<br/>+0.1"] --> SUM
+    SUM --> OUT["Logit for 'Paris'<br/>= 5.3"]
+```
+
 ## Logit Attribution
 
 The most basic form of attribution: for a given output token, measure how much each component contributed to that token's logit.

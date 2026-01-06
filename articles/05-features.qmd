@@ -132,6 +132,33 @@ Here's the key insight: **even when neurons are polysemantic, features can be mo
 
 The features are directions in activation space. Multiple features can be encoded in overlapping patterns across neurons. Each feature, as a direction, might be interpretable—"this direction means cat faces," "that direction means car fronts." But any individual neuron participates in multiple features, so looking at neurons individually gives you the confusing polysemantic picture.
 
+```{mermaid}
+%%| fig-cap: "Polysemantic neurons vs monosemantic features: each neuron participates in multiple features, but each feature direction is interpretable."
+%%| fig-width: 8
+flowchart LR
+    subgraph Neurons["Neurons (Polysemantic)"]
+        N1["Neuron 1<br/>🐱 + 🚗 + 🔵"]
+        N2["Neuron 2<br/>🐱 + 🌲 + 🔵"]
+        N3["Neuron 3<br/>🚗 + 🌲"]
+    end
+
+    subgraph Features["Features (Monosemantic)"]
+        F1["Cat 🐱"]
+        F2["Car 🚗"]
+        F3["Tree 🌲"]
+        F4["Blue 🔵"]
+    end
+
+    N1 --> F1
+    N1 --> F2
+    N1 --> F4
+    N2 --> F1
+    N2 --> F3
+    N2 --> F4
+    N3 --> F2
+    N3 --> F3
+```
+
 ::: {.callout-note}
 ## The Decomposition Goal
 The goal of mechanistic interpretability is to decompose polysemantic neurons into monosemantic features. We want to find the directions that correspond to interpretable concepts, even though the neurons that encode those directions are a tangled mess.
