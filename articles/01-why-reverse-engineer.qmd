@@ -15,6 +15,15 @@ description: "Neural networks discover algorithms we didn't teach them. Understa
 - The key techniques available (overview for the series)
 :::
 
+::: {.callout-note}
+## Series Information
+This is Article 1 of a 15-article series. See the [index page](../index.qmd) for:
+
+- **Background assumed**: What math and programming knowledge helps
+- **Key notation**: Symbol reference used throughout the series
+- **Reading paths**: Different routes through the material based on your background
+:::
+
 ## The Mystery
 
 In 2022, researchers at OpenAI were training a small neural network to do modular arithmetic—computing sums like (23 + 47) mod 97. The task is trivial for a pocket calculator, but the researchers wanted to understand how neural networks learn such algorithmic tasks.

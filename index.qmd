@@ -109,6 +109,49 @@ flowchart TB
 - Performance engineers interested in AI
 - Anyone who values understanding *why* over just *how*
 
+## Background Assumed
+
+This series is designed to be accessible, but some background helps:
+
+::: {.callout-note}
+## Mathematical Background
+- **Linear algebra basics**: Vectors, matrices, matrix multiplication, dot products
+- **High school math**: Exponentials, logarithms, basic trigonometry
+- **No calculus required**: Gradient descent is explained conceptually
+
+If you can multiply a matrix by a vector and know that cos(90°) = 0, you have enough math.
+:::
+
+::: {.callout-note}
+## Programming Background
+- **Python familiarity**: Code examples use Python and PyTorch
+- **No ML experience required**: We explain transformers from scratch
+- **Helpful but optional**: Prior exposure to neural networks accelerates Arc I
+:::
+
+## Key Notation
+
+Quick reference for notation used throughout the series:
+
+| Symbol | Meaning | Example |
+|--------|---------|---------|
+| $x$ | Activation vector (residual stream state) | $x \in \mathbb{R}^{768}$ |
+| $W$ | Weight matrix | $W_Q$, $W_K$, $W_V$ for attention |
+| $W_E$ | Embedding matrix (tokens → vectors) | Maps "Paris" to a 768-dim vector |
+| $W_U$ | Unembedding matrix (vectors → logits) | Projects residual stream to vocabulary |
+| $d$ | Model dimension (hidden size) | GPT-2 Small: $d = 768$ |
+| $n$ | Number of features | Often $n >> d$ due to superposition |
+| $L$ | Layer index | $x^{(L)}$ = residual stream at layer $L$ |
+| $h$ | Attention head index | Head $h$ in layer $L$ |
+| $\text{softmax}$ | Converts scores to probabilities | $\text{softmax}(z)_i = \frac{e^{z_i}}{\sum_j e^{z_j}}$ |
+
+**Common terms explained**:
+
+- **Logits**: Raw (unnormalized) scores before softmax. Higher logit = model thinks token is more likely.
+- **Embedding**: Converting discrete tokens into continuous vectors the model can process.
+- **Unembedding**: The reverse—projecting internal vectors back to vocabulary-sized predictions.
+- **Hook**: (TransformerLens) A callback that lets you read or modify activations during a forward pass.
+
 ## The Approach
 
 We use **Polya's problem-solving framework** throughout: understand the problem before devising solutions, verify your understanding through intervention, and always ask "what would make this explanation wrong?"

@@ -13,6 +13,27 @@ A reference guide to the core terminology used throughout this book. Terms are o
 **Attention**
 : A mechanism that routes information between positions in a sequence. Each position computes query, key, and value vectors; attention weights are determined by query-key similarity. ([Article 2](articles/02-transformers.qmd))
 
+**Attention Pattern**
+: The matrix of attention weights showing how much each position attends to each other position. Visualized as a heatmap where row *i*, column *j* shows how much position *i* attends to position *j*. ([Article 2](articles/02-transformers.qmd))
+
+**Query, Key, Value (Q, K, V)**
+: The three projections computed for each token in attention. Queries ask "what am I looking for?", keys say "what do I contain?", values say "what information should I provide?". Attention weight = softmax(Q · K^T / √d). ([Article 2](articles/02-transformers.qmd))
+
+**Softmax**
+: A function that converts a vector of arbitrary scores into a probability distribution. For input z, softmax(z)ᵢ = exp(zᵢ) / Σⱼ exp(zⱼ). Makes all values positive and sum to 1. ([Article 2](articles/02-transformers.qmd))
+
+**Logits**
+: Raw, unnormalized scores before applying softmax. In language models, logits are the model's "confidence" for each vocabulary token before normalization to probabilities. Higher logit = more likely prediction. ([Article 2](articles/02-transformers.qmd))
+
+**Embedding**
+: Converting discrete tokens (words, subwords) into continuous vectors the model can process. The embedding matrix W_E maps each token ID to a d-dimensional vector. ([Article 2](articles/02-transformers.qmd))
+
+**Unembedding**
+: The reverse of embedding—projecting internal vectors back to vocabulary-sized predictions. The unembedding matrix W_U converts the final residual stream into logits over the vocabulary. ([Article 2](articles/02-transformers.qmd))
+
+**Layer Normalization**
+: A technique that normalizes activations to have zero mean and unit variance. Stabilizes training and appears before attention and MLP blocks in most transformers. ([Article 2](articles/02-transformers.qmd))
+
 **MLP (Multi-Layer Perceptron)**
 : The feedforward component of a transformer layer. Applies learned nonlinear transformations to each position independently. Often hypothesized to store factual knowledge. ([Article 2](articles/02-transformers.qmd))
 
@@ -101,6 +122,18 @@ A reference guide to the core terminology used throughout this book. Terms are o
 **Resample Ablation**
 : Replacing a component's output with its value from a random different input. Preserves marginal distribution but breaks input-specific computation. ([Article 12](articles/12-ablation.qmd))
 
+**Steering**
+: Modifying model behavior by adding or subtracting feature directions from the residual stream during inference. More targeted than prompting, more reversible than fine-tuning. ([Article 9](articles/09-sparse-autoencoders.qmd))
+
+**Feature Absorption**
+: A failure mode where increasing SAE dictionary size causes common features to "absorb" related features, preventing them from activating. A fundamental challenge for hierarchical concepts. ([Article 9](articles/09-sparse-autoencoders.qmd))
+
+**Dead Features**
+: SAE latent dimensions that never activate during training or inference. Represent wasted capacity; rates of 5-20% are common. ([Article 9](articles/09-sparse-autoencoders.qmd))
+
+**Out-of-Distribution (OOD)**
+: Inputs that differ significantly from the training distribution. Interventions like patching and ablation can create OOD activations, potentially confounding results. ([Article 11](articles/11-patching.qmd))
+
 ## Arc IV: Synthesis
 
 **Induction Head**
@@ -133,12 +166,18 @@ A reference guide to the core terminology used throughout this book. Terms are o
 
 | Term | One-Line Definition |
 |------|---------------------|
+| Logits | Raw scores before softmax; higher = more likely |
+| Softmax | Converts scores to probabilities (sum to 1) |
+| Residual Stream | The shared vector all components read from and write to |
 | Feature | A direction in activation space encoding a semantic property |
 | Superposition | Packing more features than dimensions using near-orthogonality |
+| Polysemantic | A neuron responding to multiple unrelated concepts |
 | Circuit | A subnetwork implementing an identifiable algorithm |
 | SAE | Tool for decomposing polysemantic neurons into monosemantic features |
+| Steering | Adding/subtracting feature directions to modify behavior |
 | Attribution | Measuring per-component contributions to outputs |
 | Patching | Causal intervention by swapping activations between inputs |
 | Ablation | Testing necessity by removing component contributions |
 | Induction Head | Attention head enabling in-context pattern completion |
+| Out-of-Distribution | Inputs unlike training data; can confound interventions |
 :::

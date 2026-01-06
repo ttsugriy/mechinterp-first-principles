@@ -114,6 +114,47 @@ output_5 = 0.7 × V_3 + 0.2 × V_7 + 0.1 × V_1 + ...
 
 Position 5 "attends to" position 3 (weight 0.7), a bit to position 7, a bit to position 1, and so on. The output is a blend of information from across the sequence.
 
+::: {.callout-tip collapse="true"}
+## Code: Computing Attention Step-by-Step
+
+Here's the complete attention computation in Python. This is the core of what transformers do:
+
+```python
+import torch
+import torch.nn.functional as F
+
+# Example: 4 tokens, each embedded as 8-dimensional vector
+seq_len, d_model = 4, 8
+x = torch.randn(seq_len, d_model)  # Input embeddings
+
+# Learned weight matrices (normally trained, here random)
+d_head = 4  # Dimension of Q, K, V per head
+W_Q = torch.randn(d_model, d_head)
+W_K = torch.randn(d_model, d_head)
+W_V = torch.randn(d_model, d_head)
+
+# Step 1: Compute queries, keys, values
+Q = x @ W_Q  # Shape: (seq_len, d_head)
+K = x @ W_K
+V = x @ W_V
+
+# Step 2: Compute attention scores (Q·K^T)
+scores = Q @ K.T  # Shape: (seq_len, seq_len)
+scores = scores / (d_head ** 0.5)  # Scale by sqrt(d_head)
+
+# Step 3: Apply softmax to get attention weights
+attn_weights = F.softmax(scores, dim=-1)  # Each row sums to 1
+
+# Step 4: Weighted sum of values
+output = attn_weights @ V  # Shape: (seq_len, d_head)
+
+# attn_weights[i, j] = how much position i attends to position j
+print(f"Attention weights:\n{attn_weights}")
+```
+
+**Key insight**: Every step is matrix multiplication except `softmax`, which is the essential nonlinearity. Without softmax, the whole thing would collapse to a single linear transformation.
+:::
+
 ::: {.callout-important}
 ## Why This Matters
 Attention is how transformers move information between positions. A token at the end of the sequence can access information from the beginning. This is fundamentally different from older architectures that processed sequences one step at a time.

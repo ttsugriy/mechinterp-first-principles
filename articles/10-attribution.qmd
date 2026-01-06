@@ -337,6 +337,81 @@ Together, they form a complete methodology:
 2. **Patching**: What *must* contribute? (intervention)
 3. **Ablation**: What happens if we remove it? (Article 12)
 
+::: {.callout-tip collapse="true"}
+## The Attribution → Patching Workflow
+
+In practice, you never use attribution alone. Here's the standard workflow:
+
+```{mermaid}
+%%| fig-width: 9
+flowchart LR
+    A["Run attribution<br/>(cheap, ~1 forward pass)"] --> B["Identify top-10<br/>components"]
+    B --> C["Run patching on<br/>candidates<br/>(expensive, many passes)"]
+    C --> D{"Does patching<br/>confirm attribution?"}
+    D -->|Yes| E["Component is<br/>causally necessary"]
+    D -->|No| F["Component is<br/>redundant or<br/>correlated"]
+```
+
+### Why This Order?
+
+| Step | Cost | Purpose |
+|------|------|---------|
+| Attribution | 1-2 forward passes | Generate hypotheses—find candidates |
+| Patching | ~100 forward passes per component | Test hypotheses—verify causality |
+
+Attribution is cheap; patching is expensive. Use attribution to narrow your search, then patch only the promising candidates.
+
+### Practical Example: "The capital of France is ___"
+
+**Step 1: Attribution (5 minutes)**
+```python
+# Run once, get contribution of every component
+contributions = model.logit_attribution(prompt, target="Paris")
+top_components = contributions.sort()[:10]
+# Result: MLP 8 (+2.3), Head 7.4 (+1.8), Head 5.2 (+0.9), ...
+```
+
+**Step 2: Patching on top candidates (30 minutes)**
+```python
+# For each top component, patch from corrupted input
+for component in top_components:
+    recovery = patch_from_corrupted(component)
+    # If recovery > 0.5, this component is causally important
+```
+
+**Step 3: Interpret results**
+- MLP 8: patching recovers 78% → causally necessary
+- Head 7.4: patching recovers 65% → causally important
+- Head 5.2: patching recovers 8% → correlated but redundant
+
+### When Attribution ≠ Patching
+
+Sometimes high attribution doesn't survive patching:
+
+| Scenario | High Attribution? | Patching Effect? | Interpretation |
+|----------|------------------|------------------|----------------|
+| Sole path | Yes | High | This component computes the answer |
+| Redundant path | Yes | Low | Other paths also carry the answer |
+| Passthrough | Yes | Medium | Reads from earlier, writes to later |
+| Suppression | Negative | High | Actively suppresses wrong answers |
+
+The "redundant path" case is common in large models with backup circuits. Attribution sees contribution; patching reveals redundancy.
+
+### Cost-Benefit Summary
+
+- **1 task, unknown circuit**: Use attribution to find candidates, then patch top-10
+- **Known circuit, new inputs**: Skip attribution, patch directly
+- **Exploratory research**: Attribution across 100 inputs to find consistent patterns
+:::
+
+::: {.callout-warning}
+## Common Mistake: Skipping to Patching
+
+It's tempting to "just run patching on everything." Don't. For a model with 144 attention heads + 12 MLPs, full patching requires ~15,000 forward passes. Attribution gives you the same hypothesis in 2 passes.
+
+Attribution is your cheap filter. Use it.
+:::
+
 ## Polya's Perspective: Working Backwards
 
 Attribution is Polya's "work backwards" heuristic in action.
