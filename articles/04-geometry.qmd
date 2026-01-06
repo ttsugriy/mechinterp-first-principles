@@ -64,6 +64,112 @@ $$\text{similarity}(a, b) = \frac{a \cdot b}{||a|| \cdot ||b||}$$
 
 Values near 1 mean the vectors point in nearly the same direction. Values near 0 mean they're nearly perpendicular. Values near -1 mean they point in opposite directions.
 
+### Interactive: Explore Cosine Similarity
+
+Drag the sliders to change the angle of vector B and see how cosine similarity changes. Notice how similar directions have high similarity, perpendicular vectors have zero similarity, and opposite directions have negative similarity.
+
+```{ojs}
+//| label: fig-cosine-interactive
+//| fig-cap: "Interactive cosine similarity: adjust vector B's angle to see how similarity changes with direction."
+
+viewof angleB = Inputs.range([0, 360], {step: 1, value: 30, label: "Vector B angle (degrees)"})
+
+// Vector A is fixed at 0 degrees
+angleA = 0
+
+// Calculate cosine similarity
+cosineSim = Math.cos((angleB - angleA) * Math.PI / 180)
+angleDiff = Math.abs(angleB - angleA) > 180 ? 360 - Math.abs(angleB - angleA) : Math.abs(angleB - angleA)
+
+// Visualization
+{
+  const width = 450;
+  const height = 350;
+  const radius = 130;
+  const cx = width / 2;
+  const cy = height / 2 + 20;
+
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, width, height])
+    .attr("width", width)
+    .attr("height", height);
+
+  // Background
+  svg.append("circle")
+    .attr("cx", cx).attr("cy", cy)
+    .attr("r", radius)
+    .attr("fill", "none")
+    .attr("stroke", "#ddd")
+    .attr("stroke-width", 1);
+
+  // Axes
+  svg.append("line").attr("x1", cx - radius).attr("y1", cy).attr("x2", cx + radius).attr("y2", cy).attr("stroke", "#eee");
+  svg.append("line").attr("x1", cx).attr("y1", cy - radius).attr("x2", cx).attr("y2", cy + radius).attr("stroke", "#eee");
+
+  // Vector A (fixed at 0 degrees - pointing right)
+  const axA = Math.cos(angleA * Math.PI / 180) * radius * 0.9;
+  const ayA = -Math.sin(angleA * Math.PI / 180) * radius * 0.9;
+  svg.append("line")
+    .attr("x1", cx).attr("y1", cy)
+    .attr("x2", cx + axA).attr("y2", cy + ayA)
+    .attr("stroke", "#e41a1c")
+    .attr("stroke-width", 4);
+  svg.append("circle").attr("cx", cx + axA).attr("cy", cy + ayA).attr("r", 6).attr("fill", "#e41a1c");
+  svg.append("text").attr("x", cx + axA + 15).attr("y", cy + ayA + 5).attr("fill", "#e41a1c").attr("font-weight", "bold").text("A");
+
+  // Vector B (adjustable)
+  const axB = Math.cos(angleB * Math.PI / 180) * radius * 0.9;
+  const ayB = -Math.sin(angleB * Math.PI / 180) * radius * 0.9;
+  svg.append("line")
+    .attr("x1", cx).attr("y1", cy)
+    .attr("x2", cx + axB).attr("y2", cy + ayB)
+    .attr("stroke", "#377eb8")
+    .attr("stroke-width", 4);
+  svg.append("circle").attr("cx", cx + axB).attr("cy", cy + ayB).attr("r", 6).attr("fill", "#377eb8");
+  svg.append("text").attr("x", cx + axB + 15).attr("y", cy + ayB + 5).attr("fill", "#377eb8").attr("font-weight", "bold").text("B");
+
+  // Angle arc
+  const arcRadius = 40;
+  const startAngle = Math.min(angleA, angleB) * Math.PI / 180;
+  const endAngle = Math.max(angleA, angleB) * Math.PI / 180;
+  const arc = d3.arc()
+    .innerRadius(arcRadius - 2)
+    .outerRadius(arcRadius + 2)
+    .startAngle(-endAngle + Math.PI/2)
+    .endAngle(-startAngle + Math.PI/2);
+  svg.append("path")
+    .attr("d", arc)
+    .attr("transform", `translate(${cx}, ${cy})`)
+    .attr("fill", "#999")
+    .attr("opacity", 0.5);
+
+  // Title and results
+  svg.append("text").attr("x", cx).attr("y", 25).attr("text-anchor", "middle").attr("font-size", "16px").attr("font-weight", "bold")
+    .text("Cosine Similarity Explorer");
+
+  // Color based on similarity
+  const simColor = cosineSim > 0.5 ? "#4CAF50" : cosineSim > 0 ? "#FFC107" : cosineSim > -0.5 ? "#FF9800" : "#f44336";
+
+  svg.append("text").attr("x", cx).attr("y", height - 45).attr("text-anchor", "middle").attr("font-size", "14px")
+    .text(`Angle between vectors: ${angleDiff.toFixed(0)}°`);
+
+  svg.append("text").attr("x", cx).attr("y", height - 20).attr("text-anchor", "middle").attr("font-size", "18px").attr("font-weight", "bold").attr("fill", simColor)
+    .text(`Cosine Similarity: ${cosineSim.toFixed(3)}`);
+
+  return svg.node();
+}
+```
+
+```{ojs}
+//| echo: false
+md`**Interpretation**: ${cosineSim > 0.9 ? "✓ Very similar directions — these vectors represent closely related concepts" :
+  cosineSim > 0.5 ? "↗ Somewhat similar — moderate relationship" :
+  cosineSim > 0.1 ? "→ Weak similarity — slight relationship" :
+  cosineSim > -0.1 ? "⊥ Nearly orthogonal — independent concepts (no interference in superposition!)" :
+  cosineSim > -0.5 ? "← Somewhat opposite" :
+  "✗ Opposite directions — these features represent contrasting concepts"}`
+```
+
 When researchers measure cosine similarity between residual stream vectors for related inputs, they find high values. The geometry reflects semantic structure.
 
 ::: {.callout-tip}

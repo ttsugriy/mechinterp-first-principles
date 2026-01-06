@@ -80,6 +80,33 @@ Here's the crucial part: components don't talk to each other directly. Attention
 
 The residual stream is a **communication channel**. It's the only way components can interact.
 
+::: {.callout-tip}
+## Visual Metaphor: The Shared Whiteboard
+
+Think of the residual stream as a **shared whiteboard** in a meeting room:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                  📋 RESIDUAL STREAM                      │
+│              (The Shared Whiteboard)                    │
+│                                                         │
+│   "Paris" + "capital" + "France" + "answer needed"      │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+        ↑ write    ↑ write    ↑ write    ↓ read
+        │          │          │          │
+   ┌────┴───┐ ┌────┴───┐ ┌────┴───┐ ┌────┴───┐
+   │Head 1.3│ │Head 4.2│ │ MLP 6  │ │Head 9.1│
+   │"I found│ │"This is│ │"France │ │"Let me │
+   │ Paris" │ │capital"│ │→Paris" │ │ read..." │
+   └────────┘ └────────┘ └────────┘ └────────┘
+```
+
+- Each component **reads** what's on the whiteboard
+- Each component **adds** its contribution (never erases!)
+- The final answer is the sum of everything written
+:::
+
 ```{mermaid}
 %%| fig-cap: "The residual stream accumulates contributions from each component. All communication happens through this shared vector."
 %%| fig-width: 8

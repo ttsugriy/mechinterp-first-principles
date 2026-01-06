@@ -93,6 +93,36 @@ For the prompt "The capital of France is ___":
 
 The model's confidence in "Paris" is the sum of all contributions. We can now ask: what is MLP 8 doing? What pattern is head 7.4 attending to?
 
+::: {.callout-note collapse="true"}
+## Step-by-Step: How Attribution Math Works
+
+Let's trace through the calculation for one component (Head 7.4):
+
+**Step 1: Get the head's output vector**
+```
+h_7.4 = [0.23, -0.15, 0.87, ..., 0.42]  # 768 dimensions
+```
+
+**Step 2: Get the "Paris" column from the unembedding matrix**
+```
+W_unembed[:, paris_id] = [0.12, 0.34, 0.56, ..., 0.78]  # 768 dimensions
+```
+
+**Step 3: Compute the dot product (projection)**
+```
+contribution = h_7.4 · W_unembed[:, paris_id]
+             = (0.23 × 0.12) + (-0.15 × 0.34) + (0.87 × 0.56) + ... + (0.42 × 0.78)
+             = +1.84
+```
+
+**Interpretation**: Head 7.4's output, when projected onto the "Paris" direction in vocabulary space, contributes +1.84 to the logit. A positive value means this head is pushing *toward* predicting "Paris".
+
+The same calculation is repeated for every component. The final logit is the sum:
+```
+logit("Paris") = Σ all contributions = 2.31 + 1.84 + 0.92 + 0.45 - 0.28 + ... = 5.24
+```
+:::
+
 ## The Logit Lens: Peeking at Intermediate Predictions
 
 Attribution tells you which components contributed. But *when* did the model "know" the answer?
