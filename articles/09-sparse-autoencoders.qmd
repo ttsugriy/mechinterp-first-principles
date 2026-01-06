@@ -50,29 +50,14 @@ Activation (768) → Encoder → Sparse Latent (16,384) → Decoder → Reconstr
 ```
 
 ```{mermaid}
-%%| fig-cap: "SAE architecture: a small activation is expanded into a large sparse latent, then reconstructed. The sparse latent contains interpretable features."
+%%| fig-cap: "SAE architecture: activations are expanded to a large sparse space, then reconstructed. Most latent dimensions are zero."
+%%| fig-width: 8
 flowchart LR
-    subgraph Input
-        A["Activation<br/>(768 dims)"]
-    end
-
-    subgraph Encoder
-        E["W_enc × x + b<br/>+ ReLU"]
-    end
-
-    subgraph "Sparse Latent"
-        L["16,384 dims<br/>~300 non-zero<br/>⬛⬛⬜⬜⬜⬜⬛⬜⬜⬛⬜⬜..."]
-    end
-
-    subgraph Decoder
-        D["W_dec × z"]
-    end
-
-    subgraph Output
-        R["Reconstruction<br/>(768 dims)"]
-    end
-
-    A --> E --> L --> D --> R
+    A["Activation<br/>(768 dims)"] --> E["Encoder<br/>W_enc × x + b"]
+    E --> R["ReLU"]
+    R --> L["Sparse Latent<br/>(16,384 dims)<br/>~300 active"]
+    L --> D["Decoder<br/>W_dec × z"]
+    D --> O["Reconstruction<br/>(768 dims)"]
 ```
 
 ### Why Overcomplete?
@@ -338,6 +323,11 @@ Identify features related to:
 - Unsafe code patterns
 
 Potentially suppress these features during deployment, or flag inputs where they activate strongly.
+
+::: {.callout-tip}
+## Try It Yourself: Neuronpedia
+Explore real SAE features interactively at **[Neuronpedia](https://www.neuronpedia.org/)**. Browse features discovered in GPT-2, Gemma 2, Llama 3, and other models. Search for concepts like "code," "emotion," or "deception" to see what features researchers have found. Each feature shows max-activating examples, helping you build intuition for what SAEs actually discover.
+:::
 
 ## Polya's Perspective: Auxiliary Constructions
 

@@ -184,29 +184,33 @@ Here's the same process as a visual diagram:
 
 ```{mermaid}
 %%| fig-cap: "The transformer forward pass: tokens flow through embedding, repeated attention+MLP blocks, and unembedding to produce predictions."
+%%| fig-width: 8
+flowchart LR
+    T["Tokens"] --> E["Embed + Position"]
+    E --> L1["Layer 1"]
+    L1 --> L2["Layer 2"]
+    L2 --> Ldots["..."]
+    Ldots --> LL["Layer L"]
+    LL --> U["Unembed"]
+    U --> S["Softmax"]
+    S --> P["Predictions"]
+```
+
+Each layer contains the same structure: layer norm → attention → add → layer norm → MLP → add. The residual connections (the "add" steps) accumulate information through the network.
+
+```{mermaid}
+%%| fig-cap: "Inside each transformer layer: attention and MLP both read from and write to the residual stream."
+%%| fig-width: 7
 flowchart TB
-    subgraph Input
-        T[Tokens] --> E[Embedding]
-        E --> P[+ Position]
-    end
-
-    subgraph Layer["Layer (repeated L times)"]
-        P --> LN1[Layer Norm]
-        LN1 --> ATT[Multi-Head Attention]
-        ATT --> ADD1((+))
-        P --> ADD1
-        ADD1 --> LN2[Layer Norm]
-        LN2 --> MLP[MLP / FFN]
-        MLP --> ADD2((+))
-        ADD1 --> ADD2
-    end
-
-    subgraph Output
-        ADD2 --> LNF[Final Layer Norm]
-        LNF --> UE[Unembedding]
-        UE --> SM[Softmax]
-        SM --> PRED[Next Token Probabilities]
-    end
+    IN["Input from previous layer"] --> LN1["Layer Norm"]
+    LN1 --> ATT["Multi-Head Attention"]
+    ATT --> A1["+"]
+    IN --> A1
+    A1 --> LN2["Layer Norm"]
+    LN2 --> MLP["MLP"]
+    MLP --> A2["+"]
+    A1 --> A2
+    A2 --> OUT["Output to next layer"]
 ```
 
 Count the matrix multiplications:
@@ -217,6 +221,29 @@ Count the matrix multiplications:
 For a model with 12 layers and 12 attention heads, that's hundreds of matrix multiplications. For GPT-3 with 96 layers and 96 heads, it's thousands.
 
 And yet, it's *just* matrix multiplications (plus a few nonlinearities: softmax, ReLU/GELU, layer norm).
+
+## Interactive: Explore a Real Transformer
+
+Now that you understand the architecture conceptually, try exploring it interactively. The Transformer Explainer below lets you see a real GPT-2 model process text in your browser—watch attention patterns form, see how information flows through layers, and experiment with different inputs.
+
+::: {.callout-tip}
+## How to Use
+Type any text in the input box and watch the transformer process it in real-time. Click on attention heads to see their patterns. This visualization runs GPT-2 (124M parameters) directly in your browser.
+:::
+
+<div style="width: 100%; height: 800px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; margin: 2rem 0;">
+<iframe
+    src="https://poloclub.github.io/transformer-explainer/"
+    style="width: 100%; height: 100%; border: none;"
+    title="Transformer Explainer - Interactive GPT-2 Visualization"
+    loading="lazy">
+</iframe>
+</div>
+
+::: {.callout-note}
+## Credit
+[Transformer Explainer](https://poloclub.github.io/transformer-explainer/) was created by Aeree Cho and colleagues at Georgia Tech. It uses ONNX Runtime to run GPT-2 entirely in your browser. [Paper](https://arxiv.org/abs/2408.04619) | [GitHub](https://github.com/poloclub/transformer-explainer)
+:::
 
 ## Why Linearity Matters
 

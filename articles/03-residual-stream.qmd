@@ -81,25 +81,19 @@ Here's the crucial part: components don't talk to each other directly. Attention
 The residual stream is a **communication channel**. It's the only way components can interact.
 
 ```{mermaid}
-%%| fig-cap: "Components read from and write to a shared residual stream. Information flows through this common workspace."
+%%| fig-cap: "The residual stream accumulates contributions from each component. All communication happens through this shared vector."
+%%| fig-width: 8
 flowchart LR
-    subgraph "Residual Stream"
-        direction TB
-        X0["x₀ (embedding)"]
-        X1["x₁ = x₀ + contributions"]
-        X2["x₂ = x₁ + contributions"]
-        XL["xₗ (final)"]
-        X0 --> X1 --> X2 --> XL
-    end
+    X0["x₀<br/>(embedding)"] --> X1["x₁ = x₀ + attn₁ + mlp₁"]
+    X1 --> X2["x₂ = x₁ + attn₂ + mlp₂"]
+    X2 --> X3["..."]
+    X3 --> XL["xₗ<br/>(final)"]
 
-    H1["Attn Head 1.0"] -.->|"read"| X0
-    H1 -.->|"write"| X1
-    H2["Attn Head 1.1"] -.->|"read"| X0
-    H2 -.->|"write"| X1
-    M1["MLP Layer 1"] -.->|"read"| X1
-    M1 -.->|"write"| X2
-    H3["Attn Head 2.0"] -.->|"read"| X1
-    H3 -.->|"write"| X2
+    H1["Attn 1.0"] -.-> X1
+    H2["Attn 1.1"] -.-> X1
+    M1["MLP 1"] -.-> X1
+    H3["Attn 2.0"] -.-> X2
+    M2["MLP 2"] -.-> X2
 ```
 
 ## Why This Matters
