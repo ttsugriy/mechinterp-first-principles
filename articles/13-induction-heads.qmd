@@ -737,6 +737,31 @@ Gradient descent discovered induction heads, but are they optimal? Could there b
 
 Induction heads are clear in small models (GPT-2, 124M parameters). In large models (70B+ parameters), are the circuits still as clean? Early evidence suggests more redundancy and fuzzier boundaries.
 
+::: {.callout-warning}
+## Honest Assessment: Scope of These Findings
+
+The induction head circuit is remarkably well-understood—*for GPT-2 Small*. Here's an honest calibration:
+
+**What we know well:**
+- The two-layer circuit (previous token + induction head) in 124M-1B parameter models
+- The phase transition during training
+- That every tested model develops some form of induction heads
+
+**What we know less well:**
+- Exact circuit details in 70B+ parameter production models
+- How induction heads interact with other circuits in complex prompts
+- Whether the clean two-head story holds at scale or becomes messier
+
+**What we don't know:**
+- The capacity limits (how many patterns simultaneously?)
+- Whether there are better algorithms the models haven't found
+- How much in-context learning is induction heads vs. other mechanisms
+
+**Numbers without error bars**: The accuracy numbers in this article (87% baseline, 23% ablated) are illustrative, not from a single definitive study. Real numbers vary by model, prompt, and measurement method. When replicating, expect variance.
+
+The induction head story is the *best* story we have about any transformer circuit. It's also incomplete. Both facts are important.
+:::
+
 ## Polya's Perspective: Worked Example
 
 This article applies Polya's heuristic: **study worked examples**.
