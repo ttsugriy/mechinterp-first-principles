@@ -244,6 +244,48 @@ Circuit discovery is still largely manual:
 
 This works for narrow, well-defined tasks. It struggles for open-ended generation or complex reasoning where "correct" is ambiguous.
 
+::: {.callout-warning collapse="true"}
+## Reality Check: Task Selection Bias
+
+Most published circuits are on carefully chosen tasks. Here's what makes a task "circuit-friendly":
+
+### What Works Well
+
+| Property | Example | Why It Helps |
+|----------|---------|--------------|
+| Clear ground truth | IOI: "Mary" is correct | Easy to measure patching recovery |
+| Single token output | Factual recall: "Paris" | Unambiguous success criterion |
+| Minimal complexity | A→B pattern completion | Few circuit components needed |
+| Natural clean/corrupted pairs | Swap "John" and "Mary" | Easy to construct interventions |
+
+### What's Hard to Study
+
+- **Creative generation**: No single "correct" poem, story, or joke
+- **Multi-step reasoning**: Which step does the circuit implement?
+- **Open-ended dialogue**: Success is subjective
+- **Implicit knowledge**: "Common sense" distributed everywhere
+
+### The Selection Effect
+
+Published circuits (IOI, induction heads, greater-than) were chosen partly *because* they worked:
+
+1. Researchers tried many tasks
+2. Some yielded clean circuits, some didn't
+3. Clean results got published
+4. We don't see the failed attempts
+
+This doesn't mean circuits research is wrong—it means the scope is currently narrow. Most model capabilities haven't been studied this way, and some may resist circuit-level explanation.
+
+### Honest Questions
+
+Before starting a circuit analysis, ask:
+- Can I define success in one number (accuracy, logit difference)?
+- Can I construct clean/corrupted pairs with minimal changes?
+- Is the task narrow enough that <20% of components might suffice?
+
+If the answer is "no" to any of these, consider whether circuits analysis is the right approach, or whether you need complementary methods (behavioral testing, feature analysis, etc.).
+:::
+
 ## Examples of Discovered Circuits
 
 Beyond IOI, what other circuits have researchers found?

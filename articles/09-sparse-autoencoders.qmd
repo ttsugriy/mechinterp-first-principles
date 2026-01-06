@@ -128,6 +128,33 @@ For any input activation, the SAE produces a sparse vector of feature activation
 
 The magnitude of each activation tells you how strongly that feature is present.
 
+### Connection to Toy Models
+
+Remember the pentagon from [Article 7](07-toy-models.qmd)? In that toy model, 5 sparse features arranged themselves as a regular pentagon in 2D—the optimal geometry for minimizing interference.
+
+SAEs are doing the same thing, but in reverse:
+
+| Toy Models | SAEs |
+|------------|------|
+| We define features, watch network learn geometry | Network has learned geometry, we recover features |
+| 5 features → pentagon in 2D | Millions of features → complex polytope in 768D |
+| Ground truth known | Ground truth unknown |
+| Validates superposition theory | Applies superposition theory |
+
+The toy model shows *what should happen* under ideal conditions. SAEs attempt to *undo* what happened in real networks. When an SAE finds features that are nearly orthogonal and activate sparsely, it's recovering the structure that toy models predict.
+
+::: {.callout-note}
+## The Validation Loop
+Toy models predict that sparse features should arrange as near-orthogonal directions. SAE decoder columns (feature vectors) can be checked for this property. Finding that SAE features are indeed nearly orthogonal validates both the SAE and the superposition hypothesis.
+:::
+
+In practice, SAE features in large models show:
+- **High sparsity**: <300 features active per token (out of millions)
+- **Near-orthogonality**: Decoder columns have low pairwise cosine similarity
+- **Polytope-like structure**: Features cluster into interpretable groups
+
+This is exactly what toy models predict—scaled up by orders of magnitude.
+
 ## Interpreting Features
 
 How do you know what a feature means?

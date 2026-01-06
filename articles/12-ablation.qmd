@@ -454,6 +454,75 @@ Together, they enable the full interpretability workflow:
 
 This is the methodology that produced the IOI circuit, the induction head analysis, and other major interpretability results.
 
+### The Complete Interpretability Pipeline
+
+Here's how all four techniques from Arc III work together in practice:
+
+```{mermaid}
+%%| fig-cap: "The interpretability pipeline: each technique answers a different question, and together they reveal the circuit."
+%%| fig-width: 9
+flowchart TD
+    subgraph DISCOVERY["Phase 1: Discovery"]
+        SAE["SAE Feature Extraction<br/>→ What concepts exist?"]
+        ATTR["Logit Attribution<br/>→ What aligns with output?"]
+    end
+
+    subgraph VALIDATION["Phase 2: Validation"]
+        ABL["Ablation<br/>→ What's necessary?"]
+        PATCH["Patching<br/>→ What causes the behavior?"]
+    end
+
+    subgraph RESULT["Phase 3: Understanding"]
+        CIRCUIT["Circuit Description<br/>Features + Connections + Roles"]
+    end
+
+    SAE --> ATTR
+    ATTR --> ABL
+    ABL --> PATCH
+    PATCH --> CIRCUIT
+
+    SAE -.->|"monosemantic<br/>vocabulary"| PATCH
+    ABL -.->|"critical<br/>components"| PATCH
+
+    style DISCOVERY fill:#e3f2fd
+    style VALIDATION fill:#fff3e0
+    style RESULT fill:#e8f5e9
+```
+
+::: {.callout-tip collapse="true"}
+## Example: Applying the Pipeline to a New Task
+
+**Task**: Understanding how GPT-2 predicts "Berlin" after "The capital of Germany is"
+
+**Step 1: SAE Feature Extraction**
+- Run SAE on residual stream activations
+- Find features that activate: "Germany" feature, "capital city" feature, "European geography" feature
+- Now you have interpretable vocabulary
+
+**Step 2: Logit Attribution**
+- Decompose the "Berlin" logit into component contributions
+- Find: MLP layer 8 contributes +2.1, head 7.3 contributes +1.4, head 9.1 contributes +0.8
+- These are candidates for the circuit
+
+**Step 3: Ablation**
+- Ablate each candidate component
+- Find: Ablating MLP 8 drops accuracy from 95% to 20%—it's critical
+- Ablating head 7.3 drops accuracy to 60%—important but not sole contributor
+- Ablating head 9.1 has minimal effect—it's redundant (backup exists)
+
+**Step 4: Patching**
+- Use clean/corrupted pair: "The capital of Germany is ___" vs. "The capital of France is ___"
+- Patch MLP 8: 85% recovery—it carries country→capital information
+- Patch head 7.3: 40% recovery—it helps but isn't the main path
+- Path patching: trace that "Germany" token → head 5.1 → MLP 8 → output
+
+**Result: Circuit Description**
+- Head 5.1 moves "Germany" information to the prediction position
+- MLP 8 maps country → capital (stores factual knowledge)
+- Head 7.3 provides backup path (redundancy)
+- SAE features confirm: "capital city" feature activates in MLP 8 output
+:::
+
 ## Polya's Perspective: Simplification
 
 Ablation embodies Polya's heuristic of **simplification**: understand a system by making it simpler.

@@ -48,6 +48,65 @@ For the IOI task from Article 8:
 
 The corrupted input is carefully constructed: it's minimally different from the clean input but produces a different output. This ensures that any differences in activation are due to the specific computation we're studying, not irrelevant factors.
 
+::: {.callout-tip collapse="true"}
+## How to Construct Good Corrupted Inputs
+
+Constructing effective clean/corrupted pairs is an art. Here's a systematic approach:
+
+### The Checklist
+
+**1. Minimal difference**: Change as few tokens as possible
+- ✓ Good: Swap "John gave to Mary" → "Mary gave to John"
+- ✗ Bad: Completely different sentence about giving
+
+**2. Same structure**: Preserve length, syntax, and format
+- ✓ Good: "The capital of France is" → "The capital of Germany is"
+- ✗ Bad: "The capital of France is" → "Berlin is a city in Germany"
+
+**3. Matched statistics**: Similar token frequencies and positions
+- ✓ Good: Replace "Paris" with "Berlin" (both city names, similar frequency)
+- ✗ Bad: Replace "Paris" with "xyzzy" (nonsense token, very different statistics)
+
+**4. Opposite output**: Clean and corrupted should predict different (ideally opposite) targets
+- ✓ Good: Clean predicts "Mary", corrupted predicts "John"
+- ✗ Bad: Both predict "Mary" with slightly different confidence
+
+### Examples by Task Type
+
+| Task | Clean Input | Corrupted Input | What Changes |
+|------|-------------|-----------------|--------------|
+| IOI | "John and Mary... John gave to ___" | "John and Mary... Mary gave to ___" | Subject/object swap |
+| Factual recall | "The capital of France is" | "The capital of Germany is" | Country name |
+| Greater-than | "The war lasted from 1914 to 19" | "The war lasted from 1918 to 19" | Start year |
+| Sentiment | "This movie was absolutely wonderful" | "This movie was absolutely terrible" | Sentiment word |
+
+### Common Mistakes
+
+**Mistake 1: Too many differences**
+If your corrupted input differs in 10 ways, you can't isolate which difference matters. Keep it to 1-2 changes.
+
+**Mistake 2: Distribution shift**
+If corrupted tokens are rare or unusual, activations will be out-of-distribution. Use common tokens.
+
+**Mistake 3: No ground truth**
+You need to know what the "correct" output is for both inputs. Avoid ambiguous cases.
+
+**Mistake 4: Forgetting position**
+Token position matters! If you swap "John" and "Mary," make sure the positions are comparable.
+
+### When Construction Is Hard
+
+Some tasks don't have natural clean/corrupted pairs:
+- Creative generation (no single "correct" output)
+- Open-ended reasoning (many valid paths)
+- Multi-step tasks (which step do you corrupt?)
+
+For these, consider:
+- Using **ablation** instead of patching
+- Creating synthetic tasks with known structure
+- Focusing on sub-components of the task
+:::
+
 ### The Patching Procedure
 
 1. Run both clean and corrupted inputs through the model
