@@ -277,7 +277,28 @@ Research rarely follows this sequence linearly. You'll form a hypothesis, run ex
 
 ## Debugging Interpretability Experiments
 
-Things will go wrong. Here's how to debug.
+Things will go wrong. Here's how to debug systematically.
+
+```{mermaid}
+%%| fig-cap: "Systematic debugging workflow: follow this decision tree when experiments don't work."
+%%| fig-width: 10
+flowchart TD
+    START["Experiment not working"] --> CHECK["Check basics first"]
+    CHECK --> Q1{"Is the model<br/>doing the task<br/>at all?"}
+    Q1 -->|No| FIX1["Task too hard, or<br/>wrong task definition"]
+    Q1 -->|Yes| Q2{"Are attributions<br/>making sense?"}
+    Q2 -->|No| FIX2["Wrong layer, or<br/>distributed computation"]
+    Q2 -->|Yes| Q3{"Do ablations<br/>have effect?"}
+    Q3 -->|No| FIX3["Backup circuits, or<br/>wrong ablation type"]
+    Q3 -->|Yes| Q4{"Is patching<br/>clean?"}
+    Q4 -->|No| FIX4["Bad clean/corrupted pair,<br/>or distribution shift"]
+    Q4 -->|Yes| SUCCESS["Circuit analysis<br/>proceeding normally"]
+
+    FIX1 --> RETRY["Simplify & Retry"]
+    FIX2 --> RETRY
+    FIX3 --> RETRY
+    FIX4 --> RETRY
+```
 
 ### Problem: "Nothing has high attribution"
 
@@ -343,6 +364,55 @@ Things will go wrong. Here's how to debug.
 ## The Cardinal Rule
 When confused, simplify. Reduce to the smallest example that shows the phenomenon. If you can't replicate on a simple example, you probably don't understand the phenomenon.
 :::
+
+### When to Change Strategy
+
+Sometimes the problem isn't a bug—it's a signal that your approach needs rethinking.
+
+::: {.callout-warning collapse="true"}
+## Signs You Should Pivot
+
+**Signs the task is too hard for current methods:**
+
+- More than 50% of components have moderate attribution (nothing stands out)
+- Ablating any single component changes behavior by <5%
+- Results vary wildly across semantically similar prompts
+- You've spent 2+ weeks without progress
+
+**Signs you need a different approach:**
+
+| If you're doing... | Try instead... |
+|-------------------|----------------|
+| Single-head ablation | Multi-component ablation |
+| Zero ablation | Mean/resample ablation |
+| Component-level analysis | SAE feature-level analysis |
+| Looking at late layers | Looking at earlier layers |
+| One example | Many examples with statistics |
+
+**When to accept partial understanding:**
+
+Not every behavior has a clean circuit. It's scientifically valid to report:
+- "These 5 heads are the most important, but account for only 40% of the effect"
+- "The behavior appears distributed across many components"
+- "We found the circuit for the simple case; the complex case remains unclear"
+
+Partial results are still valuable—they constrain future research.
+:::
+
+### The Debugging Checklist
+
+Before concluding that something doesn't work, verify:
+
+```markdown
+□ Model actually performs the task (check logits, not just sampling)
+□ Using the right token positions (off-by-one errors are common)
+□ Cache is from the right input (easy to mix up in notebooks)
+□ Patching direction is correct (clean→corrupted vs corrupted→clean)
+□ Ablation value is sensible (zero? mean over dataset? mean over sequence?)
+□ Batch dimensions are handled correctly
+□ Running on GPU if expected (CPU can give different numerical results)
+□ Random seeds are set for reproducibility
+```
 
 ## Tools and Infrastructure
 

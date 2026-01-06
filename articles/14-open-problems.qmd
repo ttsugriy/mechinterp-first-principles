@@ -185,6 +185,79 @@ Market pressures push toward capability. Interpretability is a cost with unclear
 
 **Policy implication**: External requirements (regulation, standards, liability) may be necessary to ensure interpretability investment.
 
+## Safety Applications: Current State
+
+Despite the challenges, interpretability has concrete safety applications today—and more ambitious goals for the future.
+
+### What's Already Possible
+
+**Feature-based safety classifiers**: Use SAE features to detect concerning content:
+
+```python
+# Conceptual: Check if input activates "harmful" features
+harmful_features = [4721, 8903, 12456]  # Hypothetical indices
+activations = sae.encode(model_activations)
+safety_score = sum(activations[f] for f in harmful_features)
+if safety_score > threshold:
+    flag_for_review()
+```
+
+This is more interpretable than a black-box classifier—you can inspect *which* features triggered.
+
+**Steering for safer outputs**: Suppress features associated with harmful behavior during generation (see Article 9's steering section). Unlike fine-tuning, this is reversible and inspectable.
+
+**Behavioral verification**: After safety training (RLHF, Constitutional AI), use interpretability to check what changed:
+- Did the "deception" feature's activation pattern change?
+- Did new safety-related features emerge?
+- Are the changes localized or distributed?
+
+### Safety-Relevant Features Discovered
+
+Anthropic's SAE work on Claude found features for:
+
+| Feature Type | Example | Potential Application |
+|--------------|---------|----------------------|
+| Deception | "Being dishonest or misleading" | Detect deceptive reasoning |
+| Sycophancy | "Agreeing with user despite knowing better" | Monitor for sycophantic drift |
+| Harmful content | Violent scenarios, exploitation | Content filtering |
+| Uncertainty | "I don't know" indicators | Calibration monitoring |
+| Unsafe code | Security vulnerabilities | Code safety |
+| Power-seeking | Goal preservation, influence | Alignment monitoring |
+
+These are early findings—more systematic mapping of safety-relevant features is ongoing.
+
+### The Safety Research Agenda
+
+**Near-term** (currently tractable):
+1. Catalog safety-relevant features across models
+2. Build feature-based monitoring dashboards
+3. Use steering for targeted safety interventions
+4. Verify that safety training modifies the right features
+
+**Medium-term** (requires progress on open problems):
+1. Detect deceptive alignment before deployment
+2. Verify absence of concerning capabilities
+3. Understand how safety properties emerge in training
+4. Build interpretability-verified safety constraints
+
+**Long-term** (aspirational):
+1. Formal proofs of safety properties from interpretability
+2. Real-time interpretability during deployment
+3. Interpretability as a core component of AI governance
+
+::: {.callout-important}
+## The Honest Assessment
+
+Interpretability has found safety-relevant features. We can steer and monitor. But:
+
+- We can't yet prove a model *lacks* deceptive capabilities
+- Features might hide deceptive computations (see "Deceptive Interpretability" warning above)
+- Coverage is incomplete—most capabilities aren't analyzed
+- Scale remains a challenge for production models
+
+Interpretability is a useful safety tool today. It is not yet sufficient for strong safety guarantees.
+:::
+
 ## Superposition: Friend or Enemy?
 
 Superposition is central to how neural networks work. It's also central to why interpretability is hard.

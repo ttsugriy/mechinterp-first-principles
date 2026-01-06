@@ -340,6 +340,78 @@ Manipulate features during generation:
 
 More targeted than prompt engineering, because you're intervening on the model's internal representations.
 
+::: {.callout-tip collapse="true"}
+## Deep Dive: How to Steer with Features
+
+Steering is one of the most powerful applications of SAE features—you can modify model behavior by directly adjusting its internal representations.
+
+### The Basic Recipe
+
+1. **Find a relevant feature**: Use max-activating examples to identify a feature for the concept you want to influence
+2. **Extract the feature direction**: Get the decoder column for that feature
+3. **Add or subtract during inference**: Inject the direction into the residual stream
+
+### Conceptual Example
+
+```python
+# 1. Find the "sycophancy" feature (hypothetical index 4721)
+sycophancy_direction = sae.decoder.weight[:, 4721]
+
+# 2. During generation, subtract to reduce sycophantic behavior
+def steering_hook(residual, hook):
+    # Subtract the sycophancy direction (scaled)
+    return residual - 3.0 * sycophancy_direction
+
+# 3. Run with the intervention
+with model.hooks(fwd_hooks=[("blocks.15.hook_resid_post", steering_hook)]):
+    output = model.generate(prompt)
+```
+
+### Steering Strength
+
+The multiplier (3.0 above) controls intervention strength:
+- **Too weak**: No noticeable effect
+- **Just right**: Behavior shifts in the desired direction
+- **Too strong**: Coherence breaks down, bizarre outputs
+
+Finding the right strength requires experimentation. Start with 1x the feature's typical activation magnitude, then adjust.
+
+### When Steering Works Well
+
+| Use Case | Why It Works |
+|----------|--------------|
+| Style adjustment | Style features are often localized |
+| Content emphasis | Semantic features steer topic focus |
+| Safety guardrails | Suppressing harmful content features |
+| Debugging | Verify a feature's causal role |
+
+### When Steering Struggles
+
+- **Distributed capabilities**: If behavior involves many features, steering one doesn't suffice
+- **Feature absorption**: The "right" feature might have absorbed into a related one
+- **Interference**: Steering one feature may unexpectedly affect others
+
+### The Golden Gate Bridge Example
+
+Anthropic's famous demonstration amplified a "Golden Gate Bridge" feature in Claude. The model began inserting bridge references everywhere, even claiming *to be* the bridge. This dramatically illustrated both the power and the strangeness of feature-level intervention.
+
+**Key insight**: The model doesn't "resist" the intervention—it tries to make coherent sense of activations that now strongly include "Golden Gate Bridge," even in contexts where that makes no sense.
+:::
+
+::: {.callout-important}
+## Steering vs. Fine-tuning
+
+| Property | Steering | Fine-tuning |
+|----------|----------|-------------|
+| Persistence | Per-inference only | Permanent |
+| Precision | Single feature | Many weights |
+| Reversibility | Instant | Requires retraining |
+| Compute | Negligible | Expensive |
+| Interpretability | Transparent | Opaque |
+
+Steering is surgical intervention; fine-tuning is systemic change. For exploration and debugging, steering is often preferable.
+:::
+
 ### Circuit Discovery
 
 SAE features provide a cleaner basis for tracing circuits:
