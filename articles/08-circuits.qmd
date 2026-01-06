@@ -104,6 +104,11 @@ This is a circuit: a specific set of components working together to perform a we
 
 The circuit involves only 26 out of 144 attention heads (18% of the model). The other 82% aren't necessary for this specific task.
 
+::: {.callout-note}
+## A Nuance on Circuit Complexity
+The 26-head circuit describes how *GPT-2 Small* solves IOI—a pretrained model with general capabilities. Recent research (2024) shows that purpose-built minimal models can solve IOI with just 2 attention heads. This difference reveals important insight: pretrained models use redundant, over-parameterized circuits. The "26 heads" finding describes one implementation, not the minimal necessary computation.
+:::
+
 Moreover, you can *verify* the circuit: if you remove ("ablate") the identified heads, performance on IOI tasks degrades significantly. If you remove random heads of the same count, performance barely changes. The circuit is causally necessary, not just correlated.
 
 ::: {.callout-important}

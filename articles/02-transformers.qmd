@@ -119,11 +119,11 @@ After attention, each token's representation passes through a **multi-layer perc
 The structure is simple:
 
 ```
-hidden = ReLU(input × W_1 + b_1)
+hidden = activation(input × W_1 + b_1)
 output = hidden × W_2 + b_2
 ```
 
-Two matrix multiplications with a ReLU nonlinearity in between. That's it.
+Two matrix multiplications with a nonlinearity in between. The original transformer used ReLU; modern language models typically use GELU (Gaussian Error Linear Unit), which is smoother and empirically works better. Both serve the same purpose: introducing nonlinearity between the linear transformations.
 
 But recent research has revealed something fascinating: **MLP layers function as key-value memories**.
 

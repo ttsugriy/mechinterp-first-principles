@@ -227,7 +227,10 @@ This is sometimes useful (more precision) but sometimes problematic (which granu
 
 A more concerning failure mode: when dictionary size increases, some features *absorb* others instead of splitting cleanly. A very common concept (like "Paris") might absorb a broader concept (like "European capitals"), causing the broader feature to stop firing where it should.
 
-This is an active area of research with no clean solution.
+::: {.callout-warning}
+## A Fundamental Problem
+Recent research (2024) has shown that feature absorption is more fundamental than initially understood. When features form hierarchies (parent-child relationships), the decomposition becomes theoretically unstable. This isn't a bug to be fixed with better hyperparameters—it's a structural challenge that may require fundamentally new approaches. Varying SAE sizes or sparsity penalties is insufficient.
+:::
 
 ### No Ground Truth
 
@@ -258,6 +261,8 @@ Separate the decision "which features to use" from "how much to use each":
 - Magnitude network: How strongly each feature activates
 
 This eliminates "shrinkage" (systematic underestimation of feature magnitudes) and reduces active feature count.
+
+**Recent advances (2024)**: Gated SAEs achieve half as many firing features to reach comparable reconstruction fidelity compared to standard L1-penalized SAEs. This represents a significant improvement to the reconstruction-sparsity frontier while maintaining interpretability.
 
 ### Other Approaches
 

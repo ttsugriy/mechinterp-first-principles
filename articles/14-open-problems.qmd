@@ -137,6 +137,11 @@ Current interpretability has some of these, but not systematically.
 Is "the IOI circuit is the mechanism for indirect object identification" falsifiable? What evidence would prove it wrong? If we can't answer this clearly, interpretability risks being unfalsifiable—which would undermine its scientific status.
 :::
 
+::: {.callout-note}
+## A Positive Development: Minimal Circuit Research
+Recent work (2024) has made progress on this question. Researchers found that purpose-built minimal models can solve IOI with just 2 attention heads—far fewer than the 26 found in GPT-2 Small. This comparison helps distinguish between "how this model does it" (26 heads, with redundancy) and "what's minimally necessary" (2 heads). Studying minimal circuits alongside pretrained circuits may provide the falsifiability we need.
+:::
+
 ## The Alignment Tax
 
 Interpretability is expensive. Is it worth it?

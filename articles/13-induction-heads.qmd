@@ -148,7 +148,7 @@ Researchers developed an **induction score** to automatically detect these heads
 2. Measure whether head $H$ at position $i$ attends to position $j$ where $\text{token}[j-1] = \text{token}[i-1]$
 3. High score → likely induction head
 
-**Finding**: In every transformer language model tested (GPT-2, GPT-3, BLOOM, LLaMA), induction heads emerge in layer 1-2, comprising 5-15% of all attention heads.
+**Finding**: In every transformer language model tested (GPT-2, GPT-3, BLOOM, LLaMA), induction heads emerge in early layers (typically layers 1-2 for small models, proportionally early layers for larger models), comprising 5-15% of all attention heads. Crucially, the circuit requires at least two layers—a mathematical necessity proven by communication complexity arguments. Single-layer transformers would need exponentially larger models to solve induction tasks.
 
 ## The Phase Transition
 
