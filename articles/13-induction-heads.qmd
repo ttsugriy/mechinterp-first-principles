@@ -179,6 +179,11 @@ The transition isn't gradual—it's a discrete shift from "no induction heads" t
 Induction heads aren't present from the start—they're discovered by gradient descent as a sharp improvement to the loss. Their sudden emergence suggests they're a discrete algorithmic solution that the optimizer finds and implements quickly once conditions are right.
 :::
 
+::: {.callout-note}
+## Beyond Induction: Multi-Phase Emergence (2024)
+Recent research reveals that induction heads are just one phase in a sequence of algorithmic discoveries during training. Studies tracking circuit formation found models go through multiple distinct phases—developing token copying first, then pattern matching, then more sophisticated contextual algorithms. Each phase shows its own sharp transition. This suggests induction heads are a stepping stone, not a final destination: the model builds increasingly sophisticated circuits by composing simpler ones learned earlier.
+:::
+
 ### What Causes the Transition?
 
 The phase transition happens when:

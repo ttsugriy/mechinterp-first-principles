@@ -232,6 +232,11 @@ Interpretability would ideally detect these emergent problems. Currently, we can
 Can we build interpretability tools that detect *unknown* capabilities or behaviors? This requires moving beyond "understand the circuit for X" to "find any circuits with concerning properties"—a harder problem.
 :::
 
+::: {.callout-warning}
+## Deceptive Interpretability (2024-2025 Concern)
+A more troubling possibility: what if interpretability methods themselves can be fooled? Recent theoretical and empirical work explores scenarios where models could develop representations that *appear* interpretable but hide actual computations. Features that seem to track "honesty" might not actually govern the model's behavior. This isn't paranoia—it's a genuine methodological concern. The proxy metric gap (SAEBench, 2025) showed that interpretability metrics don't reliably predict practical utility, raising deeper questions about what our tools actually measure.
+:::
+
 ## Specific Open Questions
 
 Beyond these broad challenges, specific technical questions remain open:
@@ -345,8 +350,10 @@ This series has been theory and concepts. The next article is about practice.
 
 3. **Causal Scrubbing: Rigorous Circuit Evaluation** — [Redwood Research](https://www.lesswrong.com/posts/JvZhhzycHu2Yd57RN/causal-scrubbing-a-method-for-rigorously-testing): Attempts to address the validation problem.
 
-4. **Interp Benchmarks (Proposal)** — [Various](https://www.lesswrong.com/posts/dPpPvwEqDMxMvGKhP/interp-benchmarks-proposal): Efforts toward standardized interpretability evaluation.
+4. **SAEBench: Evaluating SAEs on Practical Tasks** — [arXiv](https://arxiv.org/abs/2407.12935): Comprehensive benchmark revealing the proxy metric gap.
 
-5. **Softmax Linear Units for Interpretability** — [Anthropic](https://transformer-circuits.pub/2022/solu/index.html): Attempts to train more interpretable models from scratch.
+5. **Interp Benchmarks (Proposal)** — [Various](https://www.lesswrong.com/posts/dPpPvwEqDMxMvGKhP/interp-benchmarks-proposal): Efforts toward standardized interpretability evaluation.
 
-6. **Scaling Interpretability Research** — [MATS](https://www.matsprogram.org/): Programs for training interpretability researchers and scaling the field.
+6. **Softmax Linear Units for Interpretability** — [Anthropic](https://transformer-circuits.pub/2022/solu/index.html): Attempts to train more interpretable models from scratch.
+
+7. **Scaling Interpretability Research** — [MATS](https://www.matsprogram.org/): Programs for training interpretability researchers and scaling the field.

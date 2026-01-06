@@ -266,9 +266,15 @@ This eliminates "shrinkage" (systematic underestimation of feature magnitudes) a
 
 ### Other Approaches
 
-- **Matryoshka SAEs**: Train across multiple sparsity levels simultaneously
-- **Contrastive losses**: Encourage features to be more distinct from each other
-- **Dictionary initialization**: Better starting points for learning
+- **JumpReLU SAEs** (2024): Use discontinuous activation functions with straight-through estimators to directly optimize L0 sparsity. Achieves state-of-the-art reconstruction on models like Gemma 2 9B.
+- **Switch SAEs**: Use mixture-of-experts routing between smaller "expert" SAEs for computational efficiency at scale.
+- **Matryoshka SAEs**: Train across multiple sparsity levels simultaneously, showing strong feature disentanglement.
+- **Contrastive losses**: Encourage features to be more distinct from each other.
+
+::: {.callout-warning}
+## The Proxy Metric Gap (2025 Finding)
+Recent comprehensive benchmarking (SAEBench, 2025) reveals a troubling finding: improvements on traditional proxy metrics (reconstruction loss, sparsity, interpretability scores) don't reliably translate to practical performance on downstream tasks. Some SAE variants that excel on proxy metrics underperform on real applications, while others (like Matryoshka SAEs) underperform on metrics but excel at feature disentanglement. This suggests the field needs better evaluation methods.
+:::
 
 ## Using SAE Features
 

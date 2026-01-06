@@ -173,6 +173,12 @@ Start with narrow, well-defined behaviors.
 **Circuit analysis**: How does capability X work?
 - Pick a narrow behavior (parenthesis matching, country-capital, etc.)
 - Apply the full methodology: attribution → ablation → patching → diagram
+- Consider automated circuit discovery tools (ACDC, CD-T) for efficiency
+
+::: {.callout-note}
+## Automated Circuit Discovery (2024-2025)
+Beyond manual patching, tools like ACDC and CD-T (Compact Discovery via Transformations) can automatically identify minimal circuits. CD-T is particularly efficient for larger models. However, automated methods still require human interpretation of the discovered components—they find *which* components matter, not *why*.
+:::
 
 **Methodology development**: Better tools
 - Improved SAE architectures
@@ -333,16 +339,28 @@ When confused, simplify. Reduce to the smallest example that shows the phenomeno
 - `run_with_cache()` for activation access
 - `run_with_hooks()` for interventions
 - Built-in support for common models
+- As of 2024-2025, supports most major model architectures including Llama, Gemma, and Mistral
 
 **SAELens**: Sparse autoencoder training and analysis
 - Train SAEs on cached activations
-- Analyze feature activations
+- Supports TopK, Gated, and JumpReLU SAE architectures
 - Feature visualization tools
+- Integration with Neuronpedia for sharing features
 
 **CircuitsVis**: Visualization library
 - Attention pattern visualization
 - Activation plots
 - Interactive exploration
+
+**Neuronpedia**: Interactive feature explorer ([neuronpedia.org](https://www.neuronpedia.org/))
+- Browse SAE features across models
+- Community-contributed feature labels
+- As of late 2024, expanded to include features from Gemma 2, Llama 3, and other modern architectures
+
+::: {.callout-tip}
+## Evaluation: SAEBench (2025)
+When evaluating SAE quality, be aware that proxy metrics (reconstruction loss, sparsity, interpretability scores) don't reliably predict practical performance. The SAEBench benchmark suite tests SAEs on downstream tasks like feature steering and circuit discovery. Consider using these practical evaluations rather than relying solely on traditional metrics.
+:::
 
 ### Compute Considerations
 
