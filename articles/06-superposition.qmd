@@ -233,14 +233,15 @@ Modern language models appear to operate deep in the high-sparsity regime. Their
 
 ## Interactive: Explore Feature Packing
 
-Use the sliders below to explore how features pack into limited dimensions. Watch how interference grows as you add more features or increase their activation probability.
+Use the sliders below to explore how features pack into limited dimensions. The **interference meter** shows how problematic co-activation would be at different sparsity levels. Click **Simulate Activations** to see random feature activations based on the probability.
 
 ```{ojs}
 //| label: fig-superposition-interactive
-//| fig-cap: "Interactive visualization of superposition. Adjust the number of features and their sparsity to see how interference changes."
+//| fig-cap: "Interactive visualization of superposition. Adjust features and sparsity, then simulate to see interference in action."
 
 viewof numFeatures = Inputs.range([2, 12], {step: 1, value: 4, label: "Number of features"})
 viewof sparsity = Inputs.range([0.01, 0.5], {step: 0.01, value: 0.05, label: "Activation probability"})
+viewof simulateBtn = Inputs.button("Simulate Activations")
 
 dimensions = 2
 
@@ -252,7 +253,7 @@ featureVectors = featureAngles.map(a => ({x: Math.cos(a), y: Math.sin(a)}))
 worstInterference = {
   if (numFeatures <= 2) return 0;
   const angle = (2 * Math.PI) / numFeatures;
-  return Math.abs(Math.cos(angle));  // Cosine of angle between adjacent features
+  return Math.abs(Math.cos(angle));
 }
 
 // Expected co-occurrence probability
@@ -261,45 +262,64 @@ cooccurrence = sparsity * sparsity
 // Effective interference (probability-weighted)
 effectiveInterference = worstInterference * cooccurrence * numFeatures
 
-// Visualization
+// Simulate which features are active (re-runs when button clicked or sparsity changes)
+activeFeatures = {
+  simulateBtn;  // Dependency on button
+  return Array.from({length: numFeatures}, () => Math.random() < sparsity);
+}
+
+// Count active and check for interference
+numActive = activeFeatures.filter(x => x).length
+hasInterference = numActive >= 2
+
+// Visualization with two panels
 {
-  const width = 400;
+  const width = 700;
   const height = 400;
-  const margin = 50;
-  const radius = 150;
+  const radius = 140;
 
   const svg = d3.create("svg")
-    .attr("viewBox", [-width/2, -height/2, width, height])
+    .attr("viewBox", [0, 0, width, height])
     .attr("width", width)
     .attr("height", height);
 
+  // Left panel: Feature directions
+  const leftG = svg.append("g").attr("transform", `translate(180, 200)`);
+
   // Background circle
-  svg.append("circle")
+  leftG.append("circle")
     .attr("r", radius)
     .attr("fill", "none")
     .attr("stroke", "#ddd")
     .attr("stroke-width", 1);
 
   // Axes
-  svg.append("line").attr("x1", -radius).attr("y1", 0).attr("x2", radius).attr("y2", 0).attr("stroke", "#ddd");
-  svg.append("line").attr("x1", 0).attr("y1", -radius).attr("x2", 0).attr("y2", radius).attr("stroke", "#ddd");
+  leftG.append("line").attr("x1", -radius).attr("y1", 0).attr("x2", radius).attr("y2", 0).attr("stroke", "#ddd");
+  leftG.append("line").attr("x1", 0).attr("y1", -radius).attr("x2", 0).attr("y2", radius).attr("stroke", "#ddd");
+
+  // Title
+  leftG.append("text").attr("y", -radius - 20).attr("text-anchor", "middle").attr("font-size", "14px").attr("font-weight", "bold").text("Feature Directions");
 
   // Feature arrows
   const colors = d3.schemeTableau10;
   featureVectors.forEach((v, i) => {
-    svg.append("line")
+    const isActive = activeFeatures[i];
+    leftG.append("line")
       .attr("x1", 0).attr("y1", 0)
-      .attr("x2", v.x * radius * 0.9).attr("y2", -v.y * radius * 0.9)
+      .attr("x2", v.x * radius * 0.85).attr("y2", -v.y * radius * 0.85)
       .attr("stroke", colors[i % 10])
-      .attr("stroke-width", 3)
+      .attr("stroke-width", isActive ? 5 : 2)
+      .attr("opacity", isActive ? 1 : 0.3)
       .attr("marker-end", "url(#arrow)");
 
-    svg.append("text")
-      .attr("x", v.x * radius * 1.05)
-      .attr("y", -v.y * radius * 1.05)
+    leftG.append("text")
+      .attr("x", v.x * radius * 1.0)
+      .attr("y", -v.y * radius * 1.0)
       .attr("text-anchor", "middle")
-      .attr("font-size", "14px")
+      .attr("font-size", isActive ? "14px" : "11px")
+      .attr("font-weight", isActive ? "bold" : "normal")
       .attr("fill", colors[i % 10])
+      .attr("opacity", isActive ? 1 : 0.5)
       .text(`F${i + 1}`);
   });
 
@@ -315,6 +335,56 @@ effectiveInterference = worstInterference * cooccurrence * numFeatures
     .attr("d", "M0,-5L10,0L0,5")
     .attr("fill", "#666");
 
+  // Right panel: Interference meter
+  const rightG = svg.append("g").attr("transform", `translate(500, 80)`);
+
+  rightG.append("text").attr("text-anchor", "middle").attr("font-size", "14px").attr("font-weight", "bold").text("Interference Risk");
+
+  // Meter background
+  const meterWidth = 30;
+  const meterHeight = 200;
+  rightG.append("rect")
+    .attr("x", -meterWidth/2)
+    .attr("y", 20)
+    .attr("width", meterWidth)
+    .attr("height", meterHeight)
+    .attr("fill", "#eee")
+    .attr("stroke", "#999")
+    .attr("rx", 4);
+
+  // Meter fill (based on effective interference, scaled)
+  const meterLevel = Math.min(1, effectiveInterference * 5);  // Scale for visibility
+  const fillColor = meterLevel < 0.3 ? "#4CAF50" : meterLevel < 0.6 ? "#FFC107" : "#f44336";
+  rightG.append("rect")
+    .attr("x", -meterWidth/2 + 2)
+    .attr("y", 20 + meterHeight * (1 - meterLevel))
+    .attr("width", meterWidth - 4)
+    .attr("height", meterHeight * meterLevel)
+    .attr("fill", fillColor)
+    .attr("rx", 2);
+
+  // Labels
+  rightG.append("text").attr("x", meterWidth/2 + 8).attr("y", 30).attr("font-size", "10px").attr("fill", "#666").text("High");
+  rightG.append("text").attr("x", meterWidth/2 + 8).attr("y", 130).attr("font-size", "10px").attr("fill", "#666").text("Med");
+  rightG.append("text").attr("x", meterWidth/2 + 8).attr("y", 220).attr("font-size", "10px").attr("fill", "#666").text("Low");
+
+  // Status text
+  const statusY = 260;
+  rightG.append("text")
+    .attr("y", statusY)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .attr("fill", hasInterference ? "#f44336" : "#4CAF50")
+    .attr("font-weight", "bold")
+    .text(hasInterference ? `⚠ ${numActive} features active!` : numActive === 1 ? "✓ 1 feature active" : "○ No features active");
+
+  rightG.append("text")
+    .attr("y", statusY + 18)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "11px")
+    .attr("fill", "#666")
+    .text(hasInterference ? "Interference occurring" : "No interference");
+
   return svg.node();
 }
 ```
@@ -322,13 +392,13 @@ effectiveInterference = worstInterference * cooccurrence * numFeatures
 ```{ojs}
 //| echo: false
 md`**Analysis:**
-- **Features**: ${numFeatures} features in ${dimensions} dimensions
-- **Angle between adjacent features**: ${(360 / numFeatures).toFixed(1)}°
-- **Worst-case cosine similarity**: ${worstInterference.toFixed(3)} (${worstInterference < 0.1 ? "✓ low interference" : worstInterference < 0.3 ? "⚠ moderate interference" : "⚠ high interference"})
-- **Co-occurrence probability**: ${(cooccurrence * 100).toFixed(2)}%
-- **Expected interference**: ${effectiveInterference < 0.05 ? "✓ Superposition is efficient" : effectiveInterference < 0.2 ? "⚠ Marginal" : "✗ Too much interference—consider dedicated dimensions"}
+- **Features**: ${numFeatures} packed into ${dimensions} dimensions
+- **Angle between adjacent features**: ${(360 / numFeatures).toFixed(1)}° ${360/numFeatures >= 90 ? "(orthogonal)" : 360/numFeatures >= 60 ? "(good separation)" : "(crowded)"}
+- **Geometric interference** (cosine similarity): ${(worstInterference * 100).toFixed(1)}%
+- **Co-occurrence probability** (at ${(sparsity*100).toFixed(0)}% activation): ${(cooccurrence * 100).toFixed(2)}%
+- **Expected total interference**: ${effectiveInterference < 0.05 ? "✓ Low — superposition works well" : effectiveInterference < 0.15 ? "⚠ Moderate — acceptable trade-off" : "✗ High — consider fewer features"}
 
-*As sparsity increases (rarer features), superposition becomes more viable because features rarely interfere in practice.*`
+*The key insight: even with high geometric interference, low activation probability keeps expected interference manageable.*`
 ```
 
 ::: {.callout-note}
