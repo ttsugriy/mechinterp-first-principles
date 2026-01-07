@@ -23,31 +23,31 @@ The diagram below shows how concepts build on each other across the four arcs:
 %%| fig-cap: "Concept map showing how chapters build on each other. Arrows indicate conceptual dependencies."
 %%| fig-width: 10
 flowchart TB
-    subgraph ARC1["<b>Arc I: Foundations</b>"]
-        A1["1. Why Reverse<br/>Engineer?"]
-        A2["2. Transformers"]
-        A3["3. Residual<br/>Stream"]
-        A4["4. Geometry"]
+    subgraph ARC1["Arc I: Foundations"]
+        A1["Ch 1: Why Reverse Engineer?"]
+        A2["Ch 2: Transformers"]
+        A3["Ch 3: Residual Stream"]
+        A4["Ch 4: Geometry"]
     end
 
-    subgraph ARC2["<b>Arc II: Core Theory</b>"]
-        A5["5. Features"]
-        A6["6. Superposition"]
-        A7["7. Toy Models"]
-        A8["8. Circuits"]
+    subgraph ARC2["Arc II: Core Theory"]
+        A5["Ch 5: Features"]
+        A6["Ch 6: Superposition"]
+        A7["Ch 7: Toy Models"]
+        A8["Ch 8: Circuits"]
     end
 
-    subgraph ARC3["<b>Arc III: Techniques</b>"]
-        A9["9. Sparse<br/>Autoencoders"]
-        A10["10. Attribution"]
-        A11["11. Patching"]
-        A12["12. Ablation"]
+    subgraph ARC3["Arc III: Techniques"]
+        A9["Ch 9: SAEs"]
+        A10["Ch 10: Attribution"]
+        A11["Ch 11: Patching"]
+        A12["Ch 12: Ablation"]
     end
 
-    subgraph ARC4["<b>Arc IV: Synthesis</b>"]
-        A13["13. Induction<br/>Heads"]
-        A14["14. Open<br/>Problems"]
-        A15["15. Practice<br/>Regime"]
+    subgraph ARC4["Arc IV: Synthesis"]
+        A13["Ch 13: Induction Heads"]
+        A14["Ch 14: Open Problems"]
+        A15["Ch 15: Practice Regime"]
     end
 
     %% Arc I flow
