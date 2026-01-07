@@ -49,13 +49,15 @@ def logit_attribution(cache, model, target_token: int) -> list[tuple[str, float]
     contributions = {}
 
     for layer in range(model.cfg.n_layers):
-        # Each attention head's contribution
+        # Each attention head's contribution (compute from z and W_O)
+        z = cache["z", layer][0, -1]  # [n_heads, d_head]
+        W_O = model.W_O[layer]  # [n_heads, d_head, d_model]
         for head in range(model.cfg.n_heads):
-            head_out = cache["result", layer][:, -1, head, :]
+            head_out = z[head] @ W_O[head]  # [d_model]
             contributions[f"L{layer}H{head}"] = (head_out @ target_dir).item()
 
         # MLP's contribution
-        mlp_out = cache["mlp_out", layer][:, -1, :]
+        mlp_out = cache["mlp_out", layer][0, -1]
         contributions[f"L{layer}_MLP"] = (mlp_out @ target_dir).item()
 
     return sorted(contributions.items(), key=lambda x: -abs(x[1]))

@@ -267,12 +267,12 @@ def head_attribution(model, prompt, target_token):
 
     contributions = {}
     for layer in range(model.cfg.n_layers):
-        # Get per-head outputs (after W_O projection)
-        # Shape: [batch, seq, n_heads, d_model]
-        head_results = cache["result", layer][0, -1]  # [n_heads, d_model]
+        # Compute per-head outputs from z (pre-W_O) and W_O matrix
+        z = cache["z", layer][0, -1]  # [n_heads, d_head]
+        W_O = model.W_O[layer]  # [n_heads, d_head, d_model]
 
         for head in range(model.cfg.n_heads):
-            head_out = head_results[head]  # [d_model]
+            head_out = z[head] @ W_O[head]  # [d_model]
             contributions[f"L{layer}H{head}"] = (head_out @ target_dir).item()
 
     return contributions
