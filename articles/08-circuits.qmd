@@ -107,6 +107,11 @@ This requires understanding:
 
 Researchers at Redwood Research discovered that GPT-2 Small solves this task using **26 specific attention heads** organized into **7 functional groups**:
 
+::: {.callout-note}
+## The Discovery Story
+In 2022, Kevin Wang, Alexandre Variengien, and collaborators at Redwood Research set out to fully reverse-engineer how GPT-2 Small completes sentences like "John gave a bottle to Mary. Mary gave a bottle to ___". What they found was remarkable: the model had learned an interpretable algorithm using 26 attention heads organized into functional groups. Each group had a specific role—detecting duplicates, inhibiting the subject, moving names. The circuit wasn't mysterious—it was *understandable*. Their paper, "Interpretability in the Wild," demonstrated that complete reverse-engineering of a non-trivial behavior was possible.
+:::
+
 **1. Previous Token Heads**: Track the position of the indirect object (where "Mary" appeared)
 
 **2. Duplicate Token Heads**: Detect that "John" appears twice, marking it as the subject

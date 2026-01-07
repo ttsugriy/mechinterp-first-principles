@@ -42,6 +42,13 @@ When head 7.4 has high attribution for predicting "Paris," we know its output al
 
 To distinguish correlation from causation, we need to **intervene**—to modify the system and observe what happens. This is what activation patching provides: a way to surgically replace activations and measure the causal effect.
 
+::: {.callout-tip}
+## The Heart Transplant Analogy
+Imagine a patient has heart disease and lives in a polluted city. Both correlate with their condition. To prove the heart is the problem, you don't just observe—you *transplant* a healthy heart and see if they recover.
+
+Activation patching is the same. You "transplant" an activation from a healthy (clean) run into a sick (corrupted) run. If behavior recovers, you've proven that activation is causally responsible—not just correlated.
+:::
+
 ::: {.callout-note}
 ## The Core Idea
 Activation patching replaces a component's activation from one input with its activation from a different input, then measures how the output changes. If the output changes significantly, that component is causally important for the behavior.

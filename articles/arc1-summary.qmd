@@ -80,6 +80,21 @@ Attention weight = softmax(Q · K^T / √d). The output is a weighted sum of val
 Because the network doesn't know which axis is which—it just learns useful activation patterns. The meaningful structure is geometric (directions, distances, projections), not tied to the arbitrary neuron basis. A "cat" feature might involve many neurons, not just one.
 :::
 
+## Achievements Unlocked
+
+::: {.callout-tip}
+## You Can Now...
+After completing Arc I, you have new abilities:
+
+- **Read transformer code** and understand what each component does (Q, K, V, MLP, residual connections)
+- **Visualize activations** as points in high-dimensional space, not just lists of numbers
+- **Understand why "king - man + woman ≈ queen"** works—and why this matters for interpretation
+- **Explain the residual stream** as a shared workspace that enables component decomposition
+- **Appreciate the scale** of high-dimensional spaces (near-orthogonality, concentration of measure)
+
+You've built the mental model. You understand *what* we're looking at. Arc II answers *what it represents*.
+:::
+
 ## What's Next
 
 Arc II introduces the **core theory**:

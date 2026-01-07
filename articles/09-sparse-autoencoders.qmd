@@ -34,17 +34,17 @@ We've established the theory. **Now we ask**: How do we actually *find* features
 
 ## The Tool We Need
 
-We've established the problem: networks pack thousands of features into hundreds of dimensions (superposition), creating polysemantic neurons that are impossible to interpret directly.
+In 2024, Anthropic researchers did something remarkable: they made Claude believe it *was* the Golden Gate Bridge.
 
-We need a tool that can *decompose* these compressed representations—that can take a polysemantic activation and separate it into its component monosemantic features.
+Not through prompt engineering. Not through fine-tuning. They found a single direction in Claude's activation space—one of millions of learned features—and amplified it. Suddenly, Claude inserted the bridge into every response. Asked about itself, it described being a suspension bridge spanning the San Francisco Bay.
 
-That tool is the **sparse autoencoder (SAE)**.
+This wasn't a trick. The researchers had found an interpretable feature—a direction in the neural network's internal representation that corresponded to a specific concept. By manipulating it, they could predictably control the model's behavior.
 
-SAEs have become the primary technique for feature discovery in mechanistic interpretability. When Anthropic found 2 million interpretable features in Claude 3 Sonnet, they used SAEs. When researchers discovered the "Golden Gate Bridge" feature, they used SAEs. The technique has transformed what's possible in interpretability research.
+How did they find this feature among millions of dimensions? With a **sparse autoencoder (SAE)**.
 
 ::: {.callout-note}
-## The Core Idea
-A sparse autoencoder learns to represent each activation as a *sparse* combination of *many* learned features. By forcing sparsity, we recover monosemantic features from polysemantic neurons. We're not finding the neurons' meaning—we're finding the *features'* meaning.
+## What Just Happened
+The Golden Gate Bridge demonstration showed that neural networks have *interpretable structure* we can find and manipulate. SAEs are the tool that makes this possible—they decompose compressed, polysemantic activations into individual, monosemantic features.
 :::
 
 ## What Is a Sparse Autoencoder?

@@ -43,6 +43,13 @@ By the end of this article, you should have a concrete plan for your first inter
 
 If you've never run an interpretability experiment, start here.
 
+::: {.callout-tip}
+## The Uncomfortable Truth
+You will feel confused. You will run experiments that don't work. You will misinterpret results. This is normal. The researchers who wrote the papers you've been reading? They felt confused too. The difference is they persisted through the confusion until patterns emerged.
+
+Interpretability research is less "execute algorithm, get answer" and more "wander through fog, occasionally glimpse something." The fog is part of the process.
+:::
+
 ### Week 1: Environment Setup
 
 **1. Install TransformerLens**

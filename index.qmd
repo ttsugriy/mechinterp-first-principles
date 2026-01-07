@@ -102,6 +102,18 @@ flowchart TB
 **Techniques-focused**: Jump to Article 9 (SAEs) after reading Articles 3-5 for the core prerequisites.
 :::
 
+::: {.callout-important}
+## Want a Quick Win? (10 minutes)
+
+Want to *do* something before reading theory? Try this:
+
+1. **Explore real features** (5 min): Visit [Neuronpedia](https://www.neuronpedia.org/gpt2-small) and click "Random Feature." Look at the max-activating examples. Can you guess what concept the feature represents? Try 3-4 features.
+
+2. **See attention patterns** (5 min): Visit [BertViz](https://github.com/jessevig/bertviz) or the [Transformer Explainer](https://poloclub.github.io/transformer-explainer/) to visualize how attention moves information between tokens.
+
+You've now seen the two core phenomena this series explains: **features** (what networks represent) and **attention** (how they move information). The rest is understanding *why* it works this way.
+:::
+
 ::: {.callout-note}
 ## Estimated Reading Times
 

@@ -181,6 +181,11 @@ For 6 features in 2D, the optimal arrangement is a regular hexagon. For more fea
 Networks discover these polytope arrangements through gradient descent, not through explicit programming. The geometry is optimal, and optimization finds it. This suggests superposition isn't an accident—it's the natural solution to the problem of representing sparse features in limited dimensions.
 :::
 
+::: {.callout-note}
+## The Discovery Story
+In 2022, researchers at Anthropic—including Shan Carter, Chris Olah, and Nelson Elhage—were trying to understand why neural networks are so hard to interpret. They built the simplest possible toy model: a tiny autoencoder with more features than dimensions. What they observed was striking: the network didn't just randomly arrange features. It discovered regular polytopes—pentagons, hexagons, and their higher-dimensional cousins. The paper, "Toy Models of Superposition," became one of the foundational works in mechanistic interpretability, showing that superposition isn't chaos—it's elegant geometry.
+:::
+
 ## How Superposition Creates Polysemanticity
 
 Now we can explain the polysemantic neuron from Article 5—the one that activated for cat faces *and* car fronts.

@@ -62,6 +62,8 @@ Large models (70B+ parameters) are different.
 
 **More components**: GPT-2 Small has 12 layers × 12 heads = 144 attention heads. GPT-4 has an estimated 120 layers × 128 heads = 15,360+ heads. Manual inspection doesn't scale.
 
+(If you spent one minute understanding each head in GPT-4, you'd need 256 hours—over six 40-hour work weeks—just for the attention heads. And you haven't touched the MLPs.)
+
 **More redundancy**: Large models have backup circuits and distributed representations. Ablating one head has minimal effect because others compensate. This makes circuits harder to isolate.
 
 **More composition**: Complex behaviors emerge from many components working together. The IOI circuit had 26 heads in 7 functional groups. A reasoning circuit in GPT-4 might involve hundreds of components across dozens of layers.

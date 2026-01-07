@@ -82,6 +82,21 @@ Features are the meaningful unit; neurons are just one arbitrary basis for the s
 For induction heads: The previous token head writes "B follows A" into the residual stream. This information becomes part of the keys that the induction head searches. The induction head can then find positions where the previous token matches the current token—enabling pattern completion.
 :::
 
+## Achievements Unlocked
+
+::: {.callout-tip}
+## You Can Now...
+After completing Arc II, you have new abilities:
+
+- **Distinguish neurons from features**—and explain why features are directions, not individual units
+- **Explain superposition** at a cocktail party: "Networks pack more concepts than dimensions by using almost-orthogonal directions"
+- **Predict when superposition works**: sparse features enable heavy compression; dense features force dedicated representations
+- **Understand polysemanticity** as a *symptom* of superposition, not a bug
+- **Read circuits papers** and understand what "head composition" means (Q/K/V composition)
+
+You have a theoretical framework. You understand *how* networks organize representations. Arc III gives you the tools to *find* them.
+:::
+
 ## What's Next
 
 Arc III introduces the **techniques**:

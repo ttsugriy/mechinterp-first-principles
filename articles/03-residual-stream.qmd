@@ -82,6 +82,13 @@ The final representation is the original embedding plus accumulated contribution
 The transformer doesn't transform representations through a sequence of functions. It *accumulates* contributions from many components into a shared vector that flows through the network. This vector is the residual stream.
 :::
 
+::: {.callout-tip}
+## The Whiteboard Analogy
+Imagine a team solving a problem on a shared whiteboard. Each team member (attention head, MLP) can read what's on the board, do some thinking, and write their contribution. No one erases—they only add. At the end, the answer is everything on the whiteboard combined.
+
+This is the residual stream. Components don't talk to each other directly; they communicate through the shared workspace. Understanding what's "on the whiteboard" at each point is the core of mechanistic interpretability.
+:::
+
 ## Components as Readers and Writers
 
 Let's make the reading-and-writing metaphor precise.

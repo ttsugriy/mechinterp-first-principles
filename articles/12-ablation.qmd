@@ -42,6 +42,13 @@ There's one more question: **What happens if we remove it entirely?**
 
 This is ablation—the technique of "knocking out" components and observing the consequences. If patching is surgery (transplanting tissue from one context to another), ablation is amputation (removing tissue entirely).
 
+::: {.callout-tip}
+## On the Violence of the Terminology
+Interpretability researchers borrowed "ablation" from neuroscience, where it means destroying part of the brain to study what that part does. The terminology sounds dramatic, but it's apt: we're asking "what breaks if I remove this?" Just as neuroscientists learned about memory by studying patients with damaged hippocampi, we learn about transformer computation by damaging attention heads.
+
+(The networks don't feel pain. Probably.)
+:::
+
 ::: {.callout-note}
 ## The Core Idea
 Ablation sets a component's contribution to zero (or to some baseline value) and measures the effect on behavior. If the behavior degrades, the component was necessary. If it's preserved, the component was redundant.

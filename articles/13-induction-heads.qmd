@@ -103,6 +103,11 @@ Induction heads are the primary mechanism for few-shot learning in transformers.
 
 Induction heads aren't a single component—they're a **circuit** involving multiple attention heads across two layers.
 
+::: {.callout-note}
+## The Discovery Story
+In 2022, Catherine Olsson, Nelson Elhage, and collaborators at Anthropic were tracking how language models develop capabilities during training. They noticed something strange: at a specific point in training, both in-context learning ability and a distinctive attention pattern appeared *simultaneously*—within just a few thousand steps. When they investigated, they found a beautiful two-layer circuit. The first layer records "what follows each token." The second layer uses that information to copy patterns. They called these "induction heads" because they perform induction—generalizing from examples. The discovery was published as "In-context Learning and Induction Heads" and remains one of the clearest examples of reverse-engineering a neural network capability.
+:::
+
 ### The Algorithm
 
 **Layer 1: Previous Token Head**

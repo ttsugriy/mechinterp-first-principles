@@ -105,6 +105,21 @@ The component is **correlated but not necessary**. Its output points toward the 
 Use mean ablation when you want cleaner measurements. Use zero ablation for quick exploration or when you need a stronger intervention.
 :::
 
+## Achievements Unlocked
+
+::: {.callout-tip}
+## You Can Now...
+After completing Arc III, you have new abilities:
+
+- **Train or use an SAE** to extract interpretable features from model activations
+- **Run attribution analysis** to find which components contribute to a prediction
+- **Design clean/corrupted pairs** for patching experiments
+- **Distinguish correlation from causation** using interventional techniques
+- **Choose the right technique** for each question: SAEs for discovery, attribution for hypotheses, patching for causation, ablation for necessity
+
+You have a complete interpretability toolkit. You can investigate any behavior in any transformer. Arc IV shows these tools in action and reveals their limits.
+:::
+
 ## What's Next
 
 Arc IV brings it all together:

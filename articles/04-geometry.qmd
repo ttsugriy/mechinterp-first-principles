@@ -468,6 +468,13 @@ But we've been vague about what the important directions *are*. We've talked abo
 
 The next article tackles this directly: **What exactly is a feature?**
 
+::: {.callout-note}
+## A Mystery to Solve
+Here's something surprising: Anthropic found over 2 million interpretable features in a model with only 4,096 dimensions. That's 500 features per dimension. If features are directions, and you can only have as many orthogonal directions as dimensions... how is this possible?
+
+The answer, which we'll explore in Article 6, involves a beautiful piece of geometry that explains both why neural networks are so powerful and why they're so hard to interpret.
+:::
+
 Here's the question to carry forward: if the network represents more concepts than it has dimensions (because almost-orthogonal directions don't interfere), how do we untangle them? How do we find the directions that matter? And what happens when the directions *do* interfere—when the model's capacity is pushed to its limits?
 
 The geometry gives us the framework. Now we need to find the atoms of meaning within it.
