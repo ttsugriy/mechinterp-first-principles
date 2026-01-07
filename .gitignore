@@ -2,6 +2,9 @@
 _site/
 .quarto/
 
+# Claude Code
+.claude/
+
 # Python
 __pycache__/
 *.py[cod]

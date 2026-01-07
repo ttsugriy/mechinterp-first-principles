@@ -8,11 +8,13 @@ Click the "Open in Colab" badge in any notebook to run it immediately in Google 
 
 ## Available Notebooks
 
-| Chapter | Notebook | Topics |
-|---------|----------|--------|
-| 2. Transformers | [02-transformers.ipynb](02-transformers.ipynb) | Forward pass, attention visualization, residual stream |
-| 9. Sparse Autoencoders | [09-sparse-autoencoders.ipynb](09-sparse-autoencoders.ipynb) | Feature extraction, exploration, steering |
-| 13. Induction Heads | [13-induction-heads.ipynb](13-induction-heads.ipynb) | Finding induction heads, ablation, two-layer circuit |
+| Notebook | Topics |
+|----------|--------|
+| [first-analysis.ipynb](first-analysis.ipynb) | Your first interpretability analysis: sentiment attribution, attention patterns |
+| [exercises.ipynb](exercises.ipynb) | Practice exercises for all techniques |
+| [02-transformers.ipynb](02-transformers.ipynb) | Forward pass, attention visualization, residual stream |
+| [09-sparse-autoencoders.ipynb](09-sparse-autoencoders.ipynb) | Feature extraction, exploration, steering |
+| [13-induction-heads.ipynb](13-induction-heads.ipynb) | Finding induction heads, ablation, two-layer circuit |
 
 ## Running Locally
 
@@ -33,7 +35,7 @@ jupyter notebook
 ## GPU Recommendation
 
 These notebooks work on CPU but run much faster with GPU. In Colab:
-1. Runtime → Change runtime type → GPU
+1. Runtime -> Change runtime type -> GPU
 
 ## Library Versions
 
