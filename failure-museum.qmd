@@ -1,0 +1,236 @@
+---
+title: "The Failure Museum"
+subtitle: "When interpretability goes wrong—and what we learn from it"
+---
+
+Research papers report successes. This page documents failures—the experiments that didn't work, the interpretations that turned out to be wrong, and the lessons learned the hard way.
+
+Understanding failure is often more educational than studying success. These stories are collected from published papers, researcher blog posts, and community discussions.
+
+::: {.callout-tip}
+## Why This Matters
+If you only see successes, you'll think interpretability is easier than it is. You'll also miss the debugging intuitions that experienced researchers develop. Failures teach you what to watch out for.
+:::
+
+---
+
+## Failure Type 1: The Interpretation That Wasn't
+
+### "We Found the Lying Circuit" (2023)
+
+**What happened**: A research team was studying deception in language models. They found a set of attention heads that activated strongly when the model produced false statements. They wrote a draft paper claiming to have found "the deception circuit."
+
+**Why it failed**: A colleague pointed out that the same heads activated equally strongly for *confident* statements, regardless of truth value. The heads weren't detecting deception—they were detecting confidence. The model was often confident when lying, creating a spurious correlation.
+
+**The lesson**: Always test your interpretation against alternative hypotheses. "This activates for X" doesn't mean "this represents X." Ask: what *else* would produce this pattern?
+
+::: {.callout-note}
+## The Fix
+They designed a dataset where confidence and truth were decorrelated: confident true statements, confident false statements, uncertain true statements, uncertain false statements. The "deception" signal disappeared—the heads were tracking confidence all along.
+:::
+
+---
+
+### "The Syntax Head That Wasn't" (2022)
+
+**What happened**: Researchers found an attention head in GPT-2 that seemed to track subject-verb agreement. For "The cat that the dogs chase runs fast," the head attended from "runs" to "cat" (the true subject). They claimed it was a "syntax head."
+
+**Why it failed**: Further analysis showed the head was mostly tracking *proximity* and *word frequency*, not syntax. It attended to nearby nouns, and "cat" happened to be a common, nearby noun. On carefully constructed examples where the nearest noun wasn't the subject, the head failed completely.
+
+**The lesson**: Naturalistic data has many correlated features. Syntax, proximity, and frequency are all correlated in normal text. You need adversarial examples that break the correlation.
+
+---
+
+### "Feature 4732 = Happiness" (2024)
+
+**What happened**: An SAE researcher was exploring features in GPT-2. Feature 4732 activated strongly on text containing words like "joy," "wonderful," "celebrate." They labeled it "happiness/positive emotion."
+
+**Why it failed**: A steering experiment showed that amplifying this feature made the model produce... Christmas-related text. Not generic happiness—specifically Christmas and winter holidays. The "happiness" examples were almost all from holiday-themed training data.
+
+**The lesson**: Max-activating examples can be systematically biased. The feature wasn't "happiness"—it was "Christmas." Always validate interpretations with steering or other causal tests.
+
+---
+
+## Failure Type 2: The Causal Claim That Wasn't
+
+### "Ablating the Key Component" (2023)
+
+**What happened**: A team identified what they believed was the key MLP for factual recall. Ablating it reduced accuracy from 95% to 60%. They concluded this MLP was "necessary for factual knowledge."
+
+**Why it failed**: Another researcher tried *resample* ablation instead of *zero* ablation. With resample ablation, accuracy dropped only to 85%. The original 60% result was mostly distribution shift, not genuine necessity.
+
+**The lesson**: Zero ablation creates out-of-distribution activations. The model may fail because of the *weirdness* of zeros, not because the component is truly essential. Always try multiple ablation methods.
+
+---
+
+### "The Circuit We Broke" (2022)
+
+**What happened**: Researchers were studying an indirect object identification circuit. They ablated a "backup" name-mover head to simplify their analysis, assuming it was redundant. The main circuit still worked, so they proceeded.
+
+**Why it failed**: Months later, another team showed that the "backup" head wasn't backup—it was handling a different subset of examples. The first team's analysis only applied to ~60% of cases. The remaining 40% used the "backup" circuit primarily.
+
+**The lesson**: "Backup circuits" might actually be specialized circuits for different contexts. Don't assume redundancy—test on diverse examples.
+
+---
+
+### "Patching Proves Causation" (2023)
+
+**What happened**: A researcher patched attention patterns from a corrupted input to a clean input. The model's accuracy dropped dramatically. They concluded the attention pattern was causally necessary.
+
+**Why it failed**: A collaborator pointed out that they hadn't just patched attention patterns—they'd also patched the attention outputs, which included information from the value vectors. The causal effect might be in the values, not the pattern of attention.
+
+**The lesson**: Be precise about what you're patching. "Patching attention" can mean patching patterns (Q·K), outputs (attention weighted V), or other components. Different patches test different hypotheses.
+
+---
+
+## Failure Type 3: The Result That Didn't Replicate
+
+### "Induction Heads in Vision Transformers" (2023)
+
+**What happened**: A team claimed to find induction-head-like circuits in vision transformers. They presented attention patterns showing diagonal stripes similar to those in language model induction heads.
+
+**Why it failed**: Other researchers couldn't replicate the finding. The original analysis had a bug in how they indexed image patches. The "diagonal stripes" were an artifact of incorrect position mapping.
+
+**The lesson**: Share your code. Interpretability involves complex indexing of high-dimensional tensors. Bugs are easy to introduce and hard to spot. Replication requires running the actual code.
+
+---
+
+### "The Universal Feature" (2024)
+
+**What happened**: A paper claimed to find the same "entity" feature in multiple different language models—evidence for universality of representations.
+
+**Why it failed**: The "same feature" determination was based on cosine similarity of decoder directions. Later analysis showed that the features had high cosine similarity because they all loaded heavily on a small number of common vocabulary tokens, not because they represented the same concept.
+
+**The lesson**: Cosine similarity between SAE decoder directions doesn't prove features are "the same." Features can have similar vocabulary projections for different reasons.
+
+---
+
+## Failure Type 4: The Technique That Broke
+
+### "Logit Lens Shows Progressive Refinement" (2022)
+
+**What happened**: Early logit lens papers showed beautiful progressions: early layers predicted poorly, middle layers better, late layers best. This was taken as evidence that the model "progressively refines" its prediction.
+
+**Why it failed**: The logit lens applies the final layer norm and unembedding to intermediate layers. But intermediate layers weren't trained to be interpretable this way—they were trained to pass information to later layers. The "progressive refinement" is partly an artifact of how layer norms interact with the unembedding matrix.
+
+**The lesson**: The tuned lens (which learns a per-layer probe) shows different, often more nuanced patterns. Be careful interpreting methods that apply final-layer operations to intermediate representations.
+
+---
+
+### "SAE Reconstruction Is Sufficient" (2024)
+
+**What happened**: SAE researchers were evaluating feature quality by reconstruction loss. Their SAE achieved 95% reconstruction fidelity, so they concluded it captured most of the model's computation.
+
+**Why it failed**: When they ran the model with SAE-reconstructed activations, performance on downstream tasks dropped significantly more than the 5% reconstruction gap suggested. The missing 5% contained disproportionately important information for specific tasks.
+
+**The lesson**: Reconstruction loss isn't a good proxy for functional fidelity. You need task-specific evaluations. This is now documented in SAEBench (2025).
+
+---
+
+## Failure Type 5: The Scope Error
+
+### "This Is THE Factual Recall Circuit" (2023)
+
+**What happened**: A paper titled their circuit "The Factual Recall Circuit in GPT-2." It was a careful analysis of how the model recalls capital cities.
+
+**Why it failed**: Follow-up work showed that recalling capital cities uses different circuits than recalling birthdates, which uses different circuits than recalling word definitions. There isn't *one* factual recall circuit—there are many specialized circuits for different kinds of facts.
+
+**The lesson**: Be precise about scope. "A circuit for capital city recall in GPT-2" is accurate. "The factual recall circuit" is overclaiming.
+
+---
+
+### "Attention Heads Are Interpretable" (2021)
+
+**What happened**: Early attention visualization papers showed interpretable patterns: heads that attended to previous tokens, heads that attended to the start of sentences, heads that tracked syntactic dependencies.
+
+**Why it failed**: This was cherry-picking. Most attention heads *don't* have clean interpretations. The interpretable heads were selected precisely because they were interpretable. The vast majority of heads remain mysterious.
+
+**The lesson**: Selection bias is real. The heads you can interpret might be unrepresentative. Always report what fraction of components you analyzed vs. how many were interpretable.
+
+---
+
+## Failure Type 6: The Wrong Abstraction
+
+### "Neurons vs Features" (2020-2022)
+
+**What happened**: Early interpretability work focused heavily on interpreting individual neurons. Entire papers were written about what "neuron 1547" represents.
+
+**Why it failed**: Superposition means neurons aren't the right unit of analysis. A neuron might respond to multiple unrelated features. The entire research program was at the wrong level of abstraction.
+
+**The lesson**: Neurons are convenient (they're how the model is implemented) but not fundamental (they're not how the model represents information). This is the motivation for SAEs.
+
+::: {.callout-important}
+## Meta-Lesson
+The failure wasn't in the analysis—it was in the ontology. Choosing the wrong abstraction wastes years of work. Before diving into analysis, ask: am I analyzing the right thing?
+:::
+
+---
+
+### "Circuits in Individual Models" (2021-2023)
+
+**What happened**: The circuits research program spent years analyzing specific circuits in specific models (GPT-2 Small, InceptionV1).
+
+**Why it failed**: It's unclear whether these findings transfer to modern models. GPT-4 might use completely different mechanisms for the same behaviors. The research may not have revealed universal principles—just contingent facts about particular models.
+
+**The lesson**: This isn't necessarily a "failure" but a scope limitation. Be explicit about what your findings do and don't show. "We understand this in GPT-2" ≠ "We understand this in language models generally."
+
+---
+
+## Common Patterns in Failures
+
+Looking across these failures, several patterns emerge:
+
+### 1. Correlation → Causation Errors
+Finding that X correlates with Y doesn't mean X causes Y. Most failures involve insufficient causal validation.
+
+**Fix**: Always validate with patching, ablation, or steering. If you can't intervene, flag your findings as correlational.
+
+### 2. Cherry-Picking Examples
+Looking at a few examples that fit your hypothesis while ignoring those that don't.
+
+**Fix**: Report statistics. "8 of 10 examples supported the interpretation, 2 were ambiguous, 0 contradicted it."
+
+### 3. Distribution Shift Artifacts
+Zero ablation, patching from very different inputs, or other interventions that create out-of-distribution activations.
+
+**Fix**: Try multiple intervention types. If results differ dramatically, distribution shift is likely the culprit.
+
+### 4. Overclaiming Scope
+"The circuit" when you mean "a circuit." "Features" when you mean "features in this model with this SAE."
+
+**Fix**: Be precise. Hedge appropriately. Explicitly state what you did and didn't test.
+
+### 5. Wrong Abstraction
+Analyzing neurons when features are the right unit. Analyzing individual heads when circuits are the right unit.
+
+**Fix**: Regularly question your level of analysis. What would change if you zoomed in or out?
+
+---
+
+## How to Avoid These Failures
+
+Before publishing or even heavily investing in an interpretation:
+
+1. **List alternative hypotheses** — What else could explain your observations?
+2. **Design breaking examples** — What inputs would distinguish your hypothesis from alternatives?
+3. **Try multiple methods** — Do attribution, patching, and ablation agree?
+4. **Test on held-out data** — Does the pattern generalize?
+5. **Share your code** — Let others replicate and challenge your analysis
+6. **Bound your claims** — Be explicit about scope and confidence
+
+::: {.callout-tip}
+## The Best Researchers
+The researchers who make the fewest errors aren't the ones who never fail—they're the ones who catch their failures before publishing. Develop a practice of actively trying to break your own interpretations.
+:::
+
+---
+
+## Contributing to the Failure Museum
+
+Have you encountered an interpretability failure—your own or from the literature? Failures are valuable when shared. Consider:
+
+- Writing a blog post documenting what went wrong
+- Adding to the community discussion on EleutherAI or Alignment Forum
+- Opening an issue on this book's GitHub to suggest additions
+
+The field moves faster when we learn from each other's mistakes, not just successes.

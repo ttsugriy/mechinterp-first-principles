@@ -48,6 +48,7 @@ book:
         - quick-reference.qmd
         - model-selection.qmd
         - anti-patterns.qmd
+        - failure-museum.qmd
         - timeline.qmd
         - glossary.qmd
 

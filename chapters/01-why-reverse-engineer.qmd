@@ -24,7 +24,26 @@ This is Chapter 1 of a 15-chapter book. See the [index page](../index.qmd) for:
 - **Reading paths**: Different routes through the material based on your background
 :::
 
-## The Mystery
+## Something Strange Is Happening Inside These Models
+
+In May 2024, researchers at Anthropic were probing Claude's internal representations when they found something they didn't expect: a direction in the model's activation space that corresponded to the Golden Gate Bridge.
+
+Not "bridges" in general. Not "San Francisco landmarks." Specifically the Golden Gate Bridge.
+
+When they amplified this direction—adding a small vector to the model's internal state—Claude began *identifying as* the Golden Gate Bridge. Asked what it was, it would explain that it was a suspension bridge spanning the San Francisco Bay. Asked about its feelings, it would describe the sensation of fog rolling through its cables.
+
+Nobody programmed this. The model learned to represent "Golden Gate Bridge" as a direction in a 4096-dimensional space, and that representation was specific enough that amplifying it produced this bizarre behavior.
+
+This raises an obvious question: **What else is in there?**
+
+::: {.callout-important}
+## The Core Mystery
+We built these models. We know every weight—billions of parameters, all stored as floating-point numbers. Yet we didn't know the Golden Gate Bridge direction existed until someone went looking for it. What other concepts, circuits, and algorithms are hiding in these weights? And how do we find them?
+:::
+
+## The Grokking Discovery
+
+The Golden Gate Bridge isn't an isolated curiosity. Neural networks consistently discover solutions we don't understand.
 
 In 2022, researchers at OpenAI were training a small neural network to do modular arithmetic—computing sums like (23 + 47) mod 97. The task is trivial for a pocket calculator, but the researchers wanted to understand how neural networks learn such algorithmic tasks.
 
@@ -34,14 +53,14 @@ Then something strange happened.
 
 The researchers had left the training running longer than necessary—an accident, really. After what should have been pointless additional training, the network's accuracy on unseen examples suddenly jumped from near-zero to near-perfect. It had stopped memorizing and started *understanding*.
 
-When scientists looked inside to see what algorithm the network had discovered, they found something no one expected. The network wasn't counting. It wasn't using any procedure a human would naturally devise. Instead, it had invented a method involving discrete Fourier transforms—arranging numbers on a circle and manipulating them through trigonometric functions. The researchers called this phenomenon "grokking," borrowing a term from science fiction meaning to understand something so thoroughly that you become part of it.
+When scientists looked inside to see what algorithm the network had discovered, they found something no one expected. The network wasn't counting. It wasn't using any procedure a human would naturally devise. Instead, it had invented a method involving discrete Fourier transforms—arranging numbers on a circle and manipulating them through trigonometric functions. The researchers called this phenomenon "grokking."
 
 ::: {.callout-note}
 ## The Key Surprise
 We built this network. We know every weight, every connection, every parameter. Yet we didn't know—couldn't have predicted—that it would discover Fourier-based arithmetic. The algorithm emerged from training, and we only understood it by carefully reverse engineering the trained network.
 :::
 
-This isn't an isolated curiosity. Neural networks consistently discover solutions we don't understand, using methods we didn't teach them. The question isn't whether this is happening. The question is: how do we find out what's going on inside?
+This isn't rare. Neural networks consistently discover solutions we don't understand, using methods we didn't teach them. The question isn't whether this is happening. The question is: how do we find out what's going on inside?
 
 ## The Black Box Problem
 
@@ -83,11 +102,25 @@ Understanding the mechanism would change this. If we know *how* a model makes de
 
 Understanding isn't just defensive—it enables new capabilities.
 
-In 2024, Anthropic researchers were using interpretability tools to study Claude, a large language model. They found an internal "feature" that activated strongly for the Golden Gate Bridge—a direction in the model's activation space that corresponded to that concept. When they artificially amplified this feature, something remarkable happened: the model began *identifying as* the Golden Gate Bridge. Asked about itself, it would explain that it was a suspension bridge spanning the San Francisco Bay.
-
-This was strange, but it was also powerful. By understanding the model's internal representations, the researchers could *steer* its behavior in predictable ways. Find a feature for honesty, amplify it. Find a feature for harmful content, suppress it. Understanding the mechanism makes the system controllable.
+Remember the Golden Gate Bridge feature from the opening? That wasn't just a curiosity—it demonstrated something powerful. By understanding the model's internal representations, the researchers could *steer* its behavior in predictable ways. Find a feature for honesty, amplify it. Find a feature for harmful content, suppress it. Understanding the mechanism makes the system controllable.
 
 The grokking research points to another kind of capability gain. The network discovered a Fourier-based algorithm for modular arithmetic—an approach humans wouldn't naturally use. By reverse engineering trained networks, we might learn new algorithms, new approaches to problems, insights that emerge from optimization but that we can then understand and apply elsewhere.
+
+::: {.callout-warning collapse="true"}
+## The Skeptic's View: Is This Even Possible?
+
+Not everyone believes mechanistic interpretability will succeed. Here are the strongest counterarguments:
+
+**"Models are too complex"**: GPT-4 has hundreds of billions of parameters. Even if we can understand toy circuits, scaling to production systems may be fundamentally intractable. We might be studying the interpretable 1% while the important 99% remains opaque.
+
+**"Features might not exist"**: The "features as directions" hypothesis is convenient, but what if the model's representations don't decompose into human-interpretable concepts? We might be projecting structure that isn't there.
+
+**"Interpretations don't transfer"**: A circuit found in GPT-2 might not exist in GPT-4. If we have to re-analyze every new model, interpretability won't scale.
+
+**"It won't help with safety"**: Even if we understand *how* a model works, that doesn't mean we can predict or prevent bad behavior. Understanding doesn't imply control.
+
+These are serious objections. This book presents the case *for* interpretability, but you should hold these counterarguments in mind. We'll revisit them in Chapter 14 (Open Problems).
+:::
 
 ## The Reverse Engineering Frame
 

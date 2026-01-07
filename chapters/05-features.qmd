@@ -74,6 +74,58 @@ But it's a disaster for interpretation. When you ask "what does neuron 847 mean?
 Recent research has revealed something even more striking: polysemanticity can emerge even when there's no capacity pressure. Networks sometimes assign multiple unrelated features to the same neuron purely due to random initialization and training dynamics. Polysemanticity isn't just about efficiency—it's a fundamental property of how neural networks learn.
 :::
 
+::: {.callout-warning collapse="true"}
+## Try It Yourself: Watch Neuron Interpretation Fail
+
+If you want to experience this frustration firsthand, try this in a notebook:
+
+```python
+import transformer_lens as tl
+
+model = tl.HookedTransformer.from_pretrained("gpt2-small")
+
+# Pick a random MLP neuron
+layer, neuron = 6, 1234
+
+# Collect texts that highly activate this neuron
+test_texts = [
+    "The weather today is beautiful and sunny",
+    "She walked to the store to buy groceries",
+    "The president announced a new policy",
+    "I love programming in Python",
+    "The cat sat on the mat",
+    # ... add more diverse texts
+]
+
+for text in test_texts:
+    tokens = model.to_tokens(text)
+    _, cache = model.run_with_cache(tokens)
+
+    # Get MLP neuron activation (after ReLU/GELU)
+    mlp_acts = cache["post", layer][0, :, neuron]  # All positions
+
+    max_act = mlp_acts.max().item()
+    max_pos = mlp_acts.argmax().item()
+    max_token = model.to_str_tokens(text)[max_pos]
+
+    if max_act > 1.0:  # Threshold for "high activation"
+        print(f"Act={max_act:.2f} at '{max_token}' in: {text[:50]}...")
+```
+
+**What you'll likely find**: The neuron activates for seemingly random words across unrelated texts. There's no clean interpretation. *This is the problem.*
+
+Now compare with an SAE feature (we'll cover this in Chapter 9):
+```python
+from sae_lens import SAE
+
+sae, _, _ = SAE.from_pretrained("gpt2-small-res-jb", "blocks.6.hook_resid_pre")
+# Feature 4521 might be "words related to science"
+# Max-activating examples will be coherent
+```
+
+The SAE feature will have a clean interpretation. The raw neuron won't. That's the difference between neurons and features.
+:::
+
 ## What Is a Feature?
 
 If neurons aren't the right unit, what is?
@@ -107,6 +159,18 @@ In Chapter 4, we established that neural network activations are vectors in high
 Here's the key claim: **features are directions in activation space**.
 
 This is the **linear representation hypothesis**. When a network represents "this text is in French," it does so by having the activation vector point (at least partially) in the "French" direction. The more French-like the input, the more the vector points that way.
+
+::: {.callout-note}
+## Confidence Level: MEDIUM-HIGH
+
+**Evidence for**: Linear probes work. Steering works. Vector arithmetic works. SAEs find interpretable directions.
+
+**Evidence against**: Some features may be nonlinear or context-dependent. Feature absorption suggests the picture is more complex. High-level reasoning may not decompose linearly.
+
+**This claim might be wrong if**: Future work finds that important representations are irreducibly distributed or curved in activation space.
+
+We're confident this is *approximately* true for many features, especially concrete concepts. We're less confident it holds for abstract reasoning.
+:::
 
 More precisely:
 - Each feature corresponds to a direction (a unit vector) in activation space

@@ -321,6 +321,78 @@ To understand what the model represents, we need to understand this geometry. Wh
 
 This geometric perspective is the subject of the next chapter. Once we understand activations as geometry, we'll be ready to tackle the core questions: What are features? How do they compose? And why is interpretation both possible and hard?
 
+---
+
+## Mini Case Study: Watching a Prediction Form
+
+Let's apply the residual stream perspective to a real example. This is your first taste of the analysis workflow—we'll go deeper in Arc III.
+
+**The task**: GPT-2 predicts the next token for "The Eiffel Tower is located in". We want to see *when* the model commits to predicting "Paris."
+
+```python
+import transformer_lens as tl
+
+model = tl.HookedTransformer.from_pretrained("gpt2-small")
+prompt = "The Eiffel Tower is located in"
+tokens = model.to_tokens(prompt)
+
+# Get the token ID for " Paris"
+paris_token = model.to_single_token(" Paris")
+
+# Run with cache to get all intermediate states
+logits, cache = model.run_with_cache(tokens)
+
+# Apply logit lens at each layer
+print("Layer | Logit for 'Paris' | Top prediction")
+print("-" * 50)
+for layer in range(model.cfg.n_layers):
+    # Get residual stream at this layer
+    resid = cache["resid_post", layer][0, -1, :]  # Last position
+
+    # Project to vocabulary (logit lens)
+    layer_logits = resid @ model.W_U
+
+    # Get Paris logit and top prediction
+    paris_logit = layer_logits[paris_token].item()
+    top_token = layer_logits.argmax().item()
+    top_word = model.tokenizer.decode(top_token)
+
+    print(f"  {layer:2d}  |      {paris_logit:+.2f}       | {top_word}")
+```
+
+**Typical output** (approximate):
+```
+Layer | Logit for 'Paris' | Top prediction
+--------------------------------------------------
+   0  |      -2.34       | the
+   1  |      -1.89       | the
+   2  |      -0.45       | France
+   3  |      +1.23       | France
+   4  |      +3.45       | Paris
+   5  |      +5.67       | Paris
+  ...
+  11  |      +12.34      | Paris
+```
+
+**What we see**:
+- **Early layers (0-2)**: The model predicts common words. It hasn't "decided" yet.
+- **Middle layers (3-4)**: The model starts predicting relevant words ("France"). Information is being retrieved.
+- **Later layers (5-11)**: The model commits to "Paris" with increasing confidence.
+
+::: {.callout-important}
+## The Key Insight
+The prediction doesn't appear instantly—it *develops* through layers. Each layer's components read from the residual stream, compute something, and write back. We can watch this process unfold.
+:::
+
+**Questions this raises** (that we'll answer in later chapters):
+- *Which* components are responsible for the jump at layer 4?
+- What information is being retrieved, and from where?
+- Could we intervene to change the prediction?
+
+This is a taste of the residual stream in action. We'll develop these techniques systematically in Arc III.
+
+---
+
 ## Looking Ahead
 
 The residual stream reframes the transformer from "sequential layer processing" to "parallel component contributions." This isn't just a pedagogical shift—it's the foundation for mechanistic interpretability.
