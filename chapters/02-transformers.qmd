@@ -7,6 +7,13 @@ categories: [foundations, transformers]
 description: "Before we can reverse engineer what a transformer learns, we need to understand what it computes. The answer is surprisingly simple: matrix multiplications, all the way down."
 ---
 
+::: {.callout-note}
+## Hands-On Notebook
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ttsugriy/mechinterp-first-principles/blob/main/notebooks/02-transformers.ipynb)
+
+Run code interactively: load GPT-2, visualize attention patterns, explore the residual stream.
+:::
+
 ::: {.callout-tip}
 ## What You'll Learn
 - How transformers convert text to numbers (tokenization and embedding)

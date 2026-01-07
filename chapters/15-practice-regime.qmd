@@ -593,6 +593,31 @@ The transformer's circuits are waiting. Go find them.
 
 ## Resources
 
+### Your First Project: Concrete Suggestions
+
+::: {.callout-important}
+## Choose Your Adventure
+Pick ONE project based on your available time:
+
+**Weekend Project (~8 hours)**
+
+- Replicate induction head finding in GPT-2 Small using the [notebook](../notebooks/13-induction-heads.ipynb)
+- Find a polysemantic neuron and document what concepts it responds to
+- Explore 50 SAE features on Neuronpedia and write up the most interesting 5
+
+**Week Project (~20-40 hours)**
+
+- Train your own SAE on GPT-2 Small layer 6 using SAE Lens
+- Replicate the IOI circuit analysis (find the 26 heads)
+- Find a new "simple" circuit (e.g., detecting questions, predicting punctuation)
+
+**Research Project (~1-3 months)**
+
+- Investigate a phenomenon from Chapter 14's open problems
+- Apply interpretability techniques to a new model or task
+- Develop improved methods for feature finding or circuit discovery
+:::
+
 ### Getting Started
 
 - **TransformerLens Documentation** — [GitHub](https://github.com/TransformerLensOrg/TransformerLens)
@@ -602,9 +627,17 @@ The transformer's circuits are waiting. Go find them.
 
 ### Community
 
-- **EleutherAI Discord** — Active interpretability channels
-- **Alignment Forum** — Interpretability research discussions
-- **MATS Program** — Mentored Alignment Theory Scholars: structured research mentorship
+- **EleutherAI Discord** — [discord.gg/eleutherai](https://discord.gg/eleutherai): Active #interpretability channel, great for questions
+- **Alignment Forum** — [alignmentforum.org](https://www.alignmentforum.org/): Interpretability research discussions and papers
+- **MATS Program** — [matsprogram.org](https://www.matsprogram.org/): Mentored research, applications twice yearly
+- **AI Safety Camp** — [aisafety.camp](https://aisafety.camp/): Intensive research programs
+
+### Who to Follow
+
+- **Neel Nanda** ([@neaboris](https://twitter.com/neaboris)): TransformerLens creator, prolific educator
+- **Chris Olah** ([@ch402](https://twitter.com/ch402)): Anthropic interpretability lead
+- **Anthropic Interpretability Team** ([@AnthropicAI](https://twitter.com/AnthropicAI)): Major research releases
+- **Joseph Bloom** ([@jbloomaus](https://twitter.com/jbloomaus)): SAE Lens creator
 
 ### Reference
 

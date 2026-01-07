@@ -7,6 +7,13 @@ categories: [techniques, sparse-autoencoders]
 description: "The primary tool for finding interpretable features in neural networks. Sparse autoencoders decompose polysemantic activations into monosemantic features."
 ---
 
+::: {.callout-note}
+## Hands-On Notebook
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ttsugriy/mechinterp-first-principles/blob/main/notebooks/09-sparse-autoencoders.ipynb)
+
+Extract features from GPT-2, explore what they represent, try steering the model.
+:::
+
 ::: {.callout-tip}
 ## What You'll Learn
 - What sparse autoencoders are and how they work
