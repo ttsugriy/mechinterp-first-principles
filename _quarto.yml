@@ -64,7 +64,6 @@ format:
       theme: neutral
     code-fold: true
     code-tools: true
-    code-annotations: hover
     code-line-numbers: true
     toc: true
     toc-depth: 3
