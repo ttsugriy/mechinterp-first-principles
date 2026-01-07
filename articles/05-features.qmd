@@ -20,6 +20,18 @@ description: "A feature is a property of the input that the network represents i
 **Required**: [Article 4: Geometry](04-geometry.qmd) — understanding activations as vectors in high-dimensional space
 :::
 
+::: {.callout-note}
+## Before You Read: Recall
+From Articles 1-4 (Arc I: Foundations), recall:
+
+- Activations are vectors in high-dimensional space (Article 4)
+- Vector arithmetic reveals meaningful structure: king - man + woman ≈ queen (Article 4)
+- The residual stream accumulates contributions additively (Article 3)
+- Transformers are matrix multiplication machines (Article 2)
+
+We've built the computational substrate. **Now we ask**: What are the atoms of meaning in this space?
+:::
+
 ## The Neuron That Liked Cats and Cars
 
 In 2017, researchers at Google were trying to understand what individual neurons in an image classifier had learned. The approach seemed natural: look at which images maximally activate each neuron, and you'll learn what that neuron "means."

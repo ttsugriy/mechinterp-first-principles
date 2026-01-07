@@ -19,18 +19,21 @@ book:
         - articles/02-transformers.qmd
         - articles/03-residual-stream.qmd
         - articles/04-geometry.qmd
+        - articles/arc1-summary.qmd
     - part: "Arc II: Core Theory"
       chapters:
         - articles/05-features.qmd
         - articles/06-superposition.qmd
         - articles/07-toy-models.qmd
         - articles/08-circuits.qmd
+        - articles/arc2-summary.qmd
     - part: "Arc III: Techniques"
       chapters:
         - articles/09-sparse-autoencoders.qmd
         - articles/10-attribution.qmd
         - articles/11-patching.qmd
         - articles/12-ablation.qmd
+        - articles/arc3-summary.qmd
     - part: "Arc IV: Synthesis"
       chapters:
         - articles/13-induction-heads.qmd

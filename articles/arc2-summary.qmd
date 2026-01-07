@@ -1,0 +1,94 @@
+---
+title: "Arc II Summary"
+subtitle: "What you've learned about features, superposition, and circuits"
+---
+
+::: {.callout-tip}
+## Congratulations!
+You've completed Arc II: Core Theory. Before moving to Arc III (Techniques), consolidate what you've learned.
+:::
+
+## The Big Picture
+
+You now understand **what networks represent and how they compute**:
+
+```{mermaid}
+%%| fig-width: 9
+flowchart LR
+    subgraph ARC2["Arc II: The Theory"]
+        A5["Article 5<br/>Features"] --> A6["Article 6<br/>Superposition"]
+        A6 --> A7["Article 7<br/>Toy Models"]
+        A7 --> A8["Article 8<br/>Circuits"]
+    end
+```
+
+## Key Concepts to Remember
+
+### From Article 5: Features
+- Features are **directions in activation space**, not neurons
+- Neurons are **polysemantic** (respond to multiple unrelated concepts)
+- The goal: decompose polysemantic neurons into **monosemantic** features
+- Evidence: linear probes work, steering works, vector arithmetic works
+
+### From Article 6: Superposition
+- Networks pack more features than dimensions using **almost-orthogonal** directions
+- **Sparsity** enables this: if features rarely co-occur, interference is tolerable
+- **Phase transition**: at critical sparsity, networks switch from dedicated → superposed
+- This is **why** polysemanticity exists and interpretation is hard
+
+### From Article 7: Toy Models
+- We can study superposition in controlled settings where we know ground truth
+- Optimal arrangements form **regular polytopes** (pentagons in 2D, etc.)
+- Toy models confirm: networks discover mathematically optimal geometric arrangements
+- What we learn transfers (imperfectly) to real models
+
+### From Article 8: Circuits
+- Features are atoms; circuits are **molecules** (compositions of features)
+- A circuit: identifiable subnetwork that performs a specific computation
+- **IOI circuit**: 26 heads in GPT-2 Small for indirect object identification
+- **Composition types**: Q-composition, K-composition, V-composition
+
+## The Theory You've Built
+
+| Concept | Key Insight |
+|---------|-------------|
+| Features as directions | We know what to look for |
+| Superposition | We understand why interpretation is hard |
+| Phase transitions | Representation strategy depends on sparsity |
+| Circuits | Features compose into interpretable algorithms |
+
+## Self-Test: Can You Answer These?
+
+::: {.callout-note collapse="true"}
+## 1. Why can a 768-dimensional space represent millions of features?
+
+**Superposition**. Networks use almost-orthogonal directions that are close enough to perpendicular that interference is manageable. The key insight: sparsity makes this work. If features rarely co-occur, the interference when they *do* overlap is acceptable.
+:::
+
+::: {.callout-note collapse="true"}
+## 2. What's the difference between polysemantic neurons and monosemantic features?
+
+- **Polysemantic neuron**: Responds to multiple unrelated concepts (cat faces AND car fronts)
+- **Monosemantic feature**: A direction in activation space corresponding to one interpretable concept
+
+Features are the meaningful unit; neurons are just one arbitrary basis for the space.
+:::
+
+::: {.callout-note collapse="true"}
+## 3. What is K-composition and why does it matter for induction heads?
+
+**K-composition**: One head's output modifies another head's keys, changing what the second head attends to.
+
+For induction heads: The previous token head writes "B follows A" into the residual stream. This information becomes part of the keys that the induction head searches. The induction head can then find positions where the previous token matches the current token—enabling pattern completion.
+:::
+
+## What's Next
+
+Arc III introduces the **techniques**:
+
+- **Article 9 (SAEs)**: The tool for extracting features from superposition
+- **Article 10 (Attribution)**: Which components contributed to the output?
+- **Article 11 (Patching)**: Does this component *cause* the behavior?
+- **Article 12 (Ablation)**: What happens if we remove it?
+
+You have the theory. Now you'll learn how to apply it.

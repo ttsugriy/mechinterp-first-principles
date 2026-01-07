@@ -20,11 +20,22 @@ description: "The residual stream is a vector space. Understanding its geometry�
 **Required**: [Article 3: The Residual Stream](03-residual-stream.qmd) — understanding the shared workspace model
 :::
 
+::: {.callout-note}
+## Before You Read: Recall
+From Article 3, recall:
+
+- What is the residual stream? (A shared vector that accumulates contributions from all components)
+- How do components communicate? (By reading from and writing to the residual stream)
+- What does the logit lens reveal? (Predictions refine progressively through layers)
+:::
+
 ## A Famous Equation
 
 In 2013, researchers at Google trained a neural network on billions of words and discovered something remarkable. The network learned to represent words as vectors—points in a 300-dimensional space. That much was expected.
 
 What wasn't expected was the geometry.
+
+**Now we ask**: The residual stream is a vector. But what *structure* does that vector have? What does it mean for concepts to be "directions"?
 
 When researchers computed:
 

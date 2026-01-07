@@ -20,6 +20,18 @@ description: "Neural networks represent far more features than they have dimensi
 **Required**: [Article 5: Features](05-features.qmd) — understanding what features are and why neurons are polysemantic
 :::
 
+::: {.callout-note}
+## Before You Read: Recall
+From Article 5, recall:
+
+- Features are *directions* in activation space, not individual neurons
+- Neurons are polysemantic (respond to multiple unrelated concepts)
+- The goal: decompose polysemantic neurons into monosemantic features
+- Evidence for linear representations: steering works, vector arithmetic works
+
+**Now we ask**: How do networks fit thousands of features into hundreds of dimensions?
+:::
+
 ## The Capacity Puzzle
 
 In the previous article, we established that features are directions in activation space. A 768-dimensional residual stream can represent features as directions—unit vectors pointing in meaningful orientations.

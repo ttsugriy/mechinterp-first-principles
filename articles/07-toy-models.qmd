@@ -20,6 +20,18 @@ description: "Before tackling superposition in billion-parameter models, we stud
 **Required**: [Article 6: Superposition](06-superposition.qmd) — understanding the superposition hypothesis and why sparsity matters
 :::
 
+::: {.callout-note}
+## Before You Read: Recall
+From Article 6, recall:
+
+- Superposition: networks store more features than dimensions using *almost-orthogonal* directions
+- Sparsity enables this: if features rarely co-occur, interference is manageable
+- Phase transition: at critical sparsity, networks switch to superposition
+- This is why polysemanticity exists and interpretation is hard
+
+**Now we ask**: Can we study superposition in a controlled setting where we know the ground truth?
+:::
+
 ## Solve a Simpler Problem First
 
 In the previous article, we established that superposition is the central obstacle to mechanistic interpretability. Networks pack more features than dimensions, creating polysemantic neurons and hiding interpretable structure in a compressed representation.

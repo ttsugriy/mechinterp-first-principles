@@ -20,9 +20,20 @@ description: "Before we can reverse engineer what a transformer learns, we need 
 **Recommended background**: Basic linear algebra (matrix multiplication, vectors). No prior deep learning knowledge required—we build from first principles.
 :::
 
+::: {.callout-note}
+## Before You Read: Recall
+From Article 1, recall:
+
+- Why do we want to reverse-engineer neural networks? (Scientific understanding, safety, capability improvement)
+- What makes neural networks "black boxes"? (We have the weights but don't understand the algorithms)
+- What's the goal of mechanistic interpretability? (Find the *how* behind the *what*)
+:::
+
 ## The Machine We're Trying to Understand
 
 In the previous article, we saw a neural network discover Fourier transforms for modular arithmetic—an algorithm no one taught it. We established that mechanistic interpretability is the project of reverse engineering such discoveries: finding the *how* behind the *what*.
+
+**Now we ask**: What exactly are we reverse-engineering? What operations does a transformer compute?
 
 But before we can reverse engineer a transformer, we need to understand what it actually computes. What happens when you feed text into GPT-4? What operations transform "The capital of France is" into a prediction of "Paris"?
 

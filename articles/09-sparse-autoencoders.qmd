@@ -20,6 +20,18 @@ description: "The primary tool for finding interpretable features in neural netw
 **Required**: [Article 6: Superposition](06-superposition.qmd) — understanding why features are compressed into overlapping representations
 :::
 
+::: {.callout-note}
+## Before You Read: Recall
+From Arc II (Core Theory), recall:
+
+- Features are directions in activation space (Article 5)
+- Superposition compresses many features into few dimensions (Article 6)
+- This creates polysemantic neurons that are hard to interpret
+- Circuits are how features compose into algorithms (Article 8)
+
+We've established the theory. **Now we ask**: How do we actually *find* features in real networks?
+:::
+
 ## The Tool We Need
 
 We've established the problem: networks pack thousands of features into hundreds of dimensions (superposition), creating polysemantic neurons that are impossible to interpret directly.

@@ -20,6 +20,18 @@ description: "Attribution shows correlation. Patching proves causation. By surgi
 **Required**: [Article 10: Attribution](10-attribution.qmd) — understanding how to identify candidate components
 :::
 
+::: {.callout-note}
+## Before You Read: Recall
+From Article 10 (Attribution), recall:
+
+- Attribution shows which components contributed to the output (correlation)
+- The logit is a sum of per-component contributions
+- But high attribution doesn't prove a component is *necessary*
+- Other paths might carry the same information (redundancy)
+
+Attribution gives us hypotheses. **Now we ask**: How do we *test* whether a component is causally necessary?
+:::
+
 ## From Observation to Experiment
 
 In Article 10, we learned to ask: "What contributed to this output?" Attribution decomposes the logit into per-component contributions, showing which attention heads and MLPs pushed the prediction in which direction.

@@ -21,6 +21,17 @@ description: "Induction heads enable in-context learning—the ability to learn 
 This article synthesizes everything you've learned.
 :::
 
+::: {.callout-note}
+## Before You Read: Recall
+From Arc II & III, recall:
+
+- Features are directions; circuits are how they compose (Articles 5, 8)
+- SAEs extract interpretable features from superposition (Article 9)
+- Attribution finds candidates; patching tests causation; ablation tests necessity (Articles 10-12)
+
+We have theory and tools. **Now we apply everything**: reverse-engineer a complete circuit.
+:::
+
 ## The Complete Picture
 
 We've built a complete interpretability toolkit:

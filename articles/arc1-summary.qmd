@@ -1,0 +1,92 @@
+---
+title: "Arc I Summary"
+subtitle: "What you've learned about the computational substrate"
+---
+
+::: {.callout-tip}
+## Congratulations!
+You've completed Arc I: Foundations. Before moving to Arc II (Core Theory), consolidate what you've learned.
+:::
+
+## The Big Picture
+
+You now understand **what we're reverse-engineering**:
+
+```{mermaid}
+%%| fig-width: 9
+flowchart LR
+    subgraph ARC1["Arc I: What We're Studying"]
+        A1["Article 1<br/>Why Interpret?"] --> A2["Article 2<br/>Transformers"]
+        A2 --> A3["Article 3<br/>Residual Stream"]
+        A3 --> A4["Article 4<br/>Geometry"]
+    end
+```
+
+## Key Concepts to Remember
+
+### From Article 1: Why Reverse-Engineer?
+- Neural networks discover algorithms we didn't teach them
+- We have all the weights but don't understand the algorithms
+- Goal: Find the *how* behind the *what*
+
+### From Article 2: Transformers
+- Transformers are **matrix multiplication machines**
+- Attention = soft dictionary lookup (Q, K, V)
+- MLPs = pattern-value memories storing knowledge
+- Everything is linear algebra + a few nonlinearities (softmax, GELU)
+
+### From Article 3: Residual Stream
+- The residual stream is a **shared workspace**
+- Output = embedding + Σ(all component contributions)
+- Components read from and write to the stream—they never talk directly
+- The additive structure enables **decomposition** (attribution)
+
+### From Article 4: Geometry
+- Activations are points in high-dimensional space
+- Meaning has geometric structure: king - man + woman ≈ queen
+- **Linear representation hypothesis**: features are directions
+- High dimensions: distances become noisy, but near-orthogonality is abundant
+
+## The Foundation You've Built
+
+| Concept | What It Means for Interpretability |
+|---------|-----------------------------------|
+| Matrix multiplications | We can trace computation through linear algebra |
+| Residual stream | We can decompose outputs into component contributions |
+| Additive structure | Attribution is tractable |
+| Geometric representations | Features are directions we can find and manipulate |
+
+## Self-Test: Can You Answer These?
+
+::: {.callout-note collapse="true"}
+## 1. Why does the additive structure of the residual stream matter for interpretability?
+
+Because the final output is a **sum** of contributions. We can measure exactly how much each attention head and MLP contributed to any prediction. Without this additivity, decomposition wouldn't work.
+:::
+
+::: {.callout-note collapse="true"}
+## 2. What do Q, K, V represent in attention?
+
+- **Query (Q)**: "What am I looking for?"
+- **Key (K)**: "What do I contain?"
+- **Value (V)**: "What information should I provide?"
+
+Attention weight = softmax(Q · K^T / √d). The output is a weighted sum of values.
+:::
+
+::: {.callout-note collapse="true"}
+## 3. Why are features "directions" rather than "neurons"?
+
+Because the network doesn't know which axis is which—it just learns useful activation patterns. The meaningful structure is geometric (directions, distances, projections), not tied to the arbitrary neuron basis. A "cat" feature might involve many neurons, not just one.
+:::
+
+## What's Next
+
+Arc II introduces the **core theory**:
+
+- **Article 5 (Features)**: What are the atoms of meaning in activation space?
+- **Article 6 (Superposition)**: How do networks pack more features than dimensions?
+- **Article 7 (Toy Models)**: How can we study superposition in controlled settings?
+- **Article 8 (Circuits)**: How do features compose into algorithms?
+
+You have the substrate. Now you'll learn what's represented in it.

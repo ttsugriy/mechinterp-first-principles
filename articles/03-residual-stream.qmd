@@ -20,9 +20,20 @@ description: "The residual stream is a simple architectural feature with profoun
 **Required**: [Article 2: Transformers](02-transformers.qmd) — understanding attention and MLP layers
 :::
 
+::: {.callout-note}
+## Before You Read: Recall
+From Article 2, recall:
+
+- What are Q, K, V in attention? (Query, Key, Value — for matching and retrieving information)
+- What do MLPs do? (Store and retrieve knowledge via pattern-value associations)
+- What's the key insight about transformers? (They're matrix multiplication machines)
+:::
+
 ## A Shift in Perspective
 
 In the previous article, we saw that transformers are matrix multiplication machines. Attention routes information between positions; MLPs store and retrieve knowledge. Layer by layer, the network transforms token embeddings into predictions.
+
+**Now we ask**: Is "layer-by-layer processing" the right way to think about this? There's a more powerful perspective.
 
 But there's a different way to think about what's happening—a perspective that turns out to be far more useful for mechanistic interpretability.
 

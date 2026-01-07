@@ -1,0 +1,116 @@
+---
+title: "Arc III Summary"
+subtitle: "The interpretability toolkit: what each technique does and when to use it"
+---
+
+::: {.callout-tip}
+## Congratulations!
+You've completed Arc III: Techniques. Before moving to Arc IV (Synthesis), consolidate your understanding of the interpretability toolkit.
+:::
+
+## The Big Picture
+
+You now have a **complete methodology** for reverse-engineering neural networks:
+
+```{mermaid}
+%%| fig-width: 9
+flowchart LR
+    subgraph ARC3["Arc III: The Toolkit"]
+        A9["Article 9<br/>SAEs"] --> A10["Article 10<br/>Attribution"]
+        A10 --> A11["Article 11<br/>Patching"]
+        A11 --> A12["Article 12<br/>Ablation"]
+    end
+```
+
+## Key Concepts to Remember
+
+### From Article 9: Sparse Autoencoders
+- SAEs decompose **polysemantic** activations into **monosemantic** features
+- Architecture: Overcomplete (more latent dims than input) + sparse (most are zero)
+- Training: Reconstruction loss + sparsity loss (L1 penalty)
+- Trade-off: More sparsity → more interpretable, but worse reconstruction
+
+### From Article 10: Attribution
+- Attribution decomposes the output into **per-component contributions**
+- Key insight: The logit is a sum, so we can see what each component added
+- **Logit lens**: Peek at intermediate predictions by applying unembedding early
+- Limitation: Attribution shows **correlation**, not causation
+
+### From Article 11: Activation Patching
+- Patching **proves causation** by surgically replacing activations
+- **Clean/corrupted paradigm**: Two inputs, one correct, one wrong
+- Patch from clean → corrupted: If output recovers, component is causal
+- **Path patching**: Trace specific information flows between components
+
+### From Article 12: Ablation
+- Ablation removes a component entirely and measures the effect
+- **Zero ablation**: Set to zero (simple but can cause distribution shift)
+- **Mean ablation**: Set to dataset mean (preserves magnitude, removes specificity)
+- **Resample ablation**: Replace with value from different input (preserves distribution)
+
+## The Interpretability Pipeline
+
+```{mermaid}
+%%| fig-width: 10
+flowchart TD
+    subgraph DISCOVERY["Phase 1: Discovery"]
+        SAE["SAE Feature Extraction<br/>What concepts exist?"]
+        ATTR["Attribution<br/>What correlates with output?"]
+    end
+
+    subgraph VALIDATION["Phase 2: Validation"]
+        PATCH["Patching<br/>What causes the behavior?"]
+        ABL["Ablation<br/>What's necessary?"]
+    end
+
+    subgraph RESULT["Phase 3: Understanding"]
+        CIRCUIT["Circuit Description<br/>Features + Connections + Roles"]
+    end
+
+    SAE --> ATTR
+    ATTR --> PATCH
+    PATCH --> ABL
+    ABL --> CIRCUIT
+```
+
+## When to Use Each Technique
+
+| Technique | Question Answered | Cost | Use When |
+|-----------|------------------|------|----------|
+| **SAE** | What concepts exist here? | Training time | You want interpretable features |
+| **Attribution** | What contributed to this output? | 1-2 forward passes | Generating hypotheses |
+| **Patching** | Is this component causally necessary? | ~100 passes/component | Testing hypotheses |
+| **Ablation** | What happens without this component? | 1 pass/component | Finding minimal circuits |
+
+## Self-Test: Can You Answer These?
+
+::: {.callout-note collapse="true"}
+## 1. Why use attribution before patching?
+
+**Cost efficiency**. Attribution requires only 1-2 forward passes to identify *all* component contributions. Patching requires ~100 passes *per component*. Use attribution to narrow from 144 attention heads to the top 10 candidates, then patch only those.
+:::
+
+::: {.callout-note collapse="true"}
+## 2. A component has high attribution but low patching recovery. What does this mean?
+
+The component is **correlated but not necessary**. Its output points toward the correct answer, but other paths carry the same information. This is common in large models with redundant circuits (backup pathways).
+:::
+
+::: {.callout-note collapse="true"}
+## 3. When would you use mean ablation vs. zero ablation?
+
+- **Zero ablation**: Simpler, but can cause distribution shift (the network never saw zero during training)
+- **Mean ablation**: Preserves the expected magnitude, removes only input-specific information
+
+Use mean ablation when you want cleaner measurements. Use zero ablation for quick exploration or when you need a stronger intervention.
+:::
+
+## What's Next
+
+Arc IV brings it all together:
+
+- **Article 13 (Induction Heads)**: A complete case study applying all techniques
+- **Article 14 (Open Problems)**: What we can't do yet and why
+- **Article 15 (Practice Regime)**: How to actually do interpretability research
+
+You have the tools. Now you'll see them applied—and understand their limits.

@@ -21,6 +21,17 @@ description: "Attribution traces which components contributed to the model's out
 **Recommended**: [Article 8: Circuits](08-circuits.qmd) — understanding what we're trying to find
 :::
 
+::: {.callout-note}
+## Before You Read: Recall
+From prior articles, recall:
+
+- The residual stream is a *sum* of contributions from all components (Article 3)
+- We can decompose this sum to see what each component contributed
+- SAEs extract interpretable features from superposed representations (Article 9)
+
+We have features. **Now we ask**: Which features contributed to a specific output?
+:::
+
 ## Starting from the Answer
 
 In Article 9, we learned how to extract features from superposition using sparse autoencoders. We now have a vocabulary: monosemantic features that correspond to interpretable concepts.

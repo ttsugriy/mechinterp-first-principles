@@ -20,6 +20,18 @@ description: "Features are atoms. Circuits are molecules—how individual featur
 **Required**: [Articles 5-7](05-features.qmd) — understanding features, superposition, and how they work in toy models
 :::
 
+::: {.callout-note}
+## Before You Read: Recall
+From Articles 5-7, recall:
+
+- Features are directions in activation space (not neurons)
+- Superposition packs many features into few dimensions
+- Toy models confirm: networks discover optimal geometric arrangements
+- We can find and study features—but features in isolation don't explain *computation*
+
+**Now we ask**: How do features *compose* into algorithms? How does the network compute?
+:::
+
 ## From Atoms to Molecules
 
 We've spent the last three articles building up the atomic theory of neural network representations:

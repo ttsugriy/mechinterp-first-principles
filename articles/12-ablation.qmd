@@ -20,6 +20,17 @@ description: "Ablation removes components entirely to reveal what the network tr
 **Required**: [Article 11: Patching](11-patching.qmd) — understanding causal intervention methodology
 :::
 
+::: {.callout-note}
+## Before You Read: Recall
+From Articles 10-11 (Attribution & Patching), recall:
+
+- Attribution: measures per-component contributions (correlational)
+- Patching: replaces activations from one run with another (causal)
+- Together: find candidates (attribution) → verify importance (patching)
+
+Patching shows what *causes* a behavior. **Now we ask**: What happens if we remove a component entirely?
+:::
+
 ## The Simplest Intervention
 
 We've now built a complete interpretability pipeline:

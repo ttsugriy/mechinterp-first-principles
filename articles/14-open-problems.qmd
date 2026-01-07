@@ -20,6 +20,18 @@ description: "An honest assessment of what mechanistic interpretability can and 
 **Required**: [Article 13: Induction Heads](13-induction-heads.qmd) — seeing the full interpretability pipeline in action
 :::
 
+::: {.callout-note}
+## Before You Read: Recall
+From Article 13 (Induction Heads), recall:
+
+- Induction heads are the best-understood circuit in transformers
+- We verified them with attribution, patching, and ablation
+- They emerge suddenly during training (phase transition)
+- They enable in-context learning (few-shot prompting)
+
+We've seen interpretability work beautifully on one circuit. **Now we ask**: Does this scale? What can't we do?
+:::
+
 ## Intellectual Honesty
 
 We've built a compelling toolkit:
