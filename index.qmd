@@ -186,7 +186,7 @@ We also bring a **performance engineering mindset**: you can't optimize what you
 
 ## Getting Started
 
-Start with [Chapter 1: Why Reverse Engineer Neural Networks?](articles/01-why-reverse-engineer.qmd) to understand the motivation and scope of the project.
+Start with [Chapter 1: Why Reverse Engineer Neural Networks?](chapters/01-why-reverse-engineer.qmd) to understand the motivation and scope of the project.
 
 ## Also Published On
 

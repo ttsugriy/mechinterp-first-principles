@@ -15,30 +15,30 @@ book:
     - index.qmd
     - part: "Arc I: Foundations"
       chapters:
-        - articles/01-why-reverse-engineer.qmd
-        - articles/02-transformers.qmd
-        - articles/03-residual-stream.qmd
-        - articles/04-geometry.qmd
-        - articles/arc1-summary.qmd
+        - chapters/01-why-reverse-engineer.qmd
+        - chapters/02-transformers.qmd
+        - chapters/03-residual-stream.qmd
+        - chapters/04-geometry.qmd
+        - chapters/arc1-summary.qmd
     - part: "Arc II: Core Theory"
       chapters:
-        - articles/05-features.qmd
-        - articles/06-superposition.qmd
-        - articles/07-toy-models.qmd
-        - articles/08-circuits.qmd
-        - articles/arc2-summary.qmd
+        - chapters/05-features.qmd
+        - chapters/06-superposition.qmd
+        - chapters/07-toy-models.qmd
+        - chapters/08-circuits.qmd
+        - chapters/arc2-summary.qmd
     - part: "Arc III: Techniques"
       chapters:
-        - articles/09-sparse-autoencoders.qmd
-        - articles/10-attribution.qmd
-        - articles/11-patching.qmd
-        - articles/12-ablation.qmd
-        - articles/arc3-summary.qmd
+        - chapters/09-sparse-autoencoders.qmd
+        - chapters/10-attribution.qmd
+        - chapters/11-patching.qmd
+        - chapters/12-ablation.qmd
+        - chapters/arc3-summary.qmd
     - part: "Arc IV: Synthesis"
       chapters:
-        - articles/13-induction-heads.qmd
-        - articles/14-open-problems.qmd
-        - articles/15-practice-regime.qmd
+        - chapters/13-induction-heads.qmd
+        - chapters/14-open-problems.qmd
+        - chapters/15-practice-regime.qmd
     - part: "Reference"
       chapters:
         - glossary.qmd
