@@ -276,11 +276,11 @@ Each layer contains the same structure: layer norm → attention → add → lay
 flowchart TB
     IN["Input from previous layer"] --> LN1["Layer Norm"]
     LN1 --> ATT["Multi-Head Attention"]
-    ATT --> A1["+"]
+    ATT --> A1["Add"]
     IN --> A1
     A1 --> LN2["Layer Norm"]
     LN2 --> MLP["MLP"]
-    MLP --> A2["+"]
+    MLP --> A2["Add"]
     A1 --> A2
     A2 --> OUT["Output to next layer"]
 ```
