@@ -578,7 +578,7 @@ If features are atoms, circuits are molecules. And just as understanding atoms p
 
 1. **Toy Models of Superposition** — [Anthropic](https://transformer-circuits.pub/2022/toy_model/index.html): The foundational paper. Essential reading with interactive visualizations.
 
-2. **Interactive Toy Model** — [Mitchell Gordon](http://mitchgordon.me/ToyModels/): Train toy models in your browser and watch superposition emerge in real time.
+2. **Interactive Toy Model** — [Mitchell Gordon](https://mitchgordon.me/ToyModels/): Train toy models in your browser and watch superposition emerge in real time.
 
 3. **Toy Models of Superposition: A Walkthrough** — [Neel Nanda](https://www.neelnanda.io/mechanistic-interpretability/toy-model-walkthrough): Step-by-step guide to understanding and reproducing the experiments.
 

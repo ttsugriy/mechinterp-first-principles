@@ -72,7 +72,7 @@ Because transformers accumulate contributions additively, we can decompose the o
 %%| fig-cap: "Attribution decomposes the final logit into per-component contributions. Each component's output projects onto the vocabulary direction."
 %%| fig-width: 8
 flowchart LR
-    E["Embedding<br/>+0.5"] --> SUM(("+"))
+    E["Embedding<br/>+0.5"] --> SUM(("Σ"))
     H1["Head 5.2<br/>+0.9"] --> SUM
     H2["Head 7.4<br/>+1.8"] --> SUM
     M1["MLP 8<br/>+2.3"] --> SUM
