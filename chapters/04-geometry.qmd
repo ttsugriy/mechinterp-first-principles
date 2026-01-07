@@ -347,6 +347,64 @@ plt.tight_layout()
 plt.show()
 ```
 
+::: {.callout-tip collapse="true"}
+## Interactive Exploration: Near-Orthogonality
+
+Explore how dimensionality affects the concentration of angles between random vectors:
+
+```{ojs}
+//| panel: input
+viewof dimension = Inputs.range([2, 1000], {value: 768, step: 1, label: "Dimensions:"})
+viewof numVectors = Inputs.range([100, 5000], {value: 1000, step: 100, label: "Sample size:"})
+```
+
+```{ojs}
+// Generate random angles for the selected dimensionality
+function generateAngles(d, n) {
+  // In high dimensions, cos similarity ~ Normal(0, 1/sqrt(d))
+  // Angle = arccos(cos_sim), concentrated around 90°
+  const std = 1 / Math.sqrt(d);
+  const angles = [];
+  for (let i = 0; i < n; i++) {
+    // Sample cos similarity from Normal(0, 1/sqrt(d))
+    const u1 = Math.random(), u2 = Math.random();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    const cosSim = Math.max(-1, Math.min(1, z * std));
+    const angle = Math.acos(cosSim) * 180 / Math.PI;
+    angles.push(angle);
+  }
+  return angles;
+}
+
+angles = generateAngles(dimension, numVectors)
+meanAngle = angles.reduce((a, b) => a + b, 0) / angles.length
+stdAngle = Math.sqrt(angles.map(a => (a - meanAngle) ** 2).reduce((a, b) => a + b, 0) / angles.length)
+```
+
+```{ojs}
+Plot.plot({
+  height: 300,
+  marginLeft: 50,
+  x: {label: "Angle between random vectors (degrees)", domain: [0, 180]},
+  y: {label: "Count"},
+  marks: [
+    Plot.rectY(angles, Plot.binX({y: "count"}, {x: d => d, fill: "#4daf4a", fillOpacity: 0.7})),
+    Plot.ruleX([90], {stroke: "red", strokeDasharray: "4,4", strokeWidth: 2}),
+    Plot.ruleX([meanAngle], {stroke: "blue", strokeWidth: 2})
+  ]
+})
+```
+
+```{ojs}
+md`**At ${dimension} dimensions:**
+- Mean angle: **${meanAngle.toFixed(1)}°** (red dashed line shows 90°, blue shows mean)
+- Standard deviation: **${stdAngle.toFixed(1)}°**
+- Expected σ of cosine similarity: **${(1/Math.sqrt(dimension)).toFixed(4)}**
+
+*Try sliding to d=2 vs d=768 to see the dramatic concentration effect!*`
+```
+:::
+
 Why does this matter? Because **orthogonal vectors don't interfere**.
 
 If two features are represented by orthogonal directions, you can detect each independently. The presence of one doesn't affect the detection of the other. They're geometrically *independent*.
