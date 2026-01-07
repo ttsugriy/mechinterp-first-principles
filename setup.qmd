@@ -1,0 +1,394 @@
+---
+title: "Environment Setup"
+subtitle: "Get your interpretability toolkit running in 10 minutes"
+---
+
+This guide walks you through setting up everything you need to run the code in this book and start your own interpretability research.
+
+## Quick Start: Google Colab (Recommended)
+
+The fastest way to get started—no installation required.
+
+### Step 1: Open Colab
+
+Go to [colab.research.google.com](https://colab.research.google.com) and create a new notebook.
+
+### Step 2: Enable GPU
+
+1. Click **Runtime** → **Change runtime type**
+2. Select **T4 GPU** (free tier) or **A100** (if you have Colab Pro)
+3. Click **Save**
+
+### Step 3: Install Libraries
+
+Run this cell:
+
+```python
+# Core libraries for mechanistic interpretability
+!pip install transformer-lens einops jaxtyping circuitsvis plotly
+
+# For SAE work
+!pip install sae-lens
+
+# Verify installation
+import transformer_lens
+import sae_lens
+print(f"TransformerLens: {transformer_lens.__version__}")
+print(f"SAELens: {sae_lens.__version__}")
+```
+
+### Step 4: Verify Everything Works
+
+```python
+import torch
+import transformer_lens as tl
+
+# Check GPU
+print(f"GPU available: {torch.cuda.is_available()}")
+if torch.cuda.is_available():
+    print(f"GPU: {torch.cuda.get_device_name(0)}")
+
+# Load a model
+model = tl.HookedTransformer.from_pretrained("gpt2-small")
+print(f"Model loaded: {model.cfg.model_name}")
+
+# Run a simple forward pass
+tokens = model.to_tokens("Hello, world!")
+logits, cache = model.run_with_cache(tokens)
+print(f"Output shape: {logits.shape}")
+print("✓ Everything works!")
+```
+
+**That's it!** You're ready to start. The companion notebooks in this book all work in Colab.
+
+---
+
+## Local Installation
+
+For serious research, you'll want a local setup.
+
+### Prerequisites
+
+- Python 3.9+ (3.10 or 3.11 recommended)
+- pip or conda
+- (Optional) NVIDIA GPU with CUDA
+
+### Option A: Using pip (Recommended)
+
+```bash
+# Create a virtual environment
+python -m venv interp-env
+source interp-env/bin/activate  # On Windows: interp-env\Scripts\activate
+
+# Upgrade pip
+pip install --upgrade pip
+
+# Install PyTorch (choose the right version for your system)
+# For CUDA 11.8:
+pip install torch --index-url https://download.pytorch.org/whl/cu118
+
+# For CUDA 12.1:
+pip install torch --index-url https://download.pytorch.org/whl/cu121
+
+# For CPU only:
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+# Install interpretability libraries
+pip install transformer-lens sae-lens einops jaxtyping circuitsvis plotly
+
+# Install Jupyter
+pip install jupyter ipywidgets
+```
+
+### Option B: Using conda
+
+```bash
+# Create environment
+conda create -n interp python=3.11
+conda activate interp
+
+# Install PyTorch with CUDA
+conda install pytorch pytorch-cuda=11.8 -c pytorch -c nvidia
+
+# Or CPU only:
+conda install pytorch cpuonly -c pytorch
+
+# Install interpretability libraries
+pip install transformer-lens sae-lens einops jaxtyping circuitsvis plotly
+
+# Install Jupyter
+conda install jupyter ipywidgets
+```
+
+### Verify Local Installation
+
+```python
+import torch
+import transformer_lens as tl
+
+print(f"PyTorch: {torch.__version__}")
+print(f"CUDA available: {torch.cuda.is_available()}")
+print(f"TransformerLens: {tl.__version__}")
+
+# Quick test
+model = tl.HookedTransformer.from_pretrained("gpt2-small")
+logits, cache = model.run_with_cache("Test")
+print("✓ Installation successful!")
+```
+
+---
+
+## Library Reference
+
+### Core Libraries
+
+| Library | Purpose | Install |
+|---------|---------|---------|
+| **transformer-lens** | Load models, access activations, run interventions | `pip install transformer-lens` |
+| **sae-lens** | Train and use sparse autoencoders | `pip install sae-lens` |
+| **einops** | Tensor operations with readable syntax | `pip install einops` |
+| **circuitsvis** | Visualize attention patterns | `pip install circuitsvis` |
+
+### Optional Libraries
+
+| Library | Purpose | Install |
+|---------|---------|---------|
+| **plotly** | Interactive plots | `pip install plotly` |
+| **wandb** | Experiment tracking | `pip install wandb` |
+| **nnsight** | Alternative intervention library | `pip install nnsight` |
+| **baukit** | Activation editing utilities | `pip install baukit` |
+
+---
+
+## GPU Options
+
+### Free Options
+
+| Option | GPU | VRAM | Time Limit | Notes |
+|--------|-----|------|------------|-------|
+| **Google Colab** | T4 | 15 GB | ~12 hrs/day | Best free option |
+| **Kaggle Notebooks** | P100 / T4 | 16 GB | 30 hrs/week | Good alternative |
+| **Paperspace Gradient** | Free tier | 8 GB | Limited | Requires signup |
+
+### Paid Options
+
+| Option | GPUs Available | Cost | Notes |
+|--------|----------------|------|-------|
+| **Colab Pro** | T4, A100 | $10-50/mo | Most convenient |
+| **Lambda Labs** | A100, H100 | ~$1-2/hr | Good for long runs |
+| **Vast.ai** | Various | $0.20+/hr | Cheapest, less reliable |
+| **RunPod** | Various | $0.30+/hr | Good balance |
+
+### Recommendation by Use Case
+
+- **Learning/tutorials**: Free Colab is sufficient
+- **Running notebooks**: Free Colab with T4
+- **Training SAEs**: Paid GPU (A100 recommended)
+- **Large models (7B+)**: A100 40GB or better
+
+---
+
+## Common Issues and Fixes
+
+### "CUDA out of memory"
+
+**Cause**: Model or activations don't fit in GPU memory.
+
+**Fixes**:
+```python
+# 1. Use a smaller model
+model = tl.HookedTransformer.from_pretrained("gpt2-small")  # Not "gpt2-xl"
+
+# 2. Reduce batch size
+tokens = model.to_tokens(text)[:, :512]  # Limit sequence length
+
+# 3. Clear cache between runs
+torch.cuda.empty_cache()
+
+# 4. Use gradient checkpointing for training
+model.cfg.use_checkpoint = True
+```
+
+### "No module named 'transformer_lens'"
+
+**Cause**: Library not installed or wrong environment.
+
+**Fixes**:
+```bash
+# Make sure you're in the right environment
+which python  # Should show your virtual environment
+
+# Reinstall
+pip install --upgrade transformer-lens
+```
+
+### "Model not found" or download issues
+
+**Cause**: Network issues or Hugging Face rate limiting.
+
+**Fixes**:
+```python
+# Set cache directory
+import os
+os.environ["HF_HOME"] = "/path/to/cache"
+
+# Or download manually and load from disk
+model = tl.HookedTransformer.from_pretrained(
+    "gpt2-small",
+    cache_dir="/path/to/models"
+)
+```
+
+### Slow model loading
+
+**Cause**: Downloading model weights on every run.
+
+**Fix**: Models are cached after first download. If still slow:
+```python
+# Check cache location
+import transformer_lens
+print(transformer_lens.utils.get_cache_dir())
+
+# Set persistent cache
+import os
+os.environ["TRANSFORMERLENS_CACHE_DIR"] = "/path/to/persistent/cache"
+```
+
+### CircuitsVis not rendering
+
+**Cause**: JavaScript not loading in notebook.
+
+**Fixes**:
+```python
+# In Colab, enable widgets
+from google.colab import output
+output.enable_custom_widget_manager()
+
+# Or use HTML rendering
+import circuitsvis as cv
+html = cv.attention.attention_patterns(tokens, patterns)
+from IPython.display import HTML
+display(HTML(html._repr_html_()))
+```
+
+---
+
+## IDE Setup
+
+### Jupyter Notebook/Lab
+
+```bash
+# Install
+pip install jupyter jupyterlab
+
+# Run Jupyter Lab (recommended)
+jupyter lab
+
+# Or classic notebook
+jupyter notebook
+```
+
+### VS Code
+
+1. Install the **Python** extension
+2. Install the **Jupyter** extension
+3. Select your interpreter (the virtual environment you created)
+4. Open a `.ipynb` file or create a new notebook
+
+**Recommended VS Code settings** for interpretability work:
+```json
+{
+    "python.analysis.typeCheckingMode": "off",
+    "jupyter.askForKernelRestart": false,
+    "editor.formatOnSave": true
+}
+```
+
+### PyCharm
+
+1. Configure the Python interpreter to use your virtual environment
+2. Enable **Scientific Mode** for better plot rendering
+3. Use the built-in Jupyter support
+
+---
+
+## Testing Your Setup
+
+Run this complete test to verify everything works:
+
+```python
+"""
+Complete setup verification script.
+If this runs without errors, you're ready to go!
+"""
+
+import torch
+import transformer_lens as tl
+from transformer_lens import utils
+
+print("=" * 50)
+print("ENVIRONMENT CHECK")
+print("=" * 50)
+
+# PyTorch
+print(f"\n✓ PyTorch {torch.__version__}")
+
+# CUDA
+if torch.cuda.is_available():
+    print(f"✓ CUDA available: {torch.cuda.get_device_name(0)}")
+    print(f"  VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
+else:
+    print("⚠ No GPU (CPU mode - will be slow for large models)")
+
+# TransformerLens
+print(f"✓ TransformerLens {tl.__version__}")
+
+# Load model
+print("\nLoading GPT-2 Small...")
+model = tl.HookedTransformer.from_pretrained("gpt2-small")
+print(f"✓ Model loaded: {model.cfg.n_layers} layers, {model.cfg.n_heads} heads")
+
+# Forward pass
+print("\nRunning forward pass...")
+prompt = "The capital of France is"
+tokens = model.to_tokens(prompt)
+logits, cache = model.run_with_cache(tokens)
+
+# Check prediction
+next_token = logits[0, -1].argmax()
+predicted = model.tokenizer.decode(next_token)
+print(f"✓ '{prompt}' → '{predicted}'")
+
+# Check cache
+print(f"✓ Cache contains {len(cache)} activation tensors")
+
+# Check SAELens (optional)
+try:
+    import sae_lens
+    print(f"✓ SAELens {sae_lens.__version__}")
+except ImportError:
+    print("⚠ SAELens not installed (optional)")
+
+# Check CircuitsVis (optional)
+try:
+    import circuitsvis
+    print("✓ CircuitsVis installed")
+except ImportError:
+    print("⚠ CircuitsVis not installed (optional)")
+
+print("\n" + "=" * 50)
+print("SETUP COMPLETE - You're ready to go!")
+print("=" * 50)
+```
+
+---
+
+## Next Steps
+
+Now that your environment is ready:
+
+1. **[Your First Analysis](first-analysis.qmd)** — Walk through a complete interpretability analysis
+2. **[Quick Reference](quick-reference.qmd)** — Code patterns and cheat sheets
+3. **[Chapter 2: Transformers](chapters/02-transformers.qmd)** — Understand the architecture
+
+Happy interpreting!

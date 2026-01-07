@@ -13,6 +13,10 @@ book:
 
   chapters:
     - index.qmd
+    - part: "Getting Started"
+      chapters:
+        - setup.qmd
+        - first-analysis.qmd
     - part: "Arc I: Foundations"
       chapters:
         - chapters/01-why-reverse-engineer.qmd

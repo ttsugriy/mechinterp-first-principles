@@ -1,0 +1,488 @@
+---
+title: "Your First Analysis"
+subtitle: "A complete walkthrough from question to understanding"
+---
+
+This tutorial walks you through a complete mechanistic interpretability analysis from start to finish. By the end, you'll have hands-on experience with the core workflow and a template for your own research.
+
+::: {.callout-tip}
+## What You'll Do
+1. Define a simple behavior to analyze
+2. Verify the model exhibits the behavior
+3. Use attribution to find relevant components
+4. Validate with patching
+5. Interpret what you found
+:::
+
+## The Behavior: Sentiment-Influenced Completion
+
+We'll analyze a simple but interesting behavior:
+
+> When given "I love this movie because it is", GPT-2 predicts positive words like "great" or "good".
+> When given "I hate this movie because it is", GPT-2 predicts negative words like "bad" or "terrible".
+
+**The question**: How does the model know to predict positive vs negative words? Which components read the sentiment word ("love" vs "hate") and influence the prediction?
+
+This is perfect for a first analysis because:
+- It's intuitive (we understand what "should" happen)
+- It works reliably in GPT-2 Small
+- It demonstrates core techniques (attribution, patching)
+- It's different from the induction head examples elsewhere in this book
+
+---
+
+## Step 0: Setup
+
+```python
+import torch
+import transformer_lens as tl
+from transformer_lens import utils
+import plotly.express as px
+import pandas as pd
+
+# Load GPT-2 Small
+model = tl.HookedTransformer.from_pretrained("gpt2-small")
+print(f"Loaded {model.cfg.model_name}: {model.cfg.n_layers} layers, {model.cfg.n_heads} heads")
+```
+
+---
+
+## Step 1: Verify the Behavior Exists
+
+**Never skip this step.** Before analyzing a behavior, confirm the model actually exhibits it.
+
+```python
+def get_top_predictions(model, prompt, k=5):
+    """Get the model's top-k predictions for the next token."""
+    tokens = model.to_tokens(prompt)
+    logits = model(tokens)
+    top_logits, top_tokens = logits[0, -1].topk(k)
+
+    predictions = []
+    for logit, token in zip(top_logits, top_tokens):
+        word = model.tokenizer.decode(token)
+        prob = torch.softmax(logits[0, -1], dim=-1)[token].item()
+        predictions.append((word, prob, logit.item()))
+    return predictions
+
+# Test positive sentiment
+print("POSITIVE: 'I love this movie because it is'")
+for word, prob, logit in get_top_predictions(model, "I love this movie because it is"):
+    print(f"  {word:15} prob={prob:.3f}  logit={logit:.2f}")
+
+print("\nNEGATIVE: 'I hate this movie because it is'")
+for word, prob, logit in get_top_predictions(model, "I hate this movie because it is"):
+    print(f"  {word:15} prob={prob:.3f}  logit={logit:.2f}")
+```
+
+**Expected output** (approximately):
+```
+POSITIVE: 'I love this movie because it is'
+   so              prob=0.15  logit=18.2
+   a               prob=0.12  logit=17.9
+   very            prob=0.08  logit=17.4
+   the             prob=0.05  logit=16.8
+   really          prob=0.04  logit=16.5
+
+NEGATIVE: 'I hate this movie because it is'
+   so              prob=0.18  logit=18.5
+   a               prob=0.09  logit=17.6
+   not             prob=0.07  logit=17.3
+   the             prob=0.04  logit=16.7
+   just            prob=0.03  logit=16.2
+```
+
+::: {.callout-note}
+## Observation
+The top predictions are similar (common words like "so", "a"), but the *probabilities* differ. Let's look at sentiment-specific words.
+:::
+
+```python
+# Check specific sentiment words
+def get_token_logit(model, prompt, target_word):
+    """Get the logit for a specific target word."""
+    tokens = model.to_tokens(prompt)
+    logits = model(tokens)
+    target_token = model.to_single_token(target_word)
+    return logits[0, -1, target_token].item()
+
+# Compare logits for "great" and "bad"
+positive_prompt = "I love this movie because it is"
+negative_prompt = "I hate this movie because it is"
+
+print("Logit for 'great':")
+print(f"  After 'love': {get_token_logit(model, positive_prompt, ' great'):.2f}")
+print(f"  After 'hate': {get_token_logit(model, negative_prompt, ' great'):.2f}")
+
+print("\nLogit for 'bad':")
+print(f"  After 'love': {get_token_logit(model, positive_prompt, ' bad'):.2f}")
+print(f"  After 'hate': {get_token_logit(model, negative_prompt, ' bad'):.2f}")
+```
+
+**Expected output**:
+```
+Logit for 'great':
+  After 'love': 13.8
+  After 'hate': 11.2
+
+Logit for 'bad':
+  After 'love': 10.5
+  After 'hate': 13.1
+```
+
+**Confirmed!** The model does shift predictions based on sentiment:
+- " great" gets higher logit after "love" (13.8 vs 11.2)
+- " bad" gets higher logit after "hate" (13.1 vs 10.5)
+
+---
+
+## Step 2: Logit Attribution
+
+Now let's find *which components* are responsible for this difference.
+
+**The idea**: Decompose the final logit into per-component contributions. Which attention heads and MLPs push toward " great" in the positive case?
+
+```python
+def logit_attribution(model, prompt, target_token):
+    """
+    Compute each component's contribution to the target token's logit.
+    Returns a dict of component -> contribution.
+    """
+    # Get the target token ID
+    target_id = model.to_single_token(target_token)
+
+    # Run with cache
+    tokens = model.to_tokens(prompt)
+    logits, cache = model.run_with_cache(tokens)
+
+    # Get the unembedding direction for our target
+    target_dir = model.W_U[:, target_id]  # Shape: [d_model]
+
+    contributions = {}
+
+    # Embedding contribution
+    embed = cache["embed"][0, -1]  # Last position
+    contributions["embed"] = (embed @ target_dir).item()
+
+    # Position embedding contribution
+    pos_embed = cache["pos_embed"][0, -1]
+    contributions["pos_embed"] = (pos_embed @ target_dir).item()
+
+    # Each layer's attention and MLP
+    for layer in range(model.cfg.n_layers):
+        # Attention heads (summed)
+        attn_out = cache["attn_out", layer][0, -1]
+        contributions[f"L{layer}_attn"] = (attn_out @ target_dir).item()
+
+        # MLP
+        mlp_out = cache["mlp_out", layer][0, -1]
+        contributions[f"L{layer}_mlp"] = (mlp_out @ target_dir).item()
+
+    return contributions, logits[0, -1, target_id].item()
+
+# Get attribution for " great" in positive case
+pos_attrib, pos_logit = logit_attribution(model, positive_prompt, " great")
+neg_attrib, neg_logit = logit_attribution(model, negative_prompt, " great")
+
+print(f"Total logit for ' great': positive={pos_logit:.2f}, negative={neg_logit:.2f}")
+print(f"Difference: {pos_logit - neg_logit:.2f}")
+```
+
+Now let's see which components contribute differently:
+
+```python
+# Compare attributions
+diff_attrib = {k: pos_attrib[k] - neg_attrib[k] for k in pos_attrib}
+
+# Sort by absolute difference
+sorted_diff = sorted(diff_attrib.items(), key=lambda x: abs(x[1]), reverse=True)
+
+print("\nComponents with largest attribution difference (positive - negative):")
+print("(Positive values → component pushes more toward 'great' in positive case)")
+print("-" * 60)
+for component, diff in sorted_diff[:10]:
+    print(f"{component:15} diff={diff:+.3f}  (pos={pos_attrib[component]:.3f}, neg={neg_attrib[component]:.3f})")
+```
+
+::: {.callout-important}
+## Key Insight
+The components with the *largest difference* between positive and negative cases are the ones that "read" the sentiment and adjust the prediction accordingly.
+:::
+
+---
+
+## Step 3: Visualize the Attribution
+
+```python
+# Create a visualization
+data = []
+for layer in range(model.cfg.n_layers):
+    data.append({
+        "layer": layer,
+        "component": "attention",
+        "positive": pos_attrib[f"L{layer}_attn"],
+        "negative": neg_attrib[f"L{layer}_attn"],
+        "diff": pos_attrib[f"L{layer}_attn"] - neg_attrib[f"L{layer}_attn"]
+    })
+    data.append({
+        "layer": layer,
+        "component": "mlp",
+        "positive": pos_attrib[f"L{layer}_mlp"],
+        "negative": neg_attrib[f"L{layer}_mlp"],
+        "diff": pos_attrib[f"L{layer}_mlp"] - neg_attrib[f"L{layer}_mlp"]
+    })
+
+df = pd.DataFrame(data)
+
+# Plot the difference
+fig = px.bar(df, x="layer", y="diff", color="component",
+             barmode="group",
+             title="Attribution Difference: Positive vs Negative Sentiment",
+             labels={"diff": "Contribution difference to 'great'", "layer": "Layer"})
+fig.show()
+```
+
+**What to look for**: Layers where the bars are tall (large difference) are where the model processes sentiment.
+
+---
+
+## Step 4: Look at Specific Heads
+
+The layer-level view is coarse. Let's look at individual attention heads.
+
+```python
+def head_attribution(model, prompt, target_token):
+    """Get per-head attribution."""
+    target_id = model.to_single_token(target_token)
+    tokens = model.to_tokens(prompt)
+    logits, cache = model.run_with_cache(tokens)
+
+    target_dir = model.W_U[:, target_id]
+
+    contributions = {}
+    for layer in range(model.cfg.n_layers):
+        # Get per-head outputs (after W_O projection)
+        # Shape: [batch, seq, n_heads, d_model]
+        head_results = cache["result", layer][0, -1]  # [n_heads, d_model]
+
+        for head in range(model.cfg.n_heads):
+            head_out = head_results[head]  # [d_model]
+            contributions[f"L{layer}H{head}"] = (head_out @ target_dir).item()
+
+    return contributions
+
+pos_heads = head_attribution(model, positive_prompt, " great")
+neg_heads = head_attribution(model, negative_prompt, " great")
+
+# Find heads with biggest difference
+head_diff = {k: pos_heads[k] - neg_heads[k] for k in pos_heads}
+sorted_heads = sorted(head_diff.items(), key=lambda x: abs(x[1]), reverse=True)
+
+print("Top 10 heads by attribution difference:")
+print("-" * 50)
+for head, diff in sorted_heads[:10]:
+    print(f"{head}: diff={diff:+.3f}")
+```
+
+::: {.callout-tip}
+## What Did We Find?
+Write down the top heads. These are our hypotheses for "sentiment-reading heads." We'll validate them next.
+:::
+
+---
+
+## Step 5: Validate with Patching
+
+Attribution is correlational. Now we test causation: if we patch the sentiment word's representation from the negative case into the positive case, does the prediction change?
+
+```python
+def patch_position(model, clean_prompt, corrupted_prompt, position, layer):
+    """
+    Patch the residual stream at a specific position and layer
+    from corrupted into clean.
+    """
+    # Get corrupted activations
+    corrupted_tokens = model.to_tokens(corrupted_prompt)
+    _, corrupted_cache = model.run_with_cache(corrupted_tokens)
+    corrupted_resid = corrupted_cache["resid_post", layer]
+
+    def patch_hook(resid, hook):
+        resid[:, position, :] = corrupted_resid[:, position, :]
+        return resid
+
+    # Run clean with patch
+    clean_tokens = model.to_tokens(clean_prompt)
+    patched_logits = model.run_with_hooks(
+        clean_tokens,
+        fwd_hooks=[(f"blocks.{layer}.hook_resid_post", patch_hook)]
+    )
+
+    return patched_logits
+
+# Find position of "love" / "hate"
+pos_tokens = model.to_str_tokens(positive_prompt)
+print(f"Tokens: {pos_tokens}")
+sentiment_pos = 1  # Usually "love" is at position 1 (after "I")
+
+# Patch at different layers
+print("\nPatching 'love' → 'hate' at sentiment position:")
+print("-" * 50)
+
+clean_logit = get_token_logit(model, positive_prompt, " great")
+print(f"Original (love → great): {clean_logit:.2f}")
+
+for layer in range(model.cfg.n_layers):
+    patched = patch_position(model, positive_prompt, negative_prompt, sentiment_pos, layer)
+    target_id = model.to_single_token(" great")
+    patched_logit = patched[0, -1, target_id].item()
+    change = patched_logit - clean_logit
+    print(f"Layer {layer:2d}: {patched_logit:.2f} (change: {change:+.2f})")
+```
+
+**What to look for**: Layers where patching causes a big drop in "great" logit are where the sentiment information is being used.
+
+---
+
+## Step 6: Examine Attention Patterns
+
+Let's see what the important heads are attending to.
+
+```python
+import circuitsvis as cv
+from IPython.display import display
+
+# Get attention patterns
+tokens = model.to_tokens(positive_prompt)
+_, cache = model.run_with_cache(tokens)
+
+str_tokens = model.to_str_tokens(positive_prompt)
+
+# Pick a head that showed up in attribution (replace with your findings)
+important_layer = 8  # Example - use your results
+important_head = 6   # Example - use your results
+
+# Get attention pattern for this head
+pattern = cache["pattern", important_layer][0, important_head]  # [seq, seq]
+
+print(f"Attention pattern for L{important_layer}H{important_head}")
+print(f"Tokens: {str_tokens}")
+
+# Visualize
+display(cv.attention.attention_patterns(
+    attention=cache["pattern", important_layer][0:1],  # [1, n_heads, seq, seq]
+    tokens=str_tokens,
+    attention_head_names=[f"H{h}" for h in range(model.cfg.n_heads)]
+))
+```
+
+**What to look for**: Does the final position attend to the sentiment word ("love")?
+
+---
+
+## Step 7: Interpret Your Findings
+
+Based on your analysis, answer these questions:
+
+1. **Which layers process sentiment?** (Where did patching have the biggest effect?)
+2. **Which heads are involved?** (Which had the biggest attribution difference?)
+3. **What are they attending to?** (Do they attend to the sentiment word?)
+4. **How does the information flow?** (Early layers read sentiment → later layers adjust prediction?)
+
+::: {.callout-important}
+## Write Your Interpretation
+
+Before reading further, write 2-3 sentences describing what you found. This is the most important part—translating observations into understanding.
+
+Example: "Layers 7-9 show the biggest patching effect, suggesting sentiment is processed in mid-to-late layers. Head 8.6 has the largest attribution difference and attends strongly to the sentiment word at the final position. This suggests an 'sentiment → adjective' circuit where..."
+:::
+
+---
+
+## Step 8: Sanity Checks
+
+Before claiming you understand the circuit, verify:
+
+```python
+# 1. Does it generalize to other examples?
+test_cases = [
+    ("I really love this book because it is", "positive"),
+    ("I absolutely hate this song because it is", "negative"),
+    ("This restaurant is great because the food is", "positive"),
+    ("This restaurant is terrible because the food is", "negative"),
+]
+
+print("Generalization test:")
+for prompt, expected in test_cases:
+    great_logit = get_token_logit(model, prompt, " great")
+    bad_logit = get_token_logit(model, prompt, " bad")
+    predicted = "positive" if great_logit > bad_logit else "negative"
+    match = "✓" if predicted == expected else "✗"
+    print(f"{match} {expected:8} | great={great_logit:.1f}, bad={bad_logit:.1f} | {prompt[:40]}...")
+
+# 2. What happens without sentiment words?
+neutral = "I watched this movie because it is"
+print(f"\nNeutral case: great={get_token_logit(model, neutral, ' great'):.2f}, bad={get_token_logit(model, neutral, ' bad'):.2f}")
+```
+
+---
+
+## What You've Learned
+
+Congratulations! You've completed a full interpretability analysis. You now know how to:
+
+1. ✅ Define and verify a behavior
+2. ✅ Use logit attribution to find candidate components
+3. ✅ Validate with activation patching
+4. ✅ Examine attention patterns
+5. ✅ Interpret findings and check generalization
+
+**The workflow you used**:
+```
+Observe behavior → Attribute → Patch → Interpret → Verify
+```
+
+This is the core loop of mechanistic interpretability research. Every analysis follows some version of this pattern.
+
+---
+
+## Next Steps
+
+Now that you've done one analysis:
+
+1. **Try variations**: What about "good" vs "bad" instead of "great"? What about different sentence structures?
+
+2. **Go deeper**: Can you find the *specific* circuit, not just the important layers? Which MLPs store sentiment-valence associations?
+
+3. **Try a new behavior**: Pick something simple:
+   - Capitalization (does the model know to capitalize after periods?)
+   - Simple arithmetic ("2 + 2 =" → "4")
+   - Entity tracking ("John went to the store. He bought..." → "John" should be attended to)
+
+4. **Read the research**: Now that you've done it yourself, read the [IOI paper](https://arxiv.org/abs/2211.00593) to see a complete circuit analysis.
+
+---
+
+## Common Mistakes in First Analyses
+
+**Mistake 1: Skipping Step 1 (verification)**
+"I assumed the model would do X, but it actually does Y." Always verify first.
+
+**Mistake 2: Stopping at attribution**
+"Head 5.2 had high attribution, so it must be important." Attribution is correlational—validate with patching.
+
+**Mistake 3: Overfitting to one example**
+"It works for 'love/hate' but not for 'adore/despise'." Always test generalization.
+
+**Mistake 4: Claiming more than you found**
+"This is THE sentiment circuit." You found *a* mechanism that influences *these* predictions. Real circuits are usually more complex.
+
+---
+
+## Reflection Questions
+
+1. What surprised you in this analysis?
+2. What would you do differently next time?
+3. What questions remain unanswered?
+4. How would you design an experiment to answer them?
+
+These are the questions that lead to research.

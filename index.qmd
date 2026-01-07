@@ -103,15 +103,26 @@ flowchart TB
 :::
 
 ::: {.callout-important}
+## Want to Start Coding? (30 minutes)
+
+If you prefer learning by doing:
+
+1. **[Environment Setup](setup.qmd)** (5 min) — Get TransformerLens running in Colab
+2. **[Your First Analysis](first-analysis.qmd)** (25 min) — Complete walkthrough analyzing a real behavior
+
+You'll have hands-on experience with attribution and patching before reading any theory.
+:::
+
+::: {.callout-tip}
 ## Want a Quick Win? (10 minutes)
 
-Want to *do* something before reading theory? Try this:
+Want to *see* what interpretability reveals before diving in?
 
 1. **Explore real features** (5 min): Visit [Neuronpedia](https://www.neuronpedia.org/gpt2-small) and click "Random Feature." Look at the max-activating examples. Can you guess what concept the feature represents? Try 3-4 features.
 
-2. **See attention patterns** (5 min): Visit [BertViz](https://github.com/jessevig/bertviz) or the [Transformer Explainer](https://poloclub.github.io/transformer-explainer/) to visualize how attention moves information between tokens.
+2. **See attention patterns** (5 min): Visit the [Transformer Explainer](https://poloclub.github.io/transformer-explainer/) to visualize how attention moves information between tokens.
 
-You've now seen the two core phenomena this book explains: **features** (what networks represent) and **attention** (how they move information). The rest is understanding *why* it works this way.
+You've now seen the two core phenomena this book explains: **features** (what networks represent) and **attention** (how they move information).
 :::
 
 ::: {.callout-note}
@@ -186,7 +197,9 @@ We also bring a **performance engineering mindset**: you can't optimize what you
 
 ## Getting Started
 
-Start with [Chapter 1: Why Reverse Engineer Neural Networks?](chapters/01-why-reverse-engineer.qmd) to understand the motivation and scope of the project.
+**Option 1: Start with theory** — Begin with [Chapter 1: Why Reverse Engineer Neural Networks?](chapters/01-why-reverse-engineer.qmd) to understand the motivation and scope of the project.
+
+**Option 2: Start with code** — Jump to [Environment Setup](setup.qmd) and [Your First Analysis](first-analysis.qmd) to get hands-on experience immediately.
 
 ## Also Published On
 
