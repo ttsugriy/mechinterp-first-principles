@@ -5,6 +5,85 @@ subtitle: "Get your interpretability toolkit running in 10 minutes"
 
 This guide walks you through setting up everything you need to run the code in this book and start your own interpretability research.
 
+## Prerequisites Self-Assessment
+
+Before diving in, check if you have the background needed. Don't worry if you're missing some—links are provided to fill gaps.
+
+::: {.callout-note collapse="true"}
+## Python Basics (Required)
+
+Can you read and understand this code?
+
+```python
+# List comprehension
+squares = [x**2 for x in range(10)]
+
+# Dictionary operations
+data = {"a": 1, "b": 2}
+for key, value in data.items():
+    print(f"{key}: {value}")
+
+# Function with type hints
+def greet(name: str) -> str:
+    return f"Hello, {name}!"
+```
+
+**If not**: Work through [Python for Everybody](https://www.py4e.com/) (free) or the first few chapters of any Python tutorial.
+:::
+
+::: {.callout-note collapse="true"}
+## PyTorch Basics (Required)
+
+Can you understand this code?
+
+```python
+import torch
+
+# Create tensors
+x = torch.randn(3, 4)  # Random 3x4 matrix
+y = torch.zeros(4, 2)  # 4x2 matrix of zeros
+
+# Matrix multiplication
+z = x @ y  # Result is 3x2
+
+# Indexing
+first_row = x[0]      # Shape: [4]
+first_col = x[:, 0]   # Shape: [3]
+```
+
+**If not**: Complete the [PyTorch 60-Minute Blitz](https://pytorch.org/tutorials/beginner/deep_learning_60min_blitz.html) (free, ~1 hour).
+:::
+
+::: {.callout-note collapse="true"}
+## Linear Algebra Intuition (Helpful)
+
+Do you understand these concepts intuitively?
+
+- **Vectors**: A list of numbers representing a point/direction in space
+- **Dot product**: Measures how aligned two vectors are (cos similarity)
+- **Matrix multiplication**: Transforms vectors from one space to another
+- **Orthogonality**: Two vectors at 90° have dot product = 0
+
+**If not**: Watch [3Blue1Brown's Essence of Linear Algebra](https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab) (free, ~3 hours total, but first 4 videos are enough).
+:::
+
+::: {.callout-note collapse="true"}
+## Transformer Architecture (Helpful but Optional)
+
+Do you know what these are?
+
+- **Attention**: Mechanism for tokens to "look at" other tokens
+- **MLP/FFN**: Feed-forward layers that process each position independently
+- **Residual stream**: The main "highway" that information flows through
+- **Embeddings**: Converting tokens to vectors
+
+**If not**: Don't worry! Chapter 2 covers this from scratch. But if you want a head start, read [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/) (free, ~30 min).
+:::
+
+**Ready?** If you can read Python and do basic PyTorch tensor operations, you have enough to start. The book explains everything else as needed.
+
+---
+
 ## Quick Start: Google Colab (Recommended)
 
 The fastest way to get started—no installation required.

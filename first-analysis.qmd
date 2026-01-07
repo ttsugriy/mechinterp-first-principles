@@ -5,6 +5,8 @@ subtitle: "A complete walkthrough from question to understanding"
 
 This tutorial walks you through a complete mechanistic interpretability analysis from start to finish. By the end, you'll have hands-on experience with the core workflow and a template for your own research.
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ttsugriy/mechinterp-first-principles/blob/main/notebooks/first-analysis.ipynb)
+
 ::: {.callout-tip}
 ## What You'll Do
 1. Define a simple behavior to analyze
@@ -135,6 +137,11 @@ Logit for 'bad':
 - " great" gets higher logit after "love" (13.8 vs 11.2)
 - " bad" gets higher logit after "hate" (13.1 vs 10.5)
 
+::: {.callout-tip}
+## Try It
+What about other sentiment words? Try replacing "love"/"hate" with "adore"/"despise" or "enjoy"/"detest". Does the effect hold? What about weaker sentiment words like "like"/"dislike"?
+:::
+
 ---
 
 ## Step 2: Logit Attribution
@@ -201,6 +208,11 @@ for component, diff in sorted_diff[:10]:
 ::: {.callout-important}
 ## Key Insight
 The components with the *largest difference* between positive and negative cases are the ones that "read" the sentiment and adjust the prediction accordingly.
+:::
+
+::: {.callout-tip}
+## Try It
+Look at the components with *negative* differences too—these are suppressing "great" more in the positive case. Why might that happen? (Hint: Think about competition between predictions.)
 :::
 
 ---
@@ -342,6 +354,11 @@ for layer in range(model.cfg.n_layers):
 ```
 
 **What to look for**: Layers where patching causes a big drop in "great" logit are where the sentiment information is being used.
+
+::: {.callout-tip}
+## Try It
+What happens if you patch at the *final* position instead of the sentiment position? What about patching the entire sequence? This helps distinguish where information is *stored* vs where it's *used*.
+:::
 
 ---
 

@@ -99,6 +99,11 @@ for name, value in sorted_contrib[:5]:
 
 **Typical finding**: Mid-to-late MLPs contribute most to factual recall.
 
+::: {.callout-tip}
+## Try It
+Change the prompt to "The Louvre is located in". Which components now contribute most? Are they the same layers, or does the model use different circuits for different facts?
+:::
+
 ### Chapter 4: Geometry
 
 The "Paris" direction is just one direction in 768-dimensional space:
@@ -271,6 +276,11 @@ for layer in range(12):
 
 **What to look for**: At which layer does patching flip the prediction from Paris to Rome?
 
+::: {.callout-tip}
+## Try It
+What happens if you patch from "The Big Ben is located in" instead? Does the prediction flip to "London"? Try patching at the position of the landmark name ("Eiffel" vs "Big") rather than the final position.
+:::
+
 ### Chapter 12: Ablation
 
 Test necessity: What happens if we ablate the key components?
@@ -297,6 +307,11 @@ for layer in range(12):
 ```
 
 **What to look for**: Which layers, when ablated, most reduce the Paris logit?
+
+::: {.callout-tip}
+## Try It
+Try mean-ablation instead of zero-ablation: replace the MLP output with its average over a batch of random inputs. This can reveal whether the effect is due to the specific computation or just the magnitude of the output.
+:::
 
 ---
 
