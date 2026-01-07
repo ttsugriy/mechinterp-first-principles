@@ -1,0 +1,252 @@
+---
+title: "Quick Reference"
+subtitle: "Cheat sheets for mechanistic interpretability techniques"
+---
+
+Printable one-page summaries for each core technique. Keep these open while working.
+
+## TransformerLens Essentials
+
+```python
+import transformer_lens as tl
+
+# Load a model
+model = tl.HookedTransformer.from_pretrained("gpt2-small")
+
+# Basic inference
+logits, cache = model.run_with_cache("Hello world")
+
+# Access activations
+resid = cache["resid_post", 5]        # Residual stream after layer 5
+attn = cache["pattern", 3]             # Attention patterns for layer 3
+mlp_out = cache["mlp_out", 7]          # MLP output at layer 7
+
+# Get specific head output
+head_out = cache["z", 4][:, :, 2, :]   # Layer 4, head 2 output
+
+# Token info
+tokens = model.to_tokens("Hello world")
+str_tokens = model.to_str_tokens("Hello world")
+```
+
+## Technique Cheat Sheets
+
+### Attribution
+
+| What | Code Pattern | Interpretation |
+|------|--------------|----------------|
+| **Logit attribution** | `(component_output @ model.W_U)[:, -1, target_token]` | How much did this component push toward the target token? |
+| **Direct logit attribution** | `cache.stack_head_results() @ model.W_U[:, target]` | Per-head contribution to target logit |
+| **Logit lens** | `model.unembed(cache["resid_post", layer])` | What would the model predict at this layer? |
+
+**Key insight**: Attribution is *correlational*, not causal. Always validate with patching.
+
+```python
+# Quick logit attribution
+def logit_attribution(cache, model, target_token):
+    """Attribute final logit to each component."""
+    contributions = {}
+    target_dir = model.W_U[:, target_token]
+
+    for layer in range(model.cfg.n_layers):
+        # Attention heads
+        for head in range(model.cfg.n_heads):
+            head_out = cache["result", layer][:, -1, head, :]
+            contributions[f"L{layer}H{head}"] = (head_out @ target_dir).item()
+
+        # MLP
+        mlp_out = cache["mlp_out", layer][:, -1, :]
+        contributions[f"L{layer}_MLP"] = (mlp_out @ target_dir).item()
+
+    return sorted(contributions.items(), key=lambda x: -abs(x[1]))
+```
+
+---
+
+### Activation Patching
+
+| Type | What's Patched | Use Case |
+|------|----------------|----------|
+| **Residual patching** | Residual stream at a layer | Where is information stored? |
+| **Attention patching** | Attention head output | Which heads matter? |
+| **MLP patching** | MLP output | Which MLPs matter? |
+| **Path patching** | Specific paths (e.g., head→head) | How does information flow? |
+
+**Key insight**: Patching is *causal*. It tells you what's necessary, not what's sufficient.
+
+```python
+# Basic activation patching template
+def patch_activation(model, clean_input, corrupted_input,
+                     layer, component="resid_post"):
+    """Patch component from corrupted into clean run."""
+    # Get corrupted activation
+    _, corrupted_cache = model.run_with_cache(corrupted_input)
+    corrupted_act = corrupted_cache[component, layer]
+
+    # Define hook
+    def patch_hook(act, hook):
+        act[:] = corrupted_act
+        return act
+
+    # Run with patch
+    patched_logits = model.run_with_hooks(
+        clean_input,
+        fwd_hooks=[(f"blocks.{layer}.hook_{component}", patch_hook)]
+    )
+    return patched_logits
+```
+
+**Noising vs Denoising**:
+
+- **Noising** (clean → corrupted): "Does breaking this break the behavior?"
+- **Denoising** (corrupted → clean): "Does fixing this fix the behavior?"
+
+---
+
+### Ablation
+
+| Type | Method | Pros | Cons |
+|------|--------|------|------|
+| **Zero ablation** | Set to 0 | Simple | Distribution shift |
+| **Mean ablation** | Set to dataset mean | Less distribution shift | Loses input-dependence |
+| **Resample ablation** | Random other input | Preserves distribution | Noisy |
+
+**Key insight**: Ablation tests *necessity*. A component that survives ablation might have backup circuits.
+
+```python
+# Mean ablation template
+def mean_ablate_head(model, input_text, layer, head, mean_cache):
+    """Ablate a specific head with its mean activation."""
+    mean_act = mean_cache["z", layer][:, :, head, :].mean(dim=0)
+
+    def ablate_hook(z, hook):
+        z[:, :, head, :] = mean_act
+        return z
+
+    return model.run_with_hooks(
+        input_text,
+        fwd_hooks=[(f"blocks.{layer}.attn.hook_z", ablate_hook)]
+    )
+```
+
+---
+
+### SAE Feature Analysis
+
+| Task | Code Pattern |
+|------|--------------|
+| **Load SAE** | `sae, cfg, sparsity = SAE.from_pretrained(release, sae_id)` |
+| **Encode** | `feature_acts = sae.encode(activations)` |
+| **Decode** | `reconstructed = sae.decode(feature_acts)` |
+| **Top features** | `top_features = feature_acts.topk(k=10)` |
+| **Feature direction** | `sae.W_dec[feature_idx]` |
+
+```python
+from sae_lens import SAE
+
+# Load SAE for GPT-2 layer 8
+sae, cfg, sparsity = SAE.from_pretrained(
+    release="gpt2-small-res-jb",
+    sae_id="blocks.8.hook_resid_pre"
+)
+
+# Get feature activations
+_, cache = model.run_with_cache(text)
+acts = cache["resid_pre", 8]
+feature_acts = sae.encode(acts)
+
+# Find top-activating features
+top_k = feature_acts[0, -1].topk(10)
+for idx, val in zip(top_k.indices, top_k.values):
+    print(f"Feature {idx}: {val:.2f}")
+```
+
+**Steering with features**:
+```python
+# Add feature direction during generation
+def steering_hook(resid, hook):
+    feature_dir = sae.W_dec[feature_idx]
+    resid[:, :, :] += strength * feature_dir
+    return resid
+```
+
+---
+
+## Common Hook Points
+
+| Hook Name | Shape | What It Contains |
+|-----------|-------|------------------|
+| `hook_embed` | `[batch, seq, d_model]` | Token embeddings |
+| `hook_pos_embed` | `[batch, seq, d_model]` | Position embeddings |
+| `blocks.{L}.hook_resid_pre` | `[batch, seq, d_model]` | Residual before layer L |
+| `blocks.{L}.hook_resid_post` | `[batch, seq, d_model]` | Residual after layer L |
+| `blocks.{L}.attn.hook_q` | `[batch, seq, n_heads, d_head]` | Queries |
+| `blocks.{L}.attn.hook_k` | `[batch, seq, n_heads, d_head]` | Keys |
+| `blocks.{L}.attn.hook_v` | `[batch, seq, n_heads, d_head]` | Values |
+| `blocks.{L}.attn.hook_z` | `[batch, seq, n_heads, d_head]` | Head outputs (before W_O) |
+| `blocks.{L}.attn.hook_pattern` | `[batch, n_heads, seq, seq]` | Attention patterns |
+| `blocks.{L}.attn.hook_result` | `[batch, seq, n_heads, d_model]` | Head outputs (after W_O) |
+| `blocks.{L}.hook_mlp_out` | `[batch, seq, d_model]` | MLP output |
+
+---
+
+## Model Dimensions Quick Reference
+
+| Model | Layers | Heads | d_model | d_head | d_mlp | Vocab |
+|-------|--------|-------|---------|--------|-------|-------|
+| GPT-2 Small | 12 | 12 | 768 | 64 | 3072 | 50257 |
+| GPT-2 Medium | 24 | 16 | 1024 | 64 | 4096 | 50257 |
+| GPT-2 Large | 36 | 20 | 1280 | 64 | 5120 | 50257 |
+| GPT-2 XL | 48 | 25 | 1600 | 64 | 6400 | 50257 |
+| Pythia-70M | 6 | 8 | 512 | 64 | 2048 | 50304 |
+| Pythia-160M | 12 | 12 | 768 | 64 | 3072 | 50304 |
+| Pythia-410M | 24 | 16 | 1024 | 64 | 4096 | 50304 |
+| Pythia-1B | 16 | 8 | 2048 | 256 | 8192 | 50304 |
+
+---
+
+## Decision Flowchart: Which Technique?
+
+```
+Start: "I want to understand behavior X"
+  │
+  ├─► "What correlates with X?"
+  │     → Use ATTRIBUTION (fast, one forward pass)
+  │     → Validate findings with patching
+  │
+  ├─► "What causes X?"
+  │     → Use PATCHING (slower, many forward passes)
+  │     → Compare clean vs corrupted inputs
+  │
+  ├─► "What's necessary for X?"
+  │     → Use ABLATION
+  │     → Try mean ablation first, then resample
+  │
+  └─► "What concepts are involved in X?"
+        → Use SAE FEATURES
+        → Check Neuronpedia for interpretation
+        → Validate with steering
+```
+
+---
+
+## Validation Checklist
+
+Before claiming you've found a circuit:
+
+- [ ] **Attribution**: Identified top contributing components
+- [ ] **Patching**: Confirmed causal role (patching changes output)
+- [ ] **Ablation**: Confirmed necessity (ablation breaks behavior)
+- [ ] **Multiple examples**: Pattern holds across diverse inputs
+- [ ] **Edge cases**: Tested failure modes and boundaries
+- [ ] **Minimal circuit**: Removed components that don't change behavior
+- [ ] **Interpretation**: Can explain *why* the circuit works
+
+---
+
+## Useful Links
+
+- [Neuronpedia](https://www.neuronpedia.org/) - Explore SAE features
+- [TransformerLens Docs](https://neelnanda-io.github.io/TransformerLens/)
+- [SAELens Docs](https://jbloomaus.github.io/SAELens/)
+- [Anthropic Circuits Thread](https://transformer-circuits.pub/)

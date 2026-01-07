@@ -1,0 +1,433 @@
+---
+title: "Anti-Patterns & Common Mistakes"
+subtitle: "What NOT to do in mechanistic interpretability"
+---
+
+Learning what to avoid is often more valuable than learning what to do. This page documents common mistakes, why they're problematic, and how to avoid them.
+
+## The Cardinal Sins
+
+### 1. Claiming Causation from Attribution
+
+::: {.callout-caution}
+## The Mistake
+"Head 5.2 has the highest logit attribution for 'Paris', so it must be computing the answer."
+:::
+
+**Why it's wrong**: Attribution measures correlation, not causation. A component might have high attribution because:
+
+- It's copying information computed elsewhere
+- It's correlated with the actual mechanism
+- It's part of a backup circuit that would activate if the main circuit failed
+
+**The fix**: Always validate attribution with patching or ablation.
+
+```python
+# BAD: Stopping at attribution
+top_heads = get_top_attributed_heads(cache, target_token)
+print(f"Head {top_heads[0]} is responsible!")  # No!
+
+# GOOD: Validate with patching
+for head in top_heads[:5]:
+    patched_logit = patch_head_from_corrupted(head)
+    if patched_logit < clean_logit - threshold:
+        print(f"Head {head} is causally important (patching confirms)")
+```
+
+---
+
+### 2. Ignoring Distribution Shift
+
+::: {.callout-caution}
+## The Mistake
+"I zero-ablated this component and the model broke, so it must be essential."
+:::
+
+**Why it's wrong**: Zero ablation creates activations the model has never seen during training. The model might fail because of the *weirdness* of the intervention, not because the component is truly necessary.
+
+**Signs of distribution shift**:
+- Model outputs become incoherent (not just wrong)
+- Loss explodes to very high values
+- Effects are much larger than expected
+
+**The fix**: Use mean ablation or resample ablation first. If results differ dramatically between methods, distribution shift is likely the culprit.
+
+```python
+# BAD: Only using zero ablation
+def ablate(act, hook):
+    return torch.zeros_like(act)  # Creates OOD activations
+
+# GOOD: Try multiple ablation types
+def mean_ablate(act, hook):
+    return act.mean(dim=0, keepdim=True).expand_as(act)
+
+def resample_ablate(act, hook, other_acts):
+    idx = torch.randint(len(other_acts), (1,))
+    return other_acts[idx]
+
+# Compare results across methods
+```
+
+---
+
+### 3. Overfitting to Single Examples
+
+::: {.callout-caution}
+## The Mistake
+"I found that head 3.2 handles the 'Eiffel Tower → Paris' example, so it must be the 'capital city' head."
+:::
+
+**Why it's wrong**: Any single example might work through an unusual path. Mechanistic claims need to generalize.
+
+**The fix**: Test on diverse examples with the same structure:
+- Different entities (London, Tokyo, Berlin)
+- Different phrasings ("What city is the Eiffel Tower in?", "The Eiffel Tower is located in")
+- Edge cases (fictional cities, ambiguous cases)
+
+```python
+# BAD: Testing one example
+result = analyze("The Eiffel Tower is in")
+conclude("Head 3.2 handles capitals")
+
+# GOOD: Testing many examples
+test_cases = [
+    ("The Eiffel Tower is in", "Paris"),
+    ("Big Ben is in", "London"),
+    ("The Colosseum is in", "Rome"),
+    ("Mount Fuji is in", "Japan"),  # Country, not city
+    ("The fictional Mordor is in", "???"),  # Edge case
+]
+results = [analyze(prompt, expected) for prompt, expected in test_cases]
+if consistent(results):
+    conclude("Head 3.2 handles landmark → location")
+```
+
+---
+
+### 4. Confusing Sufficiency with Necessity
+
+::: {.callout-caution}
+## The Mistake
+"Ablating head 5.1 doesn't change the output, so it's not part of the circuit."
+:::
+
+**Why it's wrong**: Transformers have redundancy. A component might be sufficient but not necessary because backup circuits compensate.
+
+**The fix**:
+- Test combinations of components (ablate multiple together)
+- Check if the component is sufficient (patching it in restores behavior)
+- Look for backup activation after ablation
+
+```python
+# BAD: Concluding from single ablation
+if ablate_head(5, 1) doesn't change output:
+    conclude("Head 5.1 is not involved")  # Wrong!
+
+# GOOD: Check for backup circuits
+original = model(input)
+single_ablated = ablate_head(5, 1)(input)
+double_ablated = ablate_heads([(5, 1), (7, 3)])(input)
+
+if single_ablated ≈ original but double_ablated ≠ original:
+    conclude("Head 5.1 has backup in head 7.3")
+```
+
+---
+
+### 5. Anthropomorphizing Components
+
+::: {.callout-caution}
+## The Mistake
+"This attention head *understands* syntax" or "The MLP *knows* that Paris is in France."
+:::
+
+**Why it's wrong**: Components don't "understand" or "know" anything. They implement mathematical operations that *correlate* with human-interpretable concepts. The mapping is often imperfect and context-dependent.
+
+**The fix**: Use precise language:
+- "This head's attention pattern correlates with syntactic dependencies"
+- "This MLP's output increases the logit for 'France' when the input contains 'Paris'"
+
+**Better vocabulary**:
+| Instead of... | Say... |
+|---------------|--------|
+| "knows" | "increases logit for" |
+| "understands" | "attention pattern correlates with" |
+| "thinks" | "activation represents" |
+| "decides" | "output shifts toward" |
+
+---
+
+### 6. Ignoring the Null Hypothesis
+
+::: {.callout-caution}
+## The Mistake
+Finding a pattern and immediately concluding it's meaningful.
+:::
+
+**Why it's wrong**: With enough components and examples, you'll find *some* pattern by chance. The question is whether it's a real mechanism or statistical noise.
+
+**The fix**: Always ask:
+- What would I expect to see if there were no mechanism?
+- Can I construct a control that shouldn't show this pattern?
+- Does the pattern hold on held-out examples?
+
+```python
+# BAD: Finding a pattern and celebrating
+pattern = find_pattern(data)
+publish("Discovered new circuit!")
+
+# GOOD: Testing against controls
+real_pattern = find_pattern(real_data)
+control_pattern = find_pattern(shuffled_data)
+random_pattern = find_pattern(random_data)
+
+if real_pattern >> control_pattern and real_pattern >> random_pattern:
+    if holds_on_test_set(real_pattern, test_data):
+        publish("Pattern is robust and replicable")
+```
+
+---
+
+## Experimental Design Mistakes
+
+### 7. Bad Clean/Corrupted Pairs
+
+::: {.callout-caution}
+## The Mistake
+Using corrupted inputs that differ from clean inputs in too many ways.
+:::
+
+**Why it's wrong**: If your corrupted input changes multiple things, you can't isolate what caused the behavior change.
+
+**Bad pairs**:
+- Clean: "The capital of France is" → Corrupted: "Hello world foo bar"
+- Clean: "John gave Mary the book" → Corrupted: "asdfgh jkl"
+
+**Good pairs**:
+- Clean: "The capital of France is" → Corrupted: "The capital of Poland is"
+- Clean: "John gave Mary the book" → Corrupted: "John gave John the book"
+
+**The fix**: Minimal edits that change only the relevant aspect.
+
+---
+
+### 8. Not Checking Model Performance First
+
+::: {.callout-caution}
+## The Mistake
+Analyzing a behavior the model doesn't actually exhibit reliably.
+:::
+
+**Why it's wrong**: If the model only gets the task right 60% of the time, your "circuit" might be analyzing noise.
+
+**The fix**: Before any interpretability work:
+
+```python
+# ALWAYS do this first
+def check_model_performance(model, test_cases):
+    correct = 0
+    for prompt, expected in test_cases:
+        prediction = model.generate(prompt, max_tokens=1)
+        if prediction == expected:
+            correct += 1
+    accuracy = correct / len(test_cases)
+    print(f"Model accuracy: {accuracy:.1%}")
+    if accuracy < 0.9:
+        print("WARNING: Model doesn't reliably do this task!")
+        print("Consider: simpler task, different model, or more examples")
+    return accuracy
+```
+
+---
+
+### 9. Layer Confusion
+
+::: {.callout-caution}
+## The Mistake
+Looking for a mechanism in the wrong layers.
+:::
+
+**Common confusions**:
+- Looking for factual recall in early layers (it's usually in mid-to-late MLPs)
+- Looking for syntax in late layers (it's usually in early-to-mid attention)
+- Expecting all computation to happen in one layer (it's often distributed)
+
+**The fix**: Do a layer-by-layer sweep first:
+
+```python
+# Sweep to find where the action is
+for layer in range(model.cfg.n_layers):
+    effect = patch_layer(layer)
+    print(f"Layer {layer}: {effect:.3f}")
+
+# Then focus on the important layers
+important_layers = [l for l, e in effects if e > threshold]
+```
+
+---
+
+### 10. Forgetting Position Information
+
+::: {.callout-caution}
+## The Mistake
+Ignoring that the same token in different positions behaves differently.
+:::
+
+**Why it's wrong**: Position matters enormously. The token "Paris" at position 5 vs position 15 has different attention patterns, different context, and different contributions.
+
+**The fix**: Always specify position when analyzing:
+
+```python
+# BAD: Averaging over positions
+token_embedding = cache["resid_post", 5].mean(dim=1)  # Loses position info!
+
+# GOOD: Analyzing specific positions
+final_token = cache["resid_post", 5][:, -1, :]  # Last position
+subject_pos = find_token_position("Paris")
+subject_embedding = cache["resid_post", 5][:, subject_pos, :]
+```
+
+---
+
+## Interpretation Mistakes
+
+### 11. Feature Confirmation Bias
+
+::: {.callout-caution}
+## The Mistake
+Looking at SAE feature examples and seeing what you want to see.
+:::
+
+**Why it's wrong**: Human pattern-matching is powerful but biased. Given a list of activating examples, you'll find *some* pattern, even if it's not the "true" one.
+
+**The fix**:
+1. Before looking at examples, write down your hypothesis
+2. Look for *counter*-examples that break your interpretation
+3. Test with steering: does the feature actually cause the expected behavior?
+
+```python
+# BAD: Looking at examples, forming interpretation
+examples = get_max_activating_examples(feature_42)
+# See: "cat", "dog", "bird", "fish"
+interpret("Feature 42 = animals")
+
+# GOOD: Test the interpretation
+# 1. Does "elephant" activate this feature? (should, if it's "animals")
+# 2. Does "cat" as in "concatenate" activate it? (shouldn't)
+# 3. Does steering with this feature make the model talk about animals?
+```
+
+---
+
+### 12. Claiming Features Are "Ground Truth"
+
+::: {.callout-caution}
+## The Mistake
+"SAE features are the true atomic units of the model's representations."
+:::
+
+**Why it's wrong**: SAE features are a *decomposition* that optimizes for sparsity and reconstruction. They're useful but:
+- Different SAEs give different features
+- The "right" decomposition might not exist
+- Important concepts might span multiple features
+
+**The fix**: Treat SAE features as a useful lens, not the final answer. Always validate that features correspond to causal mechanisms.
+
+---
+
+### 13. The "Clean" Interpretation Trap
+
+::: {.callout-caution}
+## The Mistake
+Preferring simple, clean interpretations over messy but accurate ones.
+:::
+
+**Why it's wrong**: Real circuits are often:
+- Distributed across many components
+- Context-dependent
+- Partially redundant
+- Not cleanly separable
+
+**The fix**: Accept complexity when the evidence supports it. A messy but accurate description is better than a clean but wrong one.
+
+---
+
+## Process Mistakes
+
+### 14. Starting with the Hardest Problem
+
+::: {.callout-caution}
+## The Mistake
+"I want to understand how GPT-4 does multi-step reasoning, so I'll start there."
+:::
+
+**Why it's wrong**: Complex behaviors involve many interacting mechanisms. Starting with them means you can't isolate anything.
+
+**The fix**: Start with the simplest version of the behavior:
+- Induction (simple pattern completion)
+- Single-token factual recall ("The Eiffel Tower is in" → "Paris")
+- Basic syntax (subject-verb agreement)
+
+Build up complexity only after understanding the simple cases.
+
+---
+
+### 15. Not Reading the Literature
+
+::: {.callout-caution}
+## The Mistake
+Reinventing techniques or missing known failure modes.
+:::
+
+**Why it's wrong**: The field has accumulated hard-won knowledge about what works and what doesn't. Ignoring it wastes time and leads to known pitfalls.
+
+**Essential reading before starting research**:
+1. [A Mathematical Framework for Transformer Circuits](https://transformer-circuits.pub/2021/framework/index.html)
+2. [Scaling Monosemanticity](https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html)
+3. [In-Context Learning and Induction Heads](https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html)
+
+---
+
+## Troubleshooting Guide
+
+### "My patching has no effect"
+
+1. **Check model performance**: Does the model actually do the task?
+2. **Check layer**: Are you patching the right layer?
+3. **Check component**: Try patching the entire residual stream first
+4. **Check direction**: Are you noising or denoising?
+5. **Check corrupted input**: Is it different enough from clean?
+
+### "My ablation breaks everything"
+
+1. **Distribution shift**: Try mean ablation instead of zero ablation
+2. **Too many components**: Ablate fewer things at once
+3. **Wrong layer**: The effect might be downstream, not at the ablated layer
+
+### "I can't find the circuit"
+
+1. **Task too complex**: Simplify the task
+2. **Distributed computation**: The "circuit" might span many components
+3. **Wrong model**: Try a smaller model where effects are clearer
+4. **Backup circuits**: Multiple mechanisms might implement the behavior
+
+### "SAE features don't make sense"
+
+1. **Wrong layer**: Different concepts emerge at different layers
+2. **Low activation**: Feature might not be relevant for your examples
+3. **Polysemantic feature**: The SAE might not have fully disentangled
+4. **Absorption**: The concept might be absorbed into a more common feature
+
+---
+
+## The Meta-Lesson
+
+The common thread in all these mistakes: **premature certainty**.
+
+Mechanistic interpretability requires:
+- Skepticism about your own interpretations
+- Multiple lines of evidence
+- Willingness to accept complexity
+- Humility about what we don't understand
+
+When in doubt, ask: "What would convince me I'm wrong?"

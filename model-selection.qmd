@@ -1,0 +1,378 @@
+---
+title: "Model Selection Guide"
+subtitle: "Which models to use for mechanistic interpretability research"
+---
+
+Choosing the right model is crucial for productive interpretability research. This guide helps you select models based on your goals, compute constraints, and research questions.
+
+## Quick Recommendations
+
+| Your Goal | Recommended Model | Why |
+|-----------|-------------------|-----|
+| **Learning the basics** | GPT-2 Small | Well-studied, fast, many tutorials |
+| **Serious research** | Pythia-410M or Pythia-1B | Training checkpoints, good balance |
+| **Scaling experiments** | Pythia family | Consistent architecture across sizes |
+| **Induction heads** | GPT-2 Small or Pythia-160M | Well-documented, clear patterns |
+| **SAE research** | GPT-2 Small | Pre-trained SAEs available |
+| **Factual recall** | Pythia-2.8B+ or Llama-7B | Need larger models for facts |
+| **Quick prototyping** | GPT-2 Small | Runs on CPU |
+
+## The Major Model Families
+
+### GPT-2 Family
+
+| Model | Params | Layers | Heads | d_model | VRAM |
+|-------|--------|--------|-------|---------|------|
+| GPT-2 Small | 124M | 12 | 12 | 768 | ~1 GB |
+| GPT-2 Medium | 355M | 24 | 16 | 1024 | ~2 GB |
+| GPT-2 Large | 774M | 36 | 20 | 1280 | ~4 GB |
+| GPT-2 XL | 1.5B | 48 | 25 | 1600 | ~7 GB |
+
+**Pros**:
+- Most studied models in interpretability
+- TransformerLens has excellent support
+- Pre-trained SAEs available (especially for Small)
+- Many tutorials and examples use GPT-2
+- Fast to run, even on CPU
+
+**Cons**:
+- No training checkpoints available
+- Older architecture (no RoPE, no GQA)
+- Limited factual knowledge (2019 training data)
+
+**Best for**: Learning, prototyping, replicating existing research
+
+```python
+import transformer_lens as tl
+model = tl.HookedTransformer.from_pretrained("gpt2-small")
+```
+
+---
+
+### Pythia Family
+
+| Model | Params | Layers | Heads | d_model | VRAM |
+|-------|--------|--------|-------|---------|------|
+| Pythia-70M | 70M | 6 | 8 | 512 | <1 GB |
+| Pythia-160M | 160M | 12 | 12 | 768 | ~1 GB |
+| Pythia-410M | 410M | 24 | 16 | 1024 | ~2 GB |
+| Pythia-1B | 1B | 16 | 8 | 2048 | ~5 GB |
+| Pythia-1.4B | 1.4B | 24 | 16 | 2048 | ~6 GB |
+| Pythia-2.8B | 2.8B | 32 | 32 | 2560 | ~12 GB |
+| Pythia-6.9B | 6.9B | 32 | 32 | 4096 | ~28 GB |
+| Pythia-12B | 12B | 36 | 40 | 5120 | ~48 GB |
+
+**Pros**:
+- **Training checkpoints**: 154 checkpoints per model, enabling training dynamics research
+- Consistent architecture across all sizes (great for scaling experiments)
+- Trained on The Pile (diverse, well-documented data)
+- Both standard and "deduped" versions available
+- Rotary position embeddings (RoPE)
+
+**Cons**:
+- Slightly less studied than GPT-2
+- Fewer pre-trained SAEs available
+- Unusual d_head for 1B model (256 vs typical 64)
+
+**Best for**: Serious research, scaling experiments, training dynamics
+
+```python
+import transformer_lens as tl
+model = tl.HookedTransformer.from_pretrained("pythia-410m")
+
+# Load a specific training checkpoint
+model = tl.HookedTransformer.from_pretrained(
+    "pythia-410m",
+    checkpoint_index=100  # Step 100,000
+)
+```
+
+---
+
+### Llama / Llama 2 / Llama 3 Family
+
+| Model | Params | Layers | Heads | d_model | VRAM |
+|-------|--------|--------|-------|---------|------|
+| Llama-7B | 7B | 32 | 32 | 4096 | ~28 GB |
+| Llama-13B | 13B | 40 | 40 | 5120 | ~52 GB |
+| Llama-2-7B | 7B | 32 | 32 | 4096 | ~28 GB |
+| Llama-3-8B | 8B | 32 | 32 | 4096 | ~32 GB |
+
+**Pros**:
+- State-of-the-art capabilities (especially Llama 3)
+- Group Query Attention (GQA) in newer versions
+- Better factual knowledge than smaller models
+- Active research community
+
+**Cons**:
+- Large, requires significant VRAM
+- TransformerLens support varies
+- Fewer interpretability resources
+- License restrictions (some versions)
+
+**Best for**: Capability-requiring tasks, factual recall, production-relevant research
+
+---
+
+### Gemma Family
+
+| Model | Params | Layers | Heads | d_model | VRAM |
+|-------|--------|--------|-------|---------|------|
+| Gemma-2B | 2B | 18 | 8 | 2048 | ~8 GB |
+| Gemma-7B | 7B | 28 | 16 | 3072 | ~28 GB |
+
+**Pros**:
+- Modern architecture from Google
+- Strong performance for size
+- Open weights
+
+**Cons**:
+- Less interpretability tooling
+- Newer, less studied
+- Some architectural differences
+
+**Best for**: Modern architecture research, comparison studies
+
+---
+
+### Mistral Family
+
+| Model | Params | Layers | Heads | d_model | VRAM |
+|-------|--------|--------|-------|---------|------|
+| Mistral-7B | 7B | 32 | 32 | 4096 | ~28 GB |
+
+**Pros**:
+- Excellent performance for size
+- Sliding window attention
+- Strong community support
+
+**Cons**:
+- Sliding window attention complicates interpretability
+- Less tooling than GPT-2/Pythia
+
+---
+
+## Decision Flowchart
+
+```{mermaid}
+%%| fig-cap: "Choosing the right model for your research"
+%%| fig-width: 10
+flowchart TD
+    START["What's your goal?"] --> LEARN{"Learning<br/>interpretability?"}
+    LEARN -->|Yes| GPT2S["GPT-2 Small<br/>Best tutorials, fast"]
+
+    LEARN -->|No| RESEARCH{"Serious<br/>research?"}
+
+    RESEARCH -->|Scaling| PYTHIA["Pythia family<br/>Consistent architecture"]
+    RESEARCH -->|Training dynamics| PYTHIAC["Pythia with checkpoints<br/>154 checkpoints available"]
+    RESEARCH -->|Circuit analysis| SIZE{"How complex<br/>is the task?"}
+
+    SIZE -->|Simple| GPT2M["GPT-2 Small/Medium<br/>Easier to analyze"]
+    SIZE -->|Complex| LARGER["Pythia-1B+<br/>More capacity"]
+
+    RESEARCH -->|SAE research| SAES{"Pre-trained<br/>SAEs needed?"}
+    SAES -->|Yes| GPT2SAE["GPT-2 Small<br/>Most SAEs available"]
+    SAES -->|No| PYTHIASAE["Pythia-410M<br/>Good balance"]
+
+    RESEARCH -->|Factual knowledge| FACTS["Pythia-2.8B+ or Llama-7B<br/>Larger models know more"]
+```
+
+---
+
+## Compute Considerations
+
+### CPU Only (No GPU)
+
+| Model | Inference Speed | Practical? |
+|-------|-----------------|------------|
+| GPT-2 Small | ~1 token/sec | ✓ Yes |
+| Pythia-70M | ~2 tokens/sec | ✓ Yes |
+| Pythia-160M | ~0.5 tokens/sec | ✓ Slow but usable |
+| GPT-2 Medium | ~0.3 tokens/sec | ⚠️ Very slow |
+| Larger models | Too slow | ✗ No |
+
+**Recommendation**: Stick to GPT-2 Small or Pythia-70M/160M for CPU work.
+
+### Consumer GPU (8-12 GB VRAM)
+
+| Model | Fits in VRAM? | Notes |
+|-------|---------------|-------|
+| GPT-2 Small | ✓ Easily | ~1 GB |
+| GPT-2 Medium | ✓ Yes | ~2 GB |
+| GPT-2 Large | ✓ Yes | ~4 GB |
+| Pythia-410M | ✓ Yes | ~2 GB |
+| Pythia-1B | ✓ Yes | ~5 GB |
+| Pythia-1.4B | ⚠️ Tight | ~6 GB, less room for cache |
+| Pythia-2.8B | ✗ No | Needs quantization |
+
+### Research GPU (24-48 GB VRAM)
+
+All models up to ~7B fit comfortably. For larger models:
+- Use gradient checkpointing
+- Use 8-bit or 4-bit quantization
+- Use model parallelism
+
+---
+
+## Task-Specific Recommendations
+
+### Induction Heads
+
+**Recommended**: GPT-2 Small, Pythia-160M
+
+Induction heads are well-documented in these models. The 2-layer circuit is clear and easy to find.
+
+```python
+# Finding induction heads in GPT-2 Small
+# They're typically in layers 5-6, look for diagonal stripe patterns
+```
+
+### Factual Recall ("The Eiffel Tower is in ___")
+
+**Recommended**: Pythia-1B+ for simple facts, Pythia-2.8B+ or Llama-7B for complex facts
+
+Smaller models have limited factual knowledge. If the model doesn't know the fact, you can't study how it recalls it.
+
+```python
+# Test if model knows the fact first!
+model.generate("The Eiffel Tower is in", max_new_tokens=5)
+```
+
+### Syntax and Grammar
+
+**Recommended**: GPT-2 Small, Pythia-410M
+
+Syntactic processing happens in early-to-mid layers. Smaller models are often sufficient.
+
+### Reasoning and Multi-Step
+
+**Recommended**: Pythia-1B+, Llama-7B+
+
+Complex reasoning requires model capacity. Don't expect clear reasoning circuits in small models.
+
+### Training Dynamics
+
+**Recommended**: Pythia family (any size)
+
+Only Pythia provides training checkpoints. Choose size based on compute and research question.
+
+```python
+# Compare early vs late training
+early_model = tl.HookedTransformer.from_pretrained("pythia-410m", checkpoint_index=10)
+late_model = tl.HookedTransformer.from_pretrained("pythia-410m", checkpoint_index=143)
+```
+
+---
+
+## SAE Availability
+
+### Pre-trained SAEs (as of 2025)
+
+| Model | Layer Coverage | Source |
+|-------|----------------|--------|
+| GPT-2 Small | Most layers | Neuronpedia, Joseph Bloom |
+| GPT-2 Medium | Partial | Various |
+| Pythia-70M | Full | SAELens examples |
+| Pythia-160M | Partial | Various |
+| Llama-2-7B | Partial | Various research |
+
+**If you need pre-trained SAEs**: Start with GPT-2 Small. It has the most comprehensive coverage.
+
+**If training your own SAEs**: Pythia-410M is a good balance of capacity and trainability.
+
+```python
+from sae_lens import SAE
+
+# Load pre-trained SAE for GPT-2 Small, layer 8
+sae, cfg, sparsity = SAE.from_pretrained(
+    release="gpt2-small-res-jb",
+    sae_id="blocks.8.hook_resid_pre"
+)
+```
+
+---
+
+## Common Mistakes
+
+### Mistake 1: Using a model that's too small
+
+**Symptom**: Model doesn't exhibit the behavior you want to study.
+
+**Fix**: Check model performance first. If accuracy < 80%, use a larger model.
+
+### Mistake 2: Using a model that's too large
+
+**Symptom**: Experiments are slow, you can't iterate quickly.
+
+**Fix**: Start with the smallest model that exhibits the behavior. Scale up only when needed.
+
+### Mistake 3: Assuming all models work the same
+
+**Symptom**: Technique works on GPT-2, fails on Llama.
+
+**Fix**: Models have different architectures. Check for:
+- Attention type (MHA vs GQA vs MQA)
+- Position encoding (learned vs RoPE vs ALiBi)
+- Normalization (LayerNorm vs RMSNorm)
+- Architecture quirks
+
+### Mistake 4: Ignoring tokenization differences
+
+**Symptom**: The "same" text produces different token counts across models.
+
+**Fix**: Always check tokenization:
+
+```python
+# Different models tokenize differently!
+gpt2_tokens = gpt2_model.to_tokens("Hello world")
+pythia_tokens = pythia_model.to_tokens("Hello world")
+# These may have different lengths and token IDs
+```
+
+---
+
+## Loading Models in TransformerLens
+
+```python
+import transformer_lens as tl
+
+# GPT-2 family
+model = tl.HookedTransformer.from_pretrained("gpt2-small")
+model = tl.HookedTransformer.from_pretrained("gpt2-medium")
+model = tl.HookedTransformer.from_pretrained("gpt2-large")
+model = tl.HookedTransformer.from_pretrained("gpt2-xl")
+
+# Pythia family
+model = tl.HookedTransformer.from_pretrained("pythia-70m")
+model = tl.HookedTransformer.from_pretrained("pythia-160m")
+model = tl.HookedTransformer.from_pretrained("pythia-410m")
+model = tl.HookedTransformer.from_pretrained("pythia-1b")
+
+# With specific checkpoint (Pythia only)
+model = tl.HookedTransformer.from_pretrained(
+    "pythia-410m",
+    checkpoint_index=100  # 0-143 available
+)
+
+# Deduped Pythia (trained on deduplicated Pile)
+model = tl.HookedTransformer.from_pretrained("pythia-410m-deduped")
+
+# Other models (check TransformerLens docs for full list)
+model = tl.HookedTransformer.from_pretrained("llama-7b")
+model = tl.HookedTransformer.from_pretrained("mistral-7b")
+```
+
+---
+
+## Summary Table
+
+| Use Case | Model | Compute | SAEs |
+|----------|-------|---------|------|
+| Learning basics | GPT-2 Small | CPU OK | ✓ Many |
+| Quick prototyping | GPT-2 Small | CPU OK | ✓ Many |
+| Induction heads | GPT-2 Small | CPU OK | ✓ Many |
+| General research | Pythia-410M | GPU recommended | Some |
+| Scaling experiments | Pythia family | Varies | Train your own |
+| Training dynamics | Pythia family | GPU recommended | Train your own |
+| Factual recall | Pythia-2.8B+ | GPU required | Few |
+| Production relevance | Llama-7B+ | GPU required | Few |

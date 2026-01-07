@@ -41,6 +41,10 @@ book:
         - chapters/15-practice-regime.qmd
     - part: "Reference"
       chapters:
+        - quick-reference.qmd
+        - model-selection.qmd
+        - anti-patterns.qmd
+        - timeline.qmd
         - glossary.qmd
 
 format:

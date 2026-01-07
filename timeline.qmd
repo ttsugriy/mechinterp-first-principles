@@ -1,0 +1,289 @@
+---
+title: "Historical Timeline"
+subtitle: "The evolution of mechanistic interpretability (2017-2025)"
+---
+
+Understanding where the field came from helps you understand where it's going. This timeline traces the key discoveries, papers, and paradigm shifts that shaped modern mechanistic interpretability.
+
+## The Visual Timeline
+
+```{mermaid}
+%%| fig-cap: "Key milestones in mechanistic interpretability research"
+%%| fig-width: 12
+timeline
+    title Evolution of Mechanistic Interpretability
+
+    section Foundations (2017-2019)
+        2017 : Attention Is All You Need
+             : Feature Visualization (Olah et al.)
+        2018 : BERT released
+             : GPT-1 released
+        2019 : GPT-2 released
+             : Building Blocks (Olah)
+
+    section Early Circuits (2020)
+        2020 : Zoom In (Circuits paper)
+             : Curve Detectors
+             : High-Low Frequency Detectors
+
+    section The Framework (2021)
+        2021 : Mathematical Framework
+             : Residual stream perspective
+             : TransformerLens created
+
+    section Core Discoveries (2022)
+        2022 : Induction Heads paper
+             : Toy Models of Superposition
+             : Grokking mechanistic analysis
+
+    section Scaling Up (2023)
+        2023 : Towards Monosemanticity
+             : Dictionary learning at scale
+             : Neuronpedia launched
+
+    section Current Era (2024-2025)
+        2024 : Scaling Monosemanticity
+             : Anthropic Golden Gate Claude
+             : Automated circuit discovery
+        2025 : SAEBench evaluation
+             : Multi-phase emergence
+             : Feature absorption discovered
+```
+
+## Detailed Timeline
+
+### 2017: The Transformer and Feature Visualization
+
+**June 2017 — Attention Is All You Need**
+Vaswani et al. introduce the Transformer architecture. At the time, nobody imagined we'd be reverse-engineering these systems. The paper focuses on translation performance, not interpretability.
+
+**November 2017 — Feature Visualization**
+Chris Olah, Alexander Mordvintsev, and Ludwig Schubert publish [Feature Visualization](https://distill.pub/2017/feature-visualization/) on Distill. This establishes that neural network features can be visualized and (sometimes) interpreted. The focus is on vision models, but the conceptual framework—features as meaningful units—will prove foundational.
+
+---
+
+### 2018-2019: The Language Model Era Begins
+
+**2018 — BERT and GPT-1**
+Large pretrained language models arrive. BERT shows that pretraining works; GPT-1 shows that autoregressive generation works. Interpretability research is sparse—most work focuses on making models bigger and better.
+
+**2019 — GPT-2 and Building Blocks**
+OpenAI releases GPT-2, demonstrating that scaling language models leads to qualitative capability jumps.
+
+Chris Olah publishes [Building Blocks of Interpretability](https://distill.pub/2018/building-blocks/), introducing key ideas about how to visualize and understand neural network internals. Still focused on vision, but the groundwork for language model interpretability is being laid.
+
+---
+
+### 2020: The Circuits Era Begins
+
+**March 2020 — Zoom In: An Introduction to Circuits**
+The [Circuits thread](https://distill.pub/2020/circuits/) launches on Distill. This is the conceptual birth of mechanistic interpretability as we know it.
+
+Key ideas introduced:
+- **Circuits**: Subnetworks implementing identifiable algorithms
+- **Features**: The fundamental units of representation
+- **Universality**: Similar circuits across different networks
+
+The focus is still on vision models (InceptionV1), but the framework is general.
+
+**2020 — Curve Detectors, High-Low Frequency**
+A series of papers document specific circuits in vision models:
+- Curve detector circuits
+- High-low frequency detector circuits
+- Branch specialization
+
+These establish the methodology: identify a behavior, isolate the responsible components, understand the algorithm.
+
+---
+
+### 2021: The Mathematical Framework
+
+**December 2021 — A Mathematical Framework for Transformer Circuits**
+[This paper](https://transformer-circuits.pub/2021/framework/index.html) from Anthropic changes everything. It provides:
+
+1. **The residual stream perspective**: Viewing the transformer as components reading from and writing to a shared workspace
+2. **Virtual attention heads**: Understanding how heads compose across layers
+3. **Precise mathematical language** for describing transformer computations
+
+This paper establishes the conceptual vocabulary still used today: residual stream, QK circuit, OV circuit, composition.
+
+**2021 — TransformerLens Created**
+Neel Nanda creates [TransformerLens](https://github.com/neelnanda-io/TransformerLens), the standard library for mechanistic interpretability research. It provides:
+- Easy access to all intermediate activations
+- Hooks for interventions
+- Support for many model architectures
+
+This dramatically lowers the barrier to entry for interpretability research.
+
+---
+
+### 2022: The Big Discoveries
+
+**March 2022 — In-Context Learning and Induction Heads**
+[This paper](https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html) documents the first complete, validated circuit in a language model.
+
+Key findings:
+- Induction heads implement in-context learning
+- They emerge via a phase transition during training
+- The circuit requires two layers (previous token head → induction head)
+
+This becomes the canonical example of mechanistic interpretability done well.
+
+**September 2022 — Toy Models of Superposition**
+[This paper](https://transformer-circuits.pub/2022/toy_model/index.html) explains why neurons are polysemantic:
+
+- Networks pack more features than dimensions (superposition)
+- Sparsity enables superposition
+- Phase transitions govern when superposition occurs
+
+This paper explains *why* interpretability is hard and points toward solutions (sparse autoencoders).
+
+**2022 — Grokking Analysis**
+Neel Nanda and colleagues analyze [grokking](https://arxiv.org/abs/2301.02679)—sudden generalization after prolonged memorization. They find:
+- Grokking corresponds to learning efficient algorithms
+- The model transitions from memorization circuits to generalization circuits
+- Mechanistic analysis can predict when grokking occurs
+
+---
+
+### 2023: Scaling Dictionary Learning
+
+**October 2023 — Towards Monosemanticity**
+[This paper](https://transformer-circuits.pub/2023/monosemantic-features/index.html) from Anthropic demonstrates that sparse autoencoders work at scale:
+
+- Training SAEs on a 1-layer transformer
+- Finding interpretable, monosemantic features
+- Demonstrating that features can be used for steering
+
+This proves the concept and sets the stage for larger-scale work.
+
+**2023 — Neuronpedia Launched**
+[Neuronpedia](https://www.neuronpedia.org/) launches, providing:
+- Interactive exploration of SAE features
+- Crowdsourced feature interpretations
+- A shared vocabulary for discussing features
+
+This transforms SAE research from individual exploration to community science.
+
+---
+
+### 2024: The Scaling Era
+
+**May 2024 — Scaling Monosemanticity**
+[This paper](https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html) scales SAEs to Claude 3 Sonnet:
+
+- 34 million features extracted
+- Abstract features discovered (e.g., "deception," "sycophancy")
+- Features can be used to steer model behavior
+
+The "Golden Gate Claude" demonstration shows that adding the "Golden Gate Bridge" feature makes Claude obsess about the bridge—dramatic proof that features are real.
+
+**2024 — Automated Circuit Discovery**
+Multiple papers develop automated methods for finding circuits:
+- ACDC (Automated Circuit DisCovery)
+- Subnetwork Probing
+- Attribution Patching at scale
+
+The goal: move from artisanal circuit analysis to systematic discovery.
+
+**2024 — Attention Pattern Taxonomy**
+Researchers develop taxonomies of attention head behaviors:
+- Previous token heads
+- Induction heads
+- Duplicate token heads
+- Positional heads
+
+This moves toward a "parts list" for transformer internals.
+
+---
+
+### 2025: Current Frontiers
+
+**2025 — SAEBench**
+[SAEBench](https://arxiv.org/abs/2501.00663) provides standardized evaluation for SAEs:
+- Benchmark tasks for assessing feature quality
+- Discovery that proxy metrics (L0, reconstruction) don't predict downstream utility
+- Push for task-specific evaluation
+
+**2025 — Multi-Phase Emergence**
+Research reveals that capability emergence is more complex than single phase transitions:
+- Multiple distinct phases during training
+- Different capabilities emerge at different times
+- Implications for understanding training dynamics
+
+**2025 — Feature Absorption**
+Researchers discover that scaling SAEs has limits:
+- Common features "absorb" related features
+- Hierarchical concepts don't decompose cleanly
+- New architectures (matryoshka SAEs) proposed as solutions
+
+---
+
+## Key Paradigm Shifts
+
+### Shift 1: Neurons → Features (2017-2022)
+**Old view**: Neurons are the unit of analysis
+**New view**: Features (directions in activation space) are the unit of analysis
+
+### Shift 2: Behavior → Mechanism (2020-2022)
+**Old view**: Understand what the model does
+**New view**: Understand *how* the model does it
+
+### Shift 3: Single Component → Circuit (2021-2022)
+**Old view**: Find the component responsible for a behavior
+**New view**: Find the circuit (connected components) that implements the behavior
+
+### Shift 4: Artisanal → Automated (2023-2025)
+**Old view**: Manually analyze individual circuits
+**New view**: Develop automated tools for systematic analysis
+
+### Shift 5: Proof of Concept → Rigorous Evaluation (2024-2025)
+**Old view**: Demonstrate that interpretability is possible
+**New view**: Develop metrics and benchmarks for interpretability quality
+
+---
+
+## The People
+
+Major contributors to the field:
+
+**Chris Olah** — Pioneered feature visualization, the circuits framework, and much of the conceptual vocabulary. Co-founded Anthropic's interpretability team.
+
+**Neel Nanda** — Created TransformerLens, wrote foundational tutorials, discovered grokking mechanisms. Made interpretability accessible.
+
+**Catherine Olsson** — Co-authored the Mathematical Framework and Induction Heads papers. Foundational technical contributions.
+
+**Nelson Elhage** — Lead author on Toy Models of Superposition. Technical lead on much of Anthropic's interpretability work.
+
+**Tom Brown, Sam McCandlish** — Anthropic researchers contributing to scaling SAEs and other foundational work.
+
+**Arthur Conmy** — Developed ACDC for automated circuit discovery. Key contributor to tooling.
+
+---
+
+## Reading the History
+
+If you're new to the field, read these papers in order:
+
+1. **Zoom In** (2020) — The vision and conceptual framework
+2. **Mathematical Framework** (2021) — The technical vocabulary for transformers
+3. **Induction Heads** (2022) — The first complete circuit
+4. **Toy Models of Superposition** (2022) — Why interpretability is hard
+5. **Towards Monosemanticity** (2023) — The SAE solution
+6. **Scaling Monosemanticity** (2024) — SAEs at scale
+
+These six papers contain 90% of what you need to understand modern mechanistic interpretability.
+
+---
+
+## What's Next?
+
+Open questions the field is working on:
+
+1. **Scaling interpretability** — Can we analyze GPT-4-scale models?
+2. **Automated discovery** — Can we find circuits without manual analysis?
+3. **Causal interventions** — Can we reliably steer model behavior?
+4. **Training dynamics** — Can we understand how capabilities emerge?
+5. **Universality** — Do the same circuits appear across models?
+
+The field is young. The major discoveries are likely still ahead of us.
