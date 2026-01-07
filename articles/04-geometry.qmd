@@ -17,12 +17,12 @@ description: "The residual stream is a vector space. Understanding its geometry�
 
 ::: {.callout-warning}
 ## Prerequisites
-**Required**: [Article 3: The Residual Stream](03-residual-stream.qmd) — understanding the shared workspace model
+**Required**: [Chapter 3: The Residual Stream](03-residual-stream.qmd) — understanding the shared workspace model
 :::
 
 ::: {.callout-note}
 ## Before You Read: Recall
-From Article 3, recall:
+From Chapter 3, recall:
 
 - What is the residual stream? (A shared vector that accumulates contributions from all components)
 - How do components communicate? (By reading from and writing to the residual stream)
@@ -50,9 +50,9 @@ This wasn't programmed. No one told the network that royalty minus masculinity p
 Vector arithmetic on learned representations produces semantically meaningful results. This suggests that meaning itself has geometric structure—that concepts aren't stored as arbitrary patterns, but as organized directions and regions in a high-dimensional space.
 :::
 
-This article is about that geometry. We've established that transformers are matrix multiplication machines (Article 2) and that information flows through a shared residual stream (Article 3). Now we ask: what's the *structure* of that stream? What does it mean for a concept to be a "direction"? And why does high-dimensional geometry enable representations far richer than we might expect?
+This chapter is about that geometry. We've established that transformers are matrix multiplication machines (Chapter 2) and that information flows through a shared residual stream (Chapter 3). Now we ask: what's the *structure* of that stream? What does it mean for a concept to be a "direction"? And why does high-dimensional geometry enable representations far richer than we might expect?
 
-The answers will set up everything that follows. Features ([Article 5](05-features.qmd)), superposition ([Article 6](06-superposition.qmd)), circuits ([Article 8](08-circuits.qmd))—all of these build on the geometric perspective we develop here.
+The answers will set up everything that follows. Features ([Chapter 5](05-features.qmd)), superposition ([Chapter 6](06-superposition.qmd)), circuits ([Chapter 8](08-circuits.qmd))—all of these build on the geometric perspective we develop here.
 
 ## From Numbers to Geometry
 
@@ -254,7 +254,7 @@ If the relevant information weren't linearly encoded, linear probes would fail. 
 
 ### The Logit Lens Works
 
-In Article 3, we introduced the logit lens: projecting intermediate residual stream states to vocabulary space as if they were final outputs. This works—you see predictions refine through layers.
+In Chapter 3, we introduced the logit lens: projecting intermediate residual stream states to vocabulary space as if they were final outputs. This works—you see predictions refine through layers.
 
 But the logit lens *is* a linear operation. It's matrix multiplication by the unembedding matrix. The fact that this produces interpretable intermediate predictions means the residual stream maintains linear structure relative to the output vocabulary throughout the forward pass.
 
@@ -361,7 +361,7 @@ The lemma says: for any set of n points in high-dimensional space, you can proje
 
 For our purposes, the implication is: **high-dimensional geometry is robust**. Structure doesn't collapse when you project or when you pack in more features. There's room—geometric room—for far more independent directions than the raw dimension count suggests.
 
-This sets up a phenomenon we'll explore deeply in Article 6: **superposition**. Networks represent more features than they have dimensions by exploiting the fact that almost-orthogonal vectors don't interfere much, especially when features rarely co-occur.
+This sets up a phenomenon we'll explore deeply in Chapter 6: **superposition**. Networks represent more features than they have dimensions by exploiting the fact that almost-orthogonal vectors don't interfere much, especially when features rarely co-occur.
 
 ## Visualizing the Invisible
 
@@ -400,7 +400,7 @@ Let's connect this back to mechanistic interpretability.
 
 ### Attribution via Projection
 
-The residual stream is a sum of contributions from attention heads and MLPs (Article 3). Each contribution is a vector. To understand how much a component contributed to a particular prediction, we can project its output onto the direction of that prediction.
+The residual stream is a sum of contributions from attention heads and MLPs (Chapter 3). Each contribution is a vector. To understand how much a component contributed to a particular prediction, we can project its output onto the direction of that prediction.
 
 If an attention head writes a vector that points strongly toward "Paris" in vocabulary space, that head is contributing to predicting "Paris." The geometry makes attribution possible: direction tells you what each component is "saying."
 
@@ -441,9 +441,9 @@ The geometry gives us a framework. Activations are vectors. Features are directi
 
 ## Polya's Perspective: Building Intuition Before Formalism
 
-This article is an exercise in Polya's heuristic: **understand the problem before solving it**.
+This chapter is an exercise in Polya's heuristic: **understand the problem before solving it**.
 
-We haven't yet defined "features" precisely—that's Article 5. We haven't explained superposition—that's Article 6. We haven't given you tools to find circuits—that's Arc III.
+We haven't yet defined "features" precisely—that's Chapter 5. We haven't explained superposition—that's Chapter 6. We haven't given you tools to find circuits—that's Arc III.
 
 But we've built geometric intuition. Now when we say "a feature is a direction in activation space," you understand what that means. When we say "features are superimposed because high dimensions allow near-orthogonality," you have the geometric background.
 
@@ -466,13 +466,13 @@ We've established that the residual stream has geometric structure: distance ref
 
 But we've been vague about what the important directions *are*. We've talked about "features" without defining them. We've assumed directions correspond to human-interpretable concepts without explaining why or how to find them.
 
-The next article tackles this directly: **What exactly is a feature?**
+The next chapter tackles this directly: **What exactly is a feature?**
 
 ::: {.callout-note}
 ## A Mystery to Solve
 Here's something surprising: Anthropic found over 2 million interpretable features in a model with only 4,096 dimensions. That's 500 features per dimension. If features are directions, and you can only have as many orthogonal directions as dimensions... how is this possible?
 
-The answer, which we'll explore in Article 6, involves a beautiful piece of geometry that explains both why neural networks are so powerful and why they're so hard to interpret.
+The answer, which we'll explore in Chapter 6, involves a beautiful piece of geometry that explains both why neural networks are so powerful and why they're so hard to interpret.
 :::
 
 Here's the question to carry forward: if the network represents more concepts than it has dimensions (because almost-orthogonal directions don't interfere), how do we untangle them? How do we find the directions that matter? And what happens when the directions *do* interfere—when the model's capacity is pushed to its limits?
@@ -506,7 +506,7 @@ The geometry gives us the framework. Now we need to find the atoms of meaning wi
 │  HIGH-DIM SURPRISE:                                        │
 │    Random vectors are ~90° apart (nearly orthogonal)       │
 │    → Can pack MANY more features than dimensions           │
-│    → Foundation for superposition (Article 6)              │
+│    → Foundation for superposition (Chapter 6)              │
 │                                                            │
 └────────────────────────────────────────────────────────────┘
 ```
@@ -543,7 +543,7 @@ The geometry gives us the framework. Now we need to find the atoms of meaning wi
 
 2. **On the Origins of Linear Representations in Large Language Models** — [arXiv:2403.03867](https://arxiv.org/abs/2403.03867): Recent research showing linear structure persists beyond embeddings into transformer hidden layers.
 
-3. **Toy Models of Superposition** — [Anthropic](https://transformer-circuits.pub/2022/toy_model/index.html): The foundational paper on how high-dimensional geometry enables superposition. Essential reading for Article 6.
+3. **Toy Models of Superposition** — [Anthropic](https://transformer-circuits.pub/2022/toy_model/index.html): The foundational paper on how high-dimensional geometry enables superposition. Essential reading for Chapter 6.
 
 4. **Neural Networks, Manifolds, and Topology** — [Chris Olah](https://colah.github.io/posts/2014-03-NN-Manifolds-Topology/): Classic blog post on how neural networks learn to disentangle data through geometric transformations.
 

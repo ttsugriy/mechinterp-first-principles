@@ -17,12 +17,12 @@ description: "An honest assessment of what mechanistic interpretability can and 
 
 ::: {.callout-warning}
 ## Prerequisites
-**Required**: [Article 13: Induction Heads](13-induction-heads.qmd) — seeing the full interpretability pipeline in action
+**Required**: [Chapter 13: Induction Heads](13-induction-heads.qmd) — seeing the full interpretability pipeline in action
 :::
 
 ::: {.callout-note}
 ## Before You Read: Recall
-From Article 13 (Induction Heads), recall:
+From Chapter 13 (Induction Heads), recall:
 
 - Induction heads are the best-understood circuit in transformers
 - We verified them with attribution, patching, and ablation
@@ -45,7 +45,7 @@ This conclusion would be wrong.
 
 The honest assessment: mechanistic interpretability has achieved meaningful successes, but fundamental problems remain unsolved. The gap between "understanding induction heads in GPT-2" and "understanding everything GPT-4 can do" is vast—and it's not clear our current methods can bridge it.
 
-This article surveys the open problems honestly. Some may be solved with incremental progress. Others may require fundamentally new ideas.
+This chapter surveys the open problems honestly. Some may be solved with incremental progress. Others may require fundamentally new ideas.
 
 ::: {.callout-important}
 ## The Responsible Claim
@@ -218,7 +218,7 @@ if safety_score > threshold:
 
 This is more interpretable than a black-box classifier—you can inspect *which* features triggered.
 
-**Steering for safer outputs**: Suppress features associated with harmful behavior during generation (see Article 9's steering section). Unlike fine-tuning, this is reversible and inspectable.
+**Steering for safer outputs**: Suppress features associated with harmful behavior during generation (see Chapter 9's steering section). Unlike fine-tuning, this is reversible and inspectable.
 
 **Behavioral verification**: After safety training (RLHF, Constitutional AI), use interpretability to check what changed:
 - Did the "deception" feature's activation pattern change?
@@ -420,25 +420,25 @@ Despite these problems, progress is possible.
 
 Polya emphasizes: **"Understand what you don't understand."**
 
-Intellectual progress requires honestly identifying gaps. This article maps the gaps in mechanistic interpretability—not to discourage work, but to focus it.
+Intellectual progress requires honestly identifying gaps. This chapter maps the gaps in mechanistic interpretability—not to discourage work, but to focus it.
 
 The problems are real. The problems are hard. But problems clearly stated are problems that can be worked on.
 
 ::: {.callout-tip}
 ## Polya's Insight
-"What is unknown?" is as important as "what is known." Honest acknowledgment of limitations guides research toward the most important problems. The open questions in this article are the research agenda for the field.
+"What is unknown?" is as important as "what is known." Honest acknowledgment of limitations guides research toward the most important problems. The open questions in this chapter are the research agenda for the field.
 :::
 
 ## Looking Ahead
 
-The final article offers a **Practice Regime**—concrete guidance for actually doing interpretability research:
+The final chapter offers a **Practice Regime**—concrete guidance for actually doing interpretability research:
 
 - How to choose problems
 - How to structure experiments
 - How to debug circuits that don't work
 - How to publish and share findings
 
-This series has been theory and concepts. The next article is about practice.
+This series has been theory and concepts. The next chapter is about practice.
 
 ---
 

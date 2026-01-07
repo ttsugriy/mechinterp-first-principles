@@ -17,12 +17,12 @@ description: "Attribution shows correlation. Patching proves causation. By surgi
 
 ::: {.callout-warning}
 ## Prerequisites
-**Required**: [Article 10: Attribution](10-attribution.qmd) — understanding how to identify candidate components
+**Required**: [Chapter 10: Attribution](10-attribution.qmd) — understanding how to identify candidate components
 :::
 
 ::: {.callout-note}
 ## Before You Read: Recall
-From Article 10 (Attribution), recall:
+From Chapter 10 (Attribution), recall:
 
 - Attribution shows which components contributed to the output (correlation)
 - The logit is a sum of per-component contributions
@@ -34,7 +34,7 @@ Attribution gives us hypotheses. **Now we ask**: How do we *test* whether a comp
 
 ## From Observation to Experiment
 
-In Article 10, we learned to ask: "What contributed to this output?" Attribution decomposes the logit into per-component contributions, showing which attention heads and MLPs pushed the prediction in which direction.
+In Chapter 10, we learned to ask: "What contributed to this output?" Attribution decomposes the logit into per-component contributions, showing which attention heads and MLPs pushed the prediction in which direction.
 
 But attribution has a fundamental limitation: **it shows correlation, not causation**.
 
@@ -61,7 +61,7 @@ The standard patching setup uses two inputs:
 **Clean input**: Produces the behavior we want to understand
 **Corrupted input**: Produces a different (usually wrong) behavior
 
-For the IOI task from Article 8:
+For the IOI task from Chapter 8:
 - **Clean**: "When John and Mary went to the store, John gave the bag to ___" → predicts "Mary"
 - **Corrupted**: "When John and Mary went to the store, Mary gave the bag to ___" → predicts "John"
 
@@ -253,7 +253,7 @@ For "When John and Mary went to the store, John gave the bag to ___":
 
 ### Feature Patching with SAEs
 
-Using sparse autoencoders (Article 9), we can patch individual features:
+Using sparse autoencoders (Chapter 9), we can patch individual features:
 
 ```
 Feature F: Replace activation_F(corrupted) with activation_F(clean)
@@ -327,7 +327,7 @@ Path patching constructs the circuit graph:
 2. Use path patching to identify important connections (edges)
 3. The result is a circuit diagram showing how information flows
 
-The IOI circuit (Article 8) was discovered using exactly this methodology:
+The IOI circuit (Chapter 8) was discovered using exactly this methodology:
 - Regular patching identified the 26 important heads
 - Path patching revealed how they connect (e.g., S-Inhibition heads suppress Name Mover heads)
 - The result was a complete circuit diagram with labeled components and connections
@@ -476,7 +476,7 @@ This is Polya's heuristic of **using all available data**—not just observation
 
 Patching tells us whether a component is necessary: "If we break this, does the behavior fail?"
 
-But there's a related question: "What happens if we completely remove this component?" This is **ablation**—the subject of the next article.
+But there's a related question: "What happens if we completely remove this component?" This is **ablation**—the subject of the next chapter.
 
 While patching swaps activations between inputs, ablation removes components entirely (setting them to zero, or to their mean value). Ablation reveals:
 - What the network can do *without* a component

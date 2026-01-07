@@ -16,33 +16,33 @@ You now have a **complete methodology** for reverse-engineering neural networks:
 %%| fig-width: 9
 flowchart LR
     subgraph ARC3["Arc III: The Toolkit"]
-        A9["Article 9<br/>SAEs"] --> A10["Article 10<br/>Attribution"]
-        A10 --> A11["Article 11<br/>Patching"]
-        A11 --> A12["Article 12<br/>Ablation"]
+        A9["Chapter 9<br/>SAEs"] --> A10["Chapter 10<br/>Attribution"]
+        A10 --> A11["Chapter 11<br/>Patching"]
+        A11 --> A12["Chapter 12<br/>Ablation"]
     end
 ```
 
 ## Key Concepts to Remember
 
-### From Article 9: Sparse Autoencoders
+### From Chapter 9: Sparse Autoencoders
 - SAEs decompose **polysemantic** activations into **monosemantic** features
 - Architecture: Overcomplete (more latent dims than input) + sparse (most are zero)
 - Training: Reconstruction loss + sparsity loss (L1 penalty)
 - Trade-off: More sparsity → more interpretable, but worse reconstruction
 
-### From Article 10: Attribution
+### From Chapter 10: Attribution
 - Attribution decomposes the output into **per-component contributions**
 - Key insight: The logit is a sum, so we can see what each component added
 - **Logit lens**: Peek at intermediate predictions by applying unembedding early
 - Limitation: Attribution shows **correlation**, not causation
 
-### From Article 11: Activation Patching
+### From Chapter 11: Activation Patching
 - Patching **proves causation** by surgically replacing activations
 - **Clean/corrupted paradigm**: Two inputs, one correct, one wrong
 - Patch from clean → corrupted: If output recovers, component is causal
 - **Path patching**: Trace specific information flows between components
 
-### From Article 12: Ablation
+### From Chapter 12: Ablation
 - Ablation removes a component entirely and measures the effect
 - **Zero ablation**: Set to zero (simple but can cause distribution shift)
 - **Mean ablation**: Set to dataset mean (preserves magnitude, removes specificity)
@@ -124,8 +124,8 @@ You have a complete interpretability toolkit. You can investigate any behavior i
 
 Arc IV brings it all together:
 
-- **Article 13 (Induction Heads)**: A complete case study applying all techniques
-- **Article 14 (Open Problems)**: What we can't do yet and why
-- **Article 15 (Practice Regime)**: How to actually do interpretability research
+- **Chapter 13 (Induction Heads)**: A complete case study applying all techniques
+- **Chapter 14 (Open Problems)**: What we can't do yet and why
+- **Chapter 15 (Practice Regime)**: How to actually do interpretability research
 
 You have the tools. Now you'll see them applied—and understand their limits.

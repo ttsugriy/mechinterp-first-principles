@@ -17,12 +17,12 @@ description: "Features are atoms. Circuits are molecules—how individual featur
 
 ::: {.callout-warning}
 ## Prerequisites
-**Required**: [Articles 5-7](05-features.qmd) — understanding features, superposition, and how they work in toy models
+**Required**: [Chapters 5-7](05-features.qmd) — understanding features, superposition, and how they work in toy models
 :::
 
 ::: {.callout-note}
 ## Before You Read: Recall
-From Articles 5-7, recall:
+From Chapters 5-7, recall:
 
 - Features are directions in activation space (not neurons)
 - Superposition packs many features into few dimensions
@@ -34,11 +34,11 @@ From Articles 5-7, recall:
 
 ## From Atoms to Molecules
 
-We've spent the last three articles building up the atomic theory of neural network representations:
+We've spent the last three chapters building up the atomic theory of neural network representations:
 
-- **Article 5**: Features are directions in activation space
-- **Article 6**: Superposition packs many features into few dimensions
-- **Article 7**: Toy models show this is the optimal compression strategy
+- **Chapter 5**: Features are directions in activation space
+- **Chapter 6**: Superposition packs many features into few dimensions
+- **Chapter 7**: Toy models show this is the optimal compression strategy
 
 But features in isolation don't explain how networks *compute*. A language model doesn't just represent "French" and "cooking" as separate features—it processes "French cuisine" by combining those concepts to predict appropriate continuations.
 
@@ -80,7 +80,7 @@ The circuits approach rests on three claims:
 
 ### 1. Features Exist
 
-Individual neurons (or more precisely, directions in activation space) learn to detect specific, interpretable patterns. We established this in Articles 5-7.
+Individual neurons (or more precisely, directions in activation space) learn to detect specific, interpretable patterns. We established this in Chapters 5-7.
 
 ### 2. Circuits Exist
 
@@ -116,7 +116,7 @@ In 2022, Kevin Wang, Alexandre Variengien, and collaborators at Redwood Research
 
 **2. Duplicate Token Heads**: Detect that "John" appears twice, marking it as the subject
 
-**3. Induction Heads** (see [Article 13](13-induction-heads.qmd)): Use patterns to identify the indirect object position
+**3. Induction Heads** (see [Chapter 13](13-induction-heads.qmd)): Use patterns to identify the indirect object position
 
 **4. S-Inhibition Heads**: Suppress attention to the subject ("John")—make sure we don't output the wrong name
 
@@ -183,7 +183,7 @@ In IOI:
 - Negative Name Mover Heads suppress the incorrect answer
 - Backup Name Mover Heads provide redundancy
 
-All three work in parallel. The final prediction is the sum of their contributions (remember the residual stream from Article 3).
+All three work in parallel. The final prediction is the sum of their contributions (remember the residual stream from Chapter 3).
 
 ### Attention Composition
 
@@ -309,7 +309,7 @@ Beyond IOI, what other circuits have researchers found?
 
 ### Induction Heads
 
-One of the most important circuits in transformers. We'll cover these in depth in Article 13, but the basic idea:
+One of the most important circuits in transformers. We'll cover these in depth in Chapter 13, but the basic idea:
 
 **Task**: Copy patterns from earlier in the sequence.
 
@@ -377,14 +377,14 @@ Circuit discovery doesn't scale easily:
 
 ### Polysemanticity
 
-Remember Article 5: most neurons are polysemantic, responding to multiple unrelated features. This means:
+Remember Chapter 5: most neurons are polysemantic, responding to multiple unrelated features. This means:
 - A head in the IOI circuit might *also* be part of a different circuit for a different task
 - Circuits aren't cleanly separated but overlap and interfere
 - Understanding one circuit doesn't explain what else those components do
 
 ### Superposition
 
-From Article 6: features are superimposed, not cleanly separated. This creates problems:
+From Chapter 6: features are superimposed, not cleanly separated. This creates problems:
 - Circuit boundaries become fuzzy
 - Interference between circuits is possible
 - Some computation may happen in superposition, making it hard to decompose
@@ -404,7 +404,7 @@ Circuits research assumes interpretable features and clean composition. But supe
 
 ## Polya's Perspective: Finding Familiar Structure
 
-This article applies Polya's heuristic: **find a related problem you understand**.
+This chapter applies Polya's heuristic: **find a related problem you understand**.
 
 We understand how software composes—functions call other functions, building complex programs from simple parts. Circuits let us apply that understanding to neural networks: sub-algorithms compose through defined interfaces (the residual stream, attention composition), just like functions compose through parameters and return values.
 
@@ -425,11 +425,11 @@ We've now completed the core theory:
 
 But theory alone doesn't let us interpret real models. We need **techniques**—practical methods for finding features, tracing circuits, and verifying interpretations.
 
-The next arc (Articles 9-12) covers these techniques:
-- **Sparse Autoencoders** (Article 9): The tool for extracting features from superposition
-- **Attribution** (Article 10): Tracing which components contribute to outputs
-- **Activation Patching** (Article 11): Causal verification through intervention
-- **Ablation** (Article 12): Understanding what happens when you remove components
+The next arc (Chapters 9-12) covers these techniques:
+- **Sparse Autoencoders** (Chapter 9): The tool for extracting features from superposition
+- **Attribution** (Chapter 10): Tracing which components contribute to outputs
+- **Activation Patching** (Chapter 11): Causal verification through intervention
+- **Ablation** (Chapter 12): Understanding what happens when you remove components
 
 These techniques are how we move from "circuits probably exist" to "here's the circuit for IOI, verified and explained."
 
@@ -443,7 +443,7 @@ These techniques are how we move from "circuits probably exist" to "here's the c
 
 3. **Interpretability in the Wild: A Circuit for Indirect Object Identification** — [arXiv:2211.00593](https://arxiv.org/abs/2211.00593): The complete IOI circuit reverse-engineering, a landmark in transformer interpretability.
 
-4. **In-Context Learning and Induction Heads** — [Anthropic](https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html): How induction circuits enable in-context learning (preview of Article 13).
+4. **In-Context Learning and Induction Heads** — [Anthropic](https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html): How induction circuits enable in-context learning (preview of Chapter 13).
 
 5. **Towards Automated Circuit Discovery (ACDC)** — [arXiv:2304.14997](https://arxiv.org/abs/2304.14997): Automated methods for finding circuits at scale.
 

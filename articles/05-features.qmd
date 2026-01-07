@@ -17,17 +17,17 @@ description: "A feature is a property of the input that the network represents i
 
 ::: {.callout-warning}
 ## Prerequisites
-**Required**: [Article 4: Geometry](04-geometry.qmd) — understanding activations as vectors in high-dimensional space
+**Required**: [Chapter 4: Geometry](04-geometry.qmd) — understanding activations as vectors in high-dimensional space
 :::
 
 ::: {.callout-note}
 ## Before You Read: Recall
-From Articles 1-4 (Arc I: Foundations), recall:
+From Chapters 1-4 (Arc I: Foundations), recall:
 
-- Activations are vectors in high-dimensional space (Article 4)
-- Vector arithmetic reveals meaningful structure: king - man + woman ≈ queen (Article 4)
-- The residual stream accumulates contributions additively (Article 3)
-- Transformers are matrix multiplication machines (Article 2)
+- Activations are vectors in high-dimensional space (Chapter 4)
+- Vector arithmetic reveals meaningful structure: king - man + woman ≈ queen (Chapter 4)
+- The residual stream accumulates contributions additively (Chapter 3)
+- Transformers are matrix multiplication machines (Chapter 2)
 
 We've built the computational substrate. **Now we ask**: What are the atoms of meaning in this space?
 :::
@@ -53,7 +53,7 @@ The neuron simply responded to cat parts *and* car fronts. It was **polysemantic
 This isn't a rare bug. It's the common case. Most neurons in trained neural networks are polysemantic—they respond to multiple, semantically unrelated features. The neuron is not the right unit of analysis.
 :::
 
-This article introduces the concept that replaces the neuron: the **feature**. Understanding what features are, why they matter, and why they're hard to find is the foundation of mechanistic interpretability.
+This chapter introduces the concept that replaces the neuron: the **feature**. Understanding what features are, why they matter, and why they're hard to find is the foundation of mechanistic interpretability.
 
 ## Why Neurons Fail
 
@@ -67,7 +67,7 @@ What does the network do? It **shares neurons across concepts**. Multiple featur
 
 This is efficient. It works because most features rarely co-occur: you don't often see cat faces and car fronts in the same image, so using the same neuron for both doesn't cause problems during inference. The network gets away with the overlap.
 
-But it's a disaster for interpretation. When you ask "what does neuron 847 mean?", the answer is "it means cat faces *and* car fronts *and* probably several other things." The neuron doesn't have a single meaning. It's a superposition of meanings (we'll explore this phenomenon deeply in [Article 6](06-superposition.qmd)).
+But it's a disaster for interpretation. When you ask "what does neuron 847 mean?", the answer is "it means cat faces *and* car fronts *and* probably several other things." The neuron doesn't have a single meaning. It's a superposition of meanings (we'll explore this phenomenon deeply in [Chapter 6](06-superposition.qmd)).
 
 ::: {.callout-note}
 ## Incidental Polysemanticity
@@ -102,7 +102,7 @@ Features are like the concepts in a profiler's ontology. When you profile a syst
 
 ## Features as Directions
 
-In Article 4, we established that neural network activations are vectors in high-dimensional space, and that geometric structure carries meaning.
+In Chapter 4, we established that neural network activations are vectors in high-dimensional space, and that geometric structure carries meaning.
 
 Here's the key claim: **features are directions in activation space**.
 
@@ -141,7 +141,7 @@ This worked because the feature is linear: adding to that direction increases th
 
 ### Vector Arithmetic Works
 
-As we saw in Article 4, word embeddings support arithmetic: king - man + woman ≈ queen. This works because gender is a linear direction—you can add and subtract it.
+As we saw in Chapter 4, word embeddings support arithmetic: king - man + woman ≈ queen. This works because gender is a linear direction—you can add and subtract it.
 
 The same holds in transformer hidden states. Researchers have found directions for concepts like "truthfulness," "refusal," and "helpfulness." Adding these directions to activations shifts model behavior in the expected direction.
 
@@ -211,7 +211,7 @@ Let's look at actual features discovered in real models.
 
 ### The Golden Gate Bridge
 
-In 2024, Anthropic researchers trained sparse autoencoders (more on these in Article 9) on Claude 3 Sonnet and discovered millions of interpretable features. One was "The Golden Gate Bridge."
+In 2024, Anthropic researchers trained sparse autoencoders (more on these in Chapter 9) on Claude 3 Sonnet and discovered millions of interpretable features. One was "The Golden Gate Bridge."
 
 This feature:
 - Activated strongly on text mentioning the Golden Gate Bridge
@@ -339,10 +339,10 @@ The field of mechanistic interpretability is built on a concept—"feature"—th
 
 In Polya's framework, we've now identified what we're looking for.
 
-Article 1 asked: what are we trying to understand? (The algorithm.)
-Articles 2-4 established: what's the computational substrate? (Matrix multiplications in a shared residual stream with geometric structure.)
+Chapter 1 asked: what are we trying to understand? (The algorithm.)
+Chapters 2-4 established: what's the computational substrate? (Matrix multiplications in a shared residual stream with geometric structure.)
 
-Now, Article 5 answers: **what are the atoms of that structure?** Features.
+Now, Chapter 5 answers: **what are the atoms of that structure?** Features.
 
 This is Polya's step of "identifying the unknown." We don't yet know *which* features a network uses, or *how* to find them efficiently, or *how* they combine into algorithms. But we know what we're looking for: directions in activation space that correspond to interpretable properties.
 
@@ -359,7 +359,7 @@ How is this possible?
 
 The answer is **superposition**: features are *almost* orthogonal directions, packed more densely than true orthogonality would allow. The geometry of high dimensions makes this work—but it also makes interpretation hard.
 
-The next article dives into superposition: what it is, why it exists, and why it's the central obstacle to mechanistic interpretability.
+The next chapter dives into superposition: what it is, why it exists, and why it's the central obstacle to mechanistic interpretability.
 
 Here's the question to carry forward: if the network packs more features than dimensions by using almost-orthogonal directions, what happens when features *do* interfere? When does superposition break down, and what are the consequences?
 

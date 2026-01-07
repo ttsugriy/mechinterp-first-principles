@@ -6,21 +6,21 @@ title: "First Principles of Mechanistic Interpretability"
 
 This is a first-principles exploration of **mechanistic interpretability** — the project of reverse engineering neural networks to understand *how* they work, not just *that* they work.
 
-## What This Series Is
+## What This Book Is
 
-A 15-article journey from foundations to practice:
+A 15-chapter journey from foundations to practice:
 
-- **Arc I: Foundations** (Articles 1-4) — What are we trying to understand? The transformer architecture, residual stream, and geometric structure of representations.
-- **Arc II: Core Theory** (Articles 5-8) — Features, superposition, toy models, and circuits. The conceptual framework for interpretation.
-- **Arc III: Techniques** (Articles 9-12) — Sparse autoencoders, attribution, activation patching, and ablation. The tools of the trade.
-- **Arc IV: Synthesis** (Articles 13-15) — Induction heads as a complete case study, open problems in the field, and a practical guide to doing research.
+- **Arc I: Foundations** (Chapters 1-4) — What are we trying to understand? The transformer architecture, residual stream, and geometric structure of representations.
+- **Arc II: Core Theory** (Chapters 5-8) — Features, superposition, toy models, and circuits. The conceptual framework for interpretation.
+- **Arc III: Techniques** (Chapters 9-12) — Sparse autoencoders, attribution, activation patching, and ablation. The tools of the trade.
+- **Arc IV: Synthesis** (Chapters 13-15) — Induction heads as a complete case study, open problems in the field, and a practical guide to doing research.
 
-## How the Articles Connect
+## How the Chapters Connect
 
 The diagram below shows how concepts build on each other across the four arcs:
 
 ```{mermaid}
-%%| fig-cap: "Concept map showing how articles build on each other. Arrows indicate conceptual dependencies."
+%%| fig-cap: "Concept map showing how chapters build on each other. Arrows indicate conceptual dependencies."
 %%| fig-width: 10
 flowchart TB
     subgraph ARC1["<b>Arc I: Foundations</b>"]
@@ -97,9 +97,9 @@ flowchart TB
 
 **Linear path**: Read articles 1-15 in order for the complete learning journey.
 
-**Quick start for practitioners**: If you're already familiar with transformers, start at Article 5 (Features) and continue from there.
+**Quick start for practitioners**: If you're already familiar with transformers, start at Chapter 5 (Features) and continue from there.
 
-**Techniques-focused**: Jump to Article 9 (SAEs) after reading Articles 3-5 for the core prerequisites.
+**Techniques-focused**: Jump to Chapter 9 (SAEs) after reading Chapters 3-5 for the core prerequisites.
 :::
 
 ::: {.callout-important}
@@ -111,21 +111,21 @@ Want to *do* something before reading theory? Try this:
 
 2. **See attention patterns** (5 min): Visit [BertViz](https://github.com/jessevig/bertviz) or the [Transformer Explainer](https://poloclub.github.io/transformer-explainer/) to visualize how attention moves information between tokens.
 
-You've now seen the two core phenomena this series explains: **features** (what networks represent) and **attention** (how they move information). The rest is understanding *why* it works this way.
+You've now seen the two core phenomena this book explains: **features** (what networks represent) and **attention** (how they move information). The rest is understanding *why* it works this way.
 :::
 
 ::: {.callout-note}
 ## Estimated Reading Times
 
-| Arc | Articles | Total Reading Time |
+| Arc | Chapters | Total Reading Time |
 |-----|----------|-------------------|
 | **Arc I: Foundations** | 1-4 + Summary | ~1 hour |
 | **Arc II: Core Theory** | 5-8 + Summary | ~1.5 hours |
 | **Arc III: Techniques** | 9-12 + Summary | ~1.5 hours |
 | **Arc IV: Synthesis** | 13-15 | ~1 hour |
-| **Total** | 15 articles + 3 summaries | **~5 hours** |
+| **Total** | 15 chapters + 3 summaries | **~5 hours** |
 
-Each article is 12-22 minutes. Take breaks between arcs—the summaries are designed as natural stopping points.
+Each chapter is 12-22 minutes. Take breaks between arcs—the summaries are designed as natural stopping points.
 :::
 
 ## Who This Is For
@@ -137,7 +137,7 @@ Each article is 12-22 minutes. Take breaks between arcs—the summaries are desi
 
 ## Background Assumed
 
-This series is designed to be accessible, but some background helps:
+This book is designed to be accessible, but some background helps:
 
 ::: {.callout-note}
 ## Mathematical Background
@@ -186,7 +186,7 @@ We also bring a **performance engineering mindset**: you can't optimize what you
 
 ## Getting Started
 
-Start with [Article 1: Why Reverse Engineer Neural Networks?](articles/01-why-reverse-engineer.qmd) to understand the motivation and scope of the project.
+Start with [Chapter 1: Why Reverse Engineer Neural Networks?](articles/01-why-reverse-engineer.qmd) to understand the motivation and scope of the project.
 
 ## Also Published On
 

@@ -17,12 +17,12 @@ description: "Ablation removes components entirely to reveal what the network tr
 
 ::: {.callout-warning}
 ## Prerequisites
-**Required**: [Article 11: Patching](11-patching.qmd) — understanding causal intervention methodology
+**Required**: [Chapter 11: Patching](11-patching.qmd) — understanding causal intervention methodology
 :::
 
 ::: {.callout-note}
 ## Before You Read: Recall
-From Articles 10-11 (Attribution & Patching), recall:
+From Chapters 10-11 (Attribution & Patching), recall:
 
 - Attribution: measures per-component contributions (correlational)
 - Patching: replaces activations from one run with another (causal)
@@ -35,8 +35,8 @@ Patching shows what *causes* a behavior. **Now we ask**: What happens if we remo
 
 We've now built a complete interpretability pipeline:
 
-- **Attribution** (Article 10): What correlates with the output?
-- **Patching** (Article 11): What causes the output?
+- **Attribution** (Chapter 10): What correlates with the output?
+- **Patching** (Chapter 11): What causes the output?
 
 There's one more question: **What happens if we remove it entirely?**
 
@@ -263,7 +263,7 @@ For "The capital of France is ___":
 
 ### SAE Features
 
-Using sparse autoencoders (Article 9), ablate specific features:
+Using sparse autoencoders (Chapter 9), ablate specific features:
 
 $$x_{\text{ablated}} = x - a_f \cdot d_f$$
 
@@ -558,10 +558,10 @@ If the simplified system still works, we've identified something inessential. If
 
 We've now completed the techniques arc:
 
-- **SAEs** (Article 9): Extract interpretable features from superposition
-- **Attribution** (Article 10): Find what correlates with outputs
-- **Patching** (Article 11): Test causal relationships
-- **Ablation** (Article 12): Identify necessary components
+- **SAEs** (Chapter 9): Extract interpretable features from superposition
+- **Attribution** (Chapter 10): Find what correlates with outputs
+- **Patching** (Chapter 11): Test causal relationships
+- **Ablation** (Chapter 12): Identify necessary components
 
 These techniques work together. No single technique suffices—but combined, they enable rigorous reverse-engineering of neural computations.
 

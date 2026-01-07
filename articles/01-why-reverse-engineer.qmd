@@ -17,7 +17,7 @@ description: "Neural networks discover algorithms we didn't teach them. Understa
 
 ::: {.callout-note}
 ## Series Information
-This is Article 1 of a 15-article series. See the [index page](../index.qmd) for:
+This is Chapter 1 of a 15-chapter book. See the [index page](../index.qmd) for:
 
 - **Background assumed**: What math and programming knowledge helps
 - **Key notation**: Symbol reference used throughout the series
@@ -173,7 +173,7 @@ We'll structure our thinking using George Polya's framework from *How to Solve I
 3. Carry out the plan
 4. Look back
 
-This article is the first step: understanding the problem. Before devising techniques or running experiments, we need clarity on what we're trying to do.
+This chapter is the first step: understanding the problem. Before devising techniques or running experiments, we need clarity on what we're trying to do.
 
 ::: {.callout-tip}
 ## Polya's Questions
@@ -190,13 +190,13 @@ The algorithm the network implements. The *why* behind its behaviors. The mechan
 We can only observe—we cannot directly read the algorithm. The network has no comments, no documentation, no spec. We must *infer* the mechanism from evidence.
 :::
 
-This frame will guide every article in this series. We'll devise plans (build tools, develop techniques). We'll carry them out (run experiments, analyze results). We'll look back (check our understanding, generalize to new cases). But we'll always start by making sure we understand what problem we're solving.
+This frame will guide every chapter in this series. We'll devise plans (build tools, develop techniques). We'll carry them out (run experiments, analyze results). We'll look back (check our understanding, generalize to new cases). But we'll always start by making sure we understand what problem we're solving.
 
 ## Looking Ahead
 
 The network that learned modular arithmetic discovered a Fourier-based algorithm. But what is the basic computational fabric in which such algorithms can emerge? What does each step of a transformer's forward pass actually do?
 
-Before we can reverse engineer the learned algorithm, we need to understand the machine that runs it. In the next article, we'll look at transformers—the architecture behind modern language models—and see that they're fundamentally *matrix multiplication machines*. This sounds simple, but the simplicity is deceptive. From these basic linear operations, combined with a few nonlinearities, emerges everything these models can do.
+Before we can reverse engineer the learned algorithm, we need to understand the machine that runs it. In the next chapter, we'll look at transformers—the architecture behind modern language models—and see that they're fundamentally *matrix multiplication machines*. This sounds simple, but the simplicity is deceptive. From these basic linear operations, combined with a few nonlinearities, emerges everything these models can do.
 
 Understanding the transformer's mechanics is the foundation for everything else in this series. Once we see the computational substrate, we can start asking: what *structures* does training build within it? What are the atoms of representation? How do they compose into algorithms?
 

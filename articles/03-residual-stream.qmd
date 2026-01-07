@@ -17,12 +17,12 @@ description: "The residual stream is a simple architectural feature with profoun
 
 ::: {.callout-warning}
 ## Prerequisites
-**Required**: [Article 2: Transformers](02-transformers.qmd) — understanding attention and MLP layers
+**Required**: [Chapter 2: Transformers](02-transformers.qmd) — understanding attention and MLP layers
 :::
 
 ::: {.callout-note}
 ## Before You Read: Recall
-From Article 2, recall:
+From Chapter 2, recall:
 
 - What are Q, K, V in attention? (Query, Key, Value — for matching and retrieving information)
 - What do MLPs do? (Store and retrieve knowledge via pattern-value associations)
@@ -31,7 +31,7 @@ From Article 2, recall:
 
 ## A Shift in Perspective
 
-In the previous article, we saw that transformers are matrix multiplication machines. Attention routes information between positions; MLPs store and retrieve knowledge. Layer by layer, the network transforms token embeddings into predictions.
+In the previous chapter, we saw that transformers are matrix multiplication machines. Attention routes information between positions; MLPs store and retrieve knowledge. Layer by layer, the network transforms token embeddings into predictions.
 
 **Now we ask**: Is "layer-by-layer processing" the right way to think about this? There's a more powerful perspective.
 
@@ -208,7 +208,7 @@ A model with L layers, H heads per layer, and MLP layers has on the order of $(H
 
 The residual stream is how attention heads **compose** with each other.
 
-Consider the famous **induction head** circuit (explored fully in [Article 13](13-induction-heads.qmd)). An induction head performs in-context learning: if it sees "...Harry Potter... Harry" it predicts "Potter" because it saw that pattern before.
+Consider the famous **induction head** circuit (explored fully in [Chapter 13](13-induction-heads.qmd)). An induction head performs in-context learning: if it sees "...Harry Potter... Harry" it predicts "Potter" because it saw that pattern before.
 
 This requires two heads working together:
 
@@ -264,7 +264,7 @@ The answer isn't simple. The stream contains:
 - **Semantic features**: Concepts, relationships, patterns the model has detected
 - **Predictions in progress**: Proto-predictions that will be refined by later layers
 
-All of this is packed into a vector of perhaps 768 or 4096 dimensions. Different "features" occupy different directions in this space. We'll explore this geometric perspective fully in the next article.
+All of this is packed into a vector of perhaps 768 or 4096 dimensions. Different "features" occupy different directions in this space. We'll explore this geometric perspective fully in the next chapter.
 
 For now, the key point is: the residual stream is *dense with information*. It's not just a pipeline carrying data forward—it's a rich representational space where components store and retrieve information.
 
@@ -319,7 +319,7 @@ The residual stream is a vector space. At each position, for each layer, we have
 
 To understand what the model represents, we need to understand this geometry. What do the directions mean? How are features organized? How can we find them?
 
-This geometric perspective is the subject of the next article. Once we understand activations as geometry, we'll be ready to tackle the core questions: What are features? How do they compose? And why is interpretation both possible and hard?
+This geometric perspective is the subject of the next chapter. Once we understand activations as geometry, we'll be ready to tackle the core questions: What are features? How do they compose? And why is interpretation both possible and hard?
 
 ## Looking Ahead
 
@@ -331,7 +331,7 @@ With this framework, we can:
 - Identify circuits by their reading and writing patterns
 - Test hypotheses by intervening on specific components
 
-In the next article, we'll zoom in on the geometry of the residual stream. What does it mean for features to be "directions"? How are concepts arranged in this high-dimensional space? And what tools do we have for navigating it?
+In the next chapter, we'll zoom in on the geometry of the residual stream. What does it mean for features to be "directions"? How are concepts arranged in this high-dimensional space? And what tools do we have for navigating it?
 
 The residual stream gives us the architecture. Geometry will give us the language.
 

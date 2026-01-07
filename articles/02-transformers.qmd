@@ -22,7 +22,7 @@ description: "Before we can reverse engineer what a transformer learns, we need 
 
 ::: {.callout-note}
 ## Before You Read: Recall
-From Article 1, recall:
+From Chapter 1, recall:
 
 - Why do we want to reverse-engineer neural networks? (Scientific understanding, safety, capability improvement)
 - What makes neural networks "black boxes"? (We have the weights but don't understand the algorithms)
@@ -31,7 +31,7 @@ From Article 1, recall:
 
 ## The Machine We're Trying to Understand
 
-In the previous article, we saw a neural network discover Fourier transforms for modular arithmetic—an algorithm no one taught it. We established that mechanistic interpretability is the project of reverse engineering such discoveries: finding the *how* behind the *what*.
+In the previous chapter, we saw a neural network discover Fourier transforms for modular arithmetic—an algorithm no one taught it. We established that mechanistic interpretability is the project of reverse engineering such discoveries: finding the *how* behind the *what*.
 
 **Now we ask**: What exactly are we reverse-engineering? What operations does a transformer compute?
 
@@ -218,7 +218,7 @@ For interpretability, layer norm is a minor complication—another linear(ish) o
 
 ## The Residual Stream: A Preview
 
-Here's a crucial architectural detail that will become central in the next article: **residual connections**.
+Here's a crucial architectural detail that will become central in the next chapter: **residual connections**.
 
 After each attention block and each MLP block, the output is *added* to the input:
 
@@ -231,7 +231,7 @@ This creates what's called the **residual stream**—a vector that flows through
 
 Think of it like a shared workspace. Each attention head and each MLP reads from this workspace, performs some computation, and writes its contribution back. Components don't talk to each other directly; they communicate through the residual stream.
 
-This perspective—seeing the transformer as components reading from and writing to a shared communication channel—is foundational for mechanistic interpretability. We'll develop it fully in the next article.
+This perspective—seeing the transformer as components reading from and writing to a shared communication channel—is foundational for mechanistic interpretability. We'll develop it fully in the next chapter.
 
 ## The Complete Forward Pass
 
@@ -323,7 +323,7 @@ This brings us to the key insight for interpretability: **linear operations pres
 
 A matrix multiplication is a linear map. It can rotate, scale, and project vectors, but it does so in a geometrically predictable way. Lines map to lines. Planes map to planes. Distances might change, but relationships are preserved in a tractable way.
 
-This is why the "features as directions" hypothesis (coming in Article 5) has any hope of working. If the operations were arbitrary nonlinear transformations, internal representations could be uninterpretably tangled. But because they're mostly linear, geometric structure—directions, subspaces, projections—provides a language for understanding what's happening inside.
+This is why the "features as directions" hypothesis (coming in Chapter 5) has any hope of working. If the operations were arbitrary nonlinear transformations, internal representations could be uninterpretably tangled. But because they're mostly linear, geometric structure—directions, subspaces, projections—provides a language for understanding what's happening inside.
 
 The nonlinearities (softmax, ReLU) are essential for the model's expressiveness, but they're sparse and localized. Most of the computation is linear algebra, and linear algebra we understand.
 
@@ -334,7 +334,7 @@ If you're familiar with GPU programming, you know that matrix multiplication is 
 
 ## Polya's Perspective: Understanding the Substrate
 
-In Polya's framework, we're still in phase one: understanding the problem. The previous article asked "what are we trying to reverse engineer?" This article answers: a machine built from matrix multiplications.
+In Polya's framework, we're still in phase one: understanding the problem. The previous chapter asked "what are we trying to reverse engineer?" This chapter answers: a machine built from matrix multiplications.
 
 **What have we learned?**
 
@@ -345,9 +345,9 @@ In Polya's framework, we're still in phase one: understanding the problem. The p
 
 **What questions does this raise?**
 
-- If components communicate through the residual stream, what "language" do they use? (Article 3)
-- If representations live in high-dimensional vector spaces, what structure do they have? (Article 4)
-- What are the "atoms" of meaning in these spaces? (Article 5)
+- If components communicate through the residual stream, what "language" do they use? (Chapter 3)
+- If representations live in high-dimensional vector spaces, what structure do they have? (Chapter 4)
+- What are the "atoms" of meaning in these spaces? (Chapter 5)
 
 We now know the computational substrate. Next, we'll examine how information flows through it.
 
@@ -355,7 +355,7 @@ We now know the computational substrate. Next, we'll examine how information flo
 
 The residual stream—that shared workspace where all components read and write—is the key abstraction for mechanistic interpretability. It's not explicitly named in the original transformer paper, but it's implicit in the architecture, and making it explicit changes how we think about interpretation.
 
-In the next article, we'll explore the residual stream in depth. We'll see why it's more useful to think of a transformer as "components contributing to a shared stream" rather than "layers processing sequentially." This shift in perspective is foundational: once you see the residual stream, you can't unsee it.
+In the next chapter, we'll explore the residual stream in depth. We'll see why it's more useful to think of a transformer as "components contributing to a shared stream" rather than "layers processing sequentially." This shift in perspective is foundational: once you see the residual stream, you can't unsee it.
 
 From there, we'll be ready to ask: what's actually represented in this stream? What structure do the vectors have? How do we find the "features" that the model has learned?
 

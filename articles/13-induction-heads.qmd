@@ -18,16 +18,16 @@ description: "Induction heads enable in-context learning—the ability to learn 
 ::: {.callout-warning}
 ## Prerequisites
 **Required**: All of Arc II (Features, Superposition, Circuits) and Arc III (SAEs, Attribution, Patching, Ablation)
-This article synthesizes everything you've learned.
+This chapter synthesizes everything you've learned.
 :::
 
 ::: {.callout-note}
 ## Before You Read: Recall
 From Arc II & III, recall:
 
-- Features are directions; circuits are how they compose (Articles 5, 8)
-- SAEs extract interpretable features from superposition (Article 9)
-- Attribution finds candidates; patching tests causation; ablation tests necessity (Articles 10-12)
+- Features are directions; circuits are how they compose (Chapters 5, 8)
+- SAEs extract interpretable features from superposition (Chapter 9)
+- Attribution finds candidates; patching tests causation; ablation tests necessity (Chapters 10-12)
 
 We have theory and tools. **Now we apply everything**: reverse-engineer a complete circuit.
 :::
@@ -49,7 +49,7 @@ We've built a complete interpretability toolkit:
 
 Now we apply everything to understand a single capability: **in-context learning**—the ability of language models to learn from examples within a prompt, without any gradient updates.
 
-This article is a complete case study. We'll reverse-engineer the circuit responsible for this capability, using every technique we've learned.
+This chapter is a complete case study. We'll reverse-engineer the circuit responsible for this capability, using every technique we've learned.
 
 ::: {.callout-note}
 ## The Target Capability
@@ -432,7 +432,7 @@ Transformers can't implement induction in a single layer because attention is co
 
 But at position $i$, the residual stream doesn't natively contain "what's the previous token?" information. Layer 1 writes this information into the stream, enabling layer 2 to use it.
 
-This is **K-composition** (Article 8): layer 1's output modifies layer 2's keys, changing what layer 2 attends to.
+This is **K-composition** (Chapter 8): layer 1's output modifies layer 2's keys, changing what layer 2 attends to.
 
 ## Discovery Through Attention Patterns
 
@@ -795,14 +795,14 @@ The induction head circuit is remarkably well-understood—*for GPT-2 Small*. He
 - Whether there are better algorithms the models haven't found
 - How much in-context learning is induction heads vs. other mechanisms
 
-**Numbers without error bars**: The accuracy numbers in this article (87% baseline, 23% ablated) are illustrative, not from a single definitive study. Real numbers vary by model, prompt, and measurement method. When replicating, expect variance.
+**Numbers without error bars**: The accuracy numbers in this chapter (87% baseline, 23% ablated) are illustrative, not from a single definitive study. Real numbers vary by model, prompt, and measurement method. When replicating, expect variance.
 
 The induction head story is the *best* story we have about any transformer circuit. It's also incomplete. Both facts are important.
 :::
 
 ## Polya's Perspective: Worked Example
 
-This article applies Polya's heuristic: **study worked examples**.
+This chapter applies Polya's heuristic: **study worked examples**.
 
 Before trying to reverse-engineer every capability, understand one capability completely. Induction heads are that worked example:
 - Well-defined behavior
@@ -828,7 +828,7 @@ But interpretability research is incomplete. Many fundamental questions remain o
 - How do we scale interpretability to 100B+ parameter models?
 - Can we use interpretability to improve safety and alignment?
 
-These questions are the subject of the next article: **Open Problems in Mechanistic Interpretability**.
+These questions are the subject of the next chapter: **Open Problems in Mechanistic Interpretability**.
 
 After that, we'll close with **A Practice Regime**—concrete advice for how to actually do interpretability research, from choosing problems to debugging circuits to publishing results.
 

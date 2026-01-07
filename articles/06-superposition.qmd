@@ -17,12 +17,12 @@ description: "Neural networks represent far more features than they have dimensi
 
 ::: {.callout-warning}
 ## Prerequisites
-**Required**: [Article 5: Features](05-features.qmd) — understanding what features are and why neurons are polysemantic
+**Required**: [Chapter 5: Features](05-features.qmd) — understanding what features are and why neurons are polysemantic
 :::
 
 ::: {.callout-note}
 ## Before You Read: Recall
-From Article 5, recall:
+From Chapter 5, recall:
 
 - Features are *directions* in activation space, not individual neurons
 - Neurons are polysemantic (respond to multiple unrelated concepts)
@@ -34,7 +34,7 @@ From Article 5, recall:
 
 ## The Capacity Puzzle
 
-In the previous article, we established that features are directions in activation space. A 768-dimensional residual stream can represent features as directions—unit vectors pointing in meaningful orientations.
+In the previous chapter, we established that features are directions in activation space. A 768-dimensional residual stream can represent features as directions—unit vectors pointing in meaningful orientations.
 
 Here's the puzzle: how many directions can you fit in 768 dimensions?
 
@@ -49,7 +49,7 @@ This isn't a mistake. This is **superposition**—the central phenomenon that ma
 The superposition hypothesis states that neural networks encode far more features than they have dimensions by storing multiple sparse features in overlapping representations. The features are *almost* orthogonal—close enough that interference is manageable when features rarely co-occur.
 :::
 
-This article explains what superposition is, why it works, and why it's the fundamental obstacle to mechanistic interpretability.
+This chapter explains what superposition is, why it works, and why it's the fundamental obstacle to mechanistic interpretability.
 
 ## The Efficiency Argument
 
@@ -77,7 +77,7 @@ Superposition is like memory overcommitment in operating systems. The OS promise
 
 How does superposition actually work geometrically?
 
-In Article 4, we noted that high-dimensional spaces have a surprising property: random vectors are almost always nearly perpendicular. In 768 dimensions, two random unit vectors have a dot product with standard deviation of about 0.036—their angle is almost certainly between 88° and 92°.
+In Chapter 4, we noted that high-dimensional spaces have a surprising property: random vectors are almost always nearly perpendicular. In 768 dimensions, two random unit vectors have a dot product with standard deviation of about 0.036—their angle is almost certainly between 88° and 92°.
 
 This is the geometric foundation of superposition. You don't need features to be *perfectly* orthogonal. You just need them to be *almost* orthogonal—close enough that interference is small.
 
@@ -95,7 +95,7 @@ Small deviations from orthogonality have small costs. This is why superposition 
 
 Here's the mathematical punch line: in $d$ dimensions, you can fit roughly $e^{O(d)}$ almost-orthogonal vectors—exponentially more than $d$.
 
-This isn't just theoretical. The Johnson-Lindenstrauss lemma, which we mentioned in Article 4, guarantees that high-dimensional projections approximately preserve distances. The same mathematics applies here: high-dimensional spaces have *far more room* for nearly-independent directions than low-dimensional intuition suggests.
+This isn't just theoretical. The Johnson-Lindenstrauss lemma, which we mentioned in Chapter 4, guarantees that high-dimensional projections approximately preserve distances. The same mathematics applies here: high-dimensional spaces have *far more room* for nearly-independent directions than low-dimensional intuition suggests.
 
 A 768-dimensional space can comfortably hold tens of thousands of nearly-orthogonal directions. A 4,096-dimensional space can hold millions. This is why superposition is so effective—the geometry allows it.
 
@@ -188,7 +188,7 @@ In 2022, researchers at Anthropic—including Shan Carter, Chris Olah, and Nelso
 
 ## How Superposition Creates Polysemanticity
 
-Now we can explain the polysemantic neuron from Article 5—the one that activated for cat faces *and* car fronts.
+Now we can explain the polysemantic neuron from Chapter 5—the one that activated for cat faces *and* car fronts.
 
 In a world without superposition:
 - The "cat face" feature would have its own dedicated neurons
@@ -542,10 +542,10 @@ An open question: as models scale to trillions of parameters, do they eventually
 
 In Polya's framework, we've now understood why the problem is hard.
 
-Article 1: What are we trying to do? (Reverse engineer the algorithm.)
-Articles 2-4: What's the substrate? (Matrix multiplication in a geometric space.)
-Article 5: What are we looking for? (Features—directions in that space.)
-Article 6: What's the obstacle? (**Superposition—features are packed densely, hiding in polysemantic neurons.**)
+Chapter 1: What are we trying to do? (Reverse engineer the algorithm.)
+Chapters 2-4: What's the substrate? (Matrix multiplication in a geometric space.)
+Chapter 5: What are we looking for? (Features—directions in that space.)
+Chapter 6: What's the obstacle? (**Superposition—features are packed densely, hiding in polysemantic neurons.**)
 
 This is Polya's approach: before devising a solution, fully understand the difficulty. Superposition isn't just a nuisance; it's a fundamental property of how neural networks compress information. Any successful interpretation method must deal with it.
 
@@ -558,7 +558,7 @@ Good problem-solving requires understanding *why* a problem is difficult, not ju
 
 We've established that superposition is why interpretation is hard. But can we study superposition in a controlled setting? Can we build a model simple enough to fully understand, that still exhibits superposition?
 
-Yes. The next article covers **toy models**—simplified networks that exhibit superposition clearly and completely. By studying these toy models, we can verify our understanding, build intuition, and prepare for the messier reality of real networks.
+Yes. The next chapter covers **toy models**—simplified networks that exhibit superposition clearly and completely. By studying these toy models, we can verify our understanding, build intuition, and prepare for the messier reality of real networks.
 
 This is Polya's heuristic in action: **solve a simpler problem first**. If we can understand superposition in a 2-dimensional network with 5 features, we're better prepared to understand it in a 4,096-dimensional network with 2 million features.
 

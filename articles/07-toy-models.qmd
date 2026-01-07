@@ -17,12 +17,12 @@ description: "Before tackling superposition in billion-parameter models, we stud
 
 ::: {.callout-warning}
 ## Prerequisites
-**Required**: [Article 6: Superposition](06-superposition.qmd) — understanding the superposition hypothesis and why sparsity matters
+**Required**: [Chapter 6: Superposition](06-superposition.qmd) — understanding the superposition hypothesis and why sparsity matters
 :::
 
 ::: {.callout-note}
 ## Before You Read: Recall
-From Article 6, recall:
+From Chapter 6, recall:
 
 - Superposition: networks store more features than dimensions using *almost-orthogonal* directions
 - Sparsity enables this: if features rarely co-occur, interference is manageable
@@ -34,7 +34,7 @@ From Article 6, recall:
 
 ## Solve a Simpler Problem First
 
-In the previous article, we established that superposition is the central obstacle to mechanistic interpretability. Networks pack more features than dimensions, creating polysemantic neurons and hiding interpretable structure in a compressed representation.
+In the previous chapter, we established that superposition is the central obstacle to mechanistic interpretability. Networks pack more features than dimensions, creating polysemantic neurons and hiding interpretable structure in a compressed representation.
 
 But superposition in a real language model is hard to study. The model has billions of parameters, millions of features, and we don't know the ground truth—we don't know which features *should* exist or how they *should* be arranged.
 
@@ -485,7 +485,7 @@ This matches the toy model regime where superposition is optimal—sparsity belo
 
 ### Polysemanticity Explained
 
-The polysemantic neuron from Article 5 (cat faces + car fronts) is exactly what toy models predict. Each neuron participates in multiple feature directions. Looking at a single neuron shows a confusing mix; looking at the feature direction shows a clean concept.
+The polysemantic neuron from Chapter 5 (cat faces + car fronts) is exactly what toy models predict. Each neuron participates in multiple feature directions. Looking at a single neuron shows a confusing mix; looking at the feature direction shows a clean concept.
 
 ### Steering Works
 
@@ -510,7 +510,7 @@ Toy model features are binary (on/off) and independent. Real features are contin
 
 ### Architecture
 
-Toy models are simple autoencoders. Real transformers have attention, layer norms, residual connections, and dozens of layers. The compositional structure of transformers creates phenomena (like induction heads, which we'll cover in Article 13) that don't appear in toy models.
+Toy models are simple autoencoders. Real transformers have attention, layer norms, residual connections, and dozens of layers. The compositional structure of transformers creates phenomena (like induction heads, which we'll cover in Chapter 13) that don't appear in toy models.
 
 ### Scale
 
@@ -547,7 +547,7 @@ Anyone can train a toy model in an afternoon. You can vary sparsity, count featu
 
 ## Polya's Perspective: The Simpler Problem
 
-This article is a direct application of Polya's heuristic: **if you can't solve a problem, solve a simpler problem first**.
+This chapter is a direct application of Polya's heuristic: **if you can't solve a problem, solve a simpler problem first**.
 
 Superposition in GPT-4 is too complex to study directly. But superposition in a 5-feature, 2-dimensional autoencoder is fully tractable. We can:
 - Verify that superposition occurs
@@ -568,7 +568,7 @@ We've now seen superposition in action—concrete, visual, fully understood.
 
 But features in isolation don't explain how models *compute*. A language model doesn't just represent "French" and "cooking" as separate features; it combines them to process "French cuisine" and predict appropriate continuations.
 
-How do features compose? How do multiple components work together to perform a computation? This is the question of **circuits**—the subject of the next article.
+How do features compose? How do multiple components work together to perform a computation? This is the question of **circuits**—the subject of the next chapter.
 
 If features are atoms, circuits are molecules. And just as understanding atoms prepared chemists to understand molecules, understanding features prepares us to understand how they combine into computational structures.
 

@@ -17,17 +17,17 @@ description: "The primary tool for finding interpretable features in neural netw
 
 ::: {.callout-warning}
 ## Prerequisites
-**Required**: [Article 6: Superposition](06-superposition.qmd) — understanding why features are compressed into overlapping representations
+**Required**: [Chapter 6: Superposition](06-superposition.qmd) — understanding why features are compressed into overlapping representations
 :::
 
 ::: {.callout-note}
 ## Before You Read: Recall
 From Arc II (Core Theory), recall:
 
-- Features are directions in activation space (Article 5)
-- Superposition compresses many features into few dimensions (Article 6)
+- Features are directions in activation space (Chapter 5)
+- Superposition compresses many features into few dimensions (Chapter 6)
 - This creates polysemantic neurons that are hard to interpret
-- Circuits are how features compose into algorithms (Article 8)
+- Circuits are how features compose into algorithms (Chapter 8)
 
 We've established the theory. **Now we ask**: How do we actually *find* features in real networks?
 :::
@@ -99,7 +99,7 @@ Think of SAEs like profiler stack sampling, but for representations. A profiler 
 ## Pause and Think
 Regular autoencoders compress to a *smaller* space. SAEs expand to a *larger* space. Why does this expansion help with interpretability?
 
-*Hint*: Think about what the input activation actually represents (from Article 6).
+*Hint*: Think about what the input activation actually represents (from Chapter 6).
 :::
 
 ## The Training Objective
@@ -149,7 +149,7 @@ The magnitude of each activation tells you how strongly that feature is present.
 
 ### Connection to Toy Models
 
-Remember the pentagon from [Article 7](07-toy-models.qmd)? In that toy model, 5 sparse features arranged themselves as a regular pentagon in 2D—the optimal geometry for minimizing interference.
+Remember the pentagon from [Chapter 7](07-toy-models.qmd)? In that toy model, 5 sparse features arranged themselves as a regular pentagon in 2D—the optimal geometry for minimizing interference.
 
 SAEs are doing the same thing, but in reverse:
 
@@ -493,11 +493,11 @@ The SAE isn't part of the original model. It's a tool we build to make the model
 ## Looking Ahead
 
 We now have a tool for extracting features. But features in isolation don't explain model behavior. We need techniques for:
-- **Attribution**: Which features contributed to this output? (Article 10)
-- **Patching**: Is this feature *causally* necessary? (Article 11)
-- **Ablation**: What happens if we remove this component? (Article 12)
+- **Attribution**: Which features contributed to this output? (Chapter 10)
+- **Patching**: Is this feature *causally* necessary? (Chapter 11)
+- **Ablation**: What happens if we remove this component? (Chapter 12)
 
-SAEs give us the vocabulary (features). The next articles give us the grammar (how to trace, verify, and understand feature contributions).
+SAEs give us the vocabulary (features). The next chapters give us the grammar (how to trace, verify, and understand feature contributions).
 
 ---
 

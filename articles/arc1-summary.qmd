@@ -16,32 +16,32 @@ You now understand **what we're reverse-engineering**:
 %%| fig-width: 9
 flowchart LR
     subgraph ARC1["Arc I: What We're Studying"]
-        A1["Article 1<br/>Why Interpret?"] --> A2["Article 2<br/>Transformers"]
-        A2 --> A3["Article 3<br/>Residual Stream"]
-        A3 --> A4["Article 4<br/>Geometry"]
+        A1["Chapter 1<br/>Why Interpret?"] --> A2["Chapter 2<br/>Transformers"]
+        A2 --> A3["Chapter 3<br/>Residual Stream"]
+        A3 --> A4["Chapter 4<br/>Geometry"]
     end
 ```
 
 ## Key Concepts to Remember
 
-### From Article 1: Why Reverse-Engineer?
+### From Chapter 1: Why Reverse-Engineer?
 - Neural networks discover algorithms we didn't teach them
 - We have all the weights but don't understand the algorithms
 - Goal: Find the *how* behind the *what*
 
-### From Article 2: Transformers
+### From Chapter 2: Transformers
 - Transformers are **matrix multiplication machines**
 - Attention = soft dictionary lookup (Q, K, V)
 - MLPs = pattern-value memories storing knowledge
 - Everything is linear algebra + a few nonlinearities (softmax, GELU)
 
-### From Article 3: Residual Stream
+### From Chapter 3: Residual Stream
 - The residual stream is a **shared workspace**
 - Output = embedding + Σ(all component contributions)
 - Components read from and write to the stream—they never talk directly
 - The additive structure enables **decomposition** (attribution)
 
-### From Article 4: Geometry
+### From Chapter 4: Geometry
 - Activations are points in high-dimensional space
 - Meaning has geometric structure: king - man + woman ≈ queen
 - **Linear representation hypothesis**: features are directions
@@ -99,9 +99,9 @@ You've built the mental model. You understand *what* we're looking at. Arc II an
 
 Arc II introduces the **core theory**:
 
-- **Article 5 (Features)**: What are the atoms of meaning in activation space?
-- **Article 6 (Superposition)**: How do networks pack more features than dimensions?
-- **Article 7 (Toy Models)**: How can we study superposition in controlled settings?
-- **Article 8 (Circuits)**: How do features compose into algorithms?
+- **Chapter 5 (Features)**: What are the atoms of meaning in activation space?
+- **Chapter 6 (Superposition)**: How do networks pack more features than dimensions?
+- **Chapter 7 (Toy Models)**: How can we study superposition in controlled settings?
+- **Chapter 8 (Circuits)**: How do features compose into algorithms?
 
 You have the substrate. Now you'll learn what's represented in it.

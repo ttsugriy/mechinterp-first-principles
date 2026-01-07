@@ -16,33 +16,33 @@ You now understand **what networks represent and how they compute**:
 %%| fig-width: 9
 flowchart LR
     subgraph ARC2["Arc II: The Theory"]
-        A5["Article 5<br/>Features"] --> A6["Article 6<br/>Superposition"]
-        A6 --> A7["Article 7<br/>Toy Models"]
-        A7 --> A8["Article 8<br/>Circuits"]
+        A5["Chapter 5<br/>Features"] --> A6["Chapter 6<br/>Superposition"]
+        A6 --> A7["Chapter 7<br/>Toy Models"]
+        A7 --> A8["Chapter 8<br/>Circuits"]
     end
 ```
 
 ## Key Concepts to Remember
 
-### From Article 5: Features
+### From Chapter 5: Features
 - Features are **directions in activation space**, not neurons
 - Neurons are **polysemantic** (respond to multiple unrelated concepts)
 - The goal: decompose polysemantic neurons into **monosemantic** features
 - Evidence: linear probes work, steering works, vector arithmetic works
 
-### From Article 6: Superposition
+### From Chapter 6: Superposition
 - Networks pack more features than dimensions using **almost-orthogonal** directions
 - **Sparsity** enables this: if features rarely co-occur, interference is tolerable
 - **Phase transition**: at critical sparsity, networks switch from dedicated → superposed
 - This is **why** polysemanticity exists and interpretation is hard
 
-### From Article 7: Toy Models
+### From Chapter 7: Toy Models
 - We can study superposition in controlled settings where we know ground truth
 - Optimal arrangements form **regular polytopes** (pentagons in 2D, etc.)
 - Toy models confirm: networks discover mathematically optimal geometric arrangements
 - What we learn transfers (imperfectly) to real models
 
-### From Article 8: Circuits
+### From Chapter 8: Circuits
 - Features are atoms; circuits are **molecules** (compositions of features)
 - A circuit: identifiable subnetwork that performs a specific computation
 - **IOI circuit**: 26 heads in GPT-2 Small for indirect object identification
@@ -101,9 +101,9 @@ You have a theoretical framework. You understand *how* networks organize represe
 
 Arc III introduces the **techniques**:
 
-- **Article 9 (SAEs)**: The tool for extracting features from superposition
-- **Article 10 (Attribution)**: Which components contributed to the output?
-- **Article 11 (Patching)**: Does this component *cause* the behavior?
-- **Article 12 (Ablation)**: What happens if we remove it?
+- **Chapter 9 (SAEs)**: The tool for extracting features from superposition
+- **Chapter 10 (Attribution)**: Which components contributed to the output?
+- **Chapter 11 (Patching)**: Does this component *cause* the behavior?
+- **Chapter 12 (Ablation)**: What happens if we remove it?
 
 You have the theory. Now you'll learn how to apply it.

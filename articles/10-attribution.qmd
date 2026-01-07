@@ -17,24 +17,24 @@ description: "Attribution traces which components contributed to the model's out
 
 ::: {.callout-warning}
 ## Prerequisites
-**Required**: [Article 3: Residual Stream](03-residual-stream.qmd) — understanding additive contributions
-**Recommended**: [Article 8: Circuits](08-circuits.qmd) — understanding what we're trying to find
+**Required**: [Chapter 3: Residual Stream](03-residual-stream.qmd) — understanding additive contributions
+**Recommended**: [Chapter 8: Circuits](08-circuits.qmd) — understanding what we're trying to find
 :::
 
 ::: {.callout-note}
 ## Before You Read: Recall
-From prior articles, recall:
+From prior chapters, recall:
 
-- The residual stream is a *sum* of contributions from all components (Article 3)
+- The residual stream is a *sum* of contributions from all components (Chapter 3)
 - We can decompose this sum to see what each component contributed
-- SAEs extract interpretable features from superposed representations (Article 9)
+- SAEs extract interpretable features from superposed representations (Chapter 9)
 
 We have features. **Now we ask**: Which features contributed to a specific output?
 :::
 
 ## Starting from the Answer
 
-In Article 9, we learned how to extract features from superposition using sparse autoencoders. We now have a vocabulary: monosemantic features that correspond to interpretable concepts.
+In Chapter 9, we learned how to extract features from superposition using sparse autoencoders. We now have a vocabulary: monosemantic features that correspond to interpretable concepts.
 
 But having features isn't the same as understanding *how* they produce outputs. When the model predicts "Paris" after "The capital of France is", which features were involved? Which attention heads mattered? Which layers did the real work?
 
@@ -47,7 +47,7 @@ Attribution embodies one of Polya's most powerful problem-solving strategies: st
 
 ## The Residual Stream Enables Attribution
 
-Attribution is possible because of the residual stream architecture we covered in Article 3.
+Attribution is possible because of the residual stream architecture we covered in Chapter 3.
 
 Recall: the final output is a *sum* of contributions. Each attention head and each MLP adds its output to the residual stream. The final logits are computed by multiplying this accumulated stream by the unembedding matrix:
 
@@ -242,7 +242,7 @@ This guides circuit discovery: heads with consistently high attribution for a ta
 
 ## Feature Attribution with SAEs
 
-With sparse autoencoders (Article 9), we can go beyond heads to *features*.
+With sparse autoencoders (Chapter 9), we can go beyond heads to *features*.
 
 Instead of asking "which heads contributed?", we ask "which *concepts* contributed?"
 
@@ -311,7 +311,7 @@ Attribution can't distinguish these cases.
 
 ::: {.callout-important}
 ## The Fundamental Limitation
-Attribution is like a profiler. It tells you where the compute goes—not *why* it goes there, or what would happen if you changed it. To understand causation, you need to *intervene*, not just *observe*. This is the subject of the next article.
+Attribution is like a profiler. It tells you where the compute goes—not *why* it goes there, or what would happen if you changed it. To understand causation, you need to *intervene*, not just *observe*. This is the subject of the next chapter.
 :::
 
 ## The Profiling Analogy
@@ -355,12 +355,12 @@ Attribution narrows your search space. Instead of investigating 144 attention he
 
 But attribution is a hypothesis, not a conclusion.
 
-The next article introduces **activation patching**: the technique for testing whether attributed components are actually causally necessary. Patching is to attribution what controlled experiments are to observation.
+The next chapter introduces **activation patching**: the technique for testing whether attributed components are actually causally necessary. Patching is to attribution what controlled experiments are to observation.
 
 Together, they form a complete methodology:
 1. **Attribution**: What *did* contribute? (observation)
 2. **Patching**: What *must* contribute? (intervention)
-3. **Ablation**: What happens if we remove it? (Article 12)
+3. **Ablation**: What happens if we remove it? (Chapter 12)
 
 ::: {.callout-tip collapse="true"}
 ## The Attribution → Patching Workflow
@@ -454,7 +454,7 @@ The backward problem—start from the output and ask "what caused this?"—is tr
 
 Attribution gives us hypotheses: "Head 7.4 matters for this prediction."
 
-But hypotheses need testing. The next article covers **activation patching**—the technique for interventional verification. We'll learn to ask not just "what correlates with the output?" but "what *causes* the output?"
+But hypotheses need testing. The next chapter covers **activation patching**—the technique for interventional verification. We'll learn to ask not just "what correlates with the output?" but "what *causes* the output?"
 
 This is the difference between observational and experimental science. Attribution is observation. Patching is experiment.
 

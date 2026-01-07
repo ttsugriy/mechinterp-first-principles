@@ -17,12 +17,12 @@ description: "Concrete guidance for actually doing mechanistic interpretability 
 
 ::: {.callout-warning}
 ## Prerequisites
-**Recommended**: The entire series, especially [Article 13: Induction Heads](13-induction-heads.qmd) for seeing techniques in action
+**Recommended**: The entire series, especially [Chapter 13: Induction Heads](13-induction-heads.qmd) for seeing techniques in action
 :::
 
 ## From Theory to Practice
 
-You've read fourteen articles. You understand:
+You've read fourteen chapters. You understand:
 - What we're trying to do (reverse-engineer neural networks)
 - Why it's hard (superposition, scale, composition)
 - The concepts (features, circuits, the residual stream)
@@ -32,11 +32,11 @@ You've read fourteen articles. You understand:
 
 Now what?
 
-This final article is about *doing*—turning conceptual understanding into research practice. How do you actually find features, trace circuits, and contribute to the field?
+This final chapter is about *doing*—turning conceptual understanding into research practice. How do you actually find features, trace circuits, and contribute to the field?
 
 ::: {.callout-note}
 ## The Goal
-By the end of this article, you should have a concrete plan for your first interpretability project—and the debugging skills to carry it through.
+By the end of this chapter, you should have a concrete plan for your first interpretability project—and the debugging skills to carry it through.
 :::
 
 ## Starting From Zero
@@ -567,7 +567,7 @@ The destination is practice. Real experiments on real models, finding real resul
 
 ::: {.callout-tip}
 ## Polya's Insight
-"Mathematics is not a spectator sport." Neither is interpretability. You understand transformer circuits by analyzing transformer circuits—not by reading articles about analyzing transformer circuits. This article ends; your practice begins.
+"Mathematics is not a spectator sport." Neither is interpretability. You understand transformer circuits by analyzing transformer circuits—not by reading chapters about analyzing transformer circuits. This chapter ends; your practice begins.
 :::
 
 ## Conclusion: The Journey Ahead
@@ -585,7 +585,7 @@ These come with time and experience. There's no shortcut.
 
 Mechanistic interpretability is a young field working on hard problems with uncertain methods. You will get stuck. You will find bugs. You will have weeks where nothing works.
 
-This is normal. It's also what makes the field exciting. The open problems from Article 14 are genuinely open. Contributions are genuinely possible. Insights that matter are within reach—not only for senior researchers at big labs, but for newcomers with fresh perspectives.
+This is normal. It's also what makes the field exciting. The open problems from Chapter 14 are genuinely open. Contributions are genuinely possible. Insights that matter are within reach—not only for senior researchers at big labs, but for newcomers with fresh perspectives.
 
 The transformer's circuits are waiting. Go find them.
 
