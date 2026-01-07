@@ -95,7 +95,7 @@ flowchart TB
 ::: {.callout-tip}
 ## Reading Paths
 
-**Linear path**: Read articles 1-15 in order for the complete learning journey.
+**Linear path**: Read chapters 1-15 in order for the complete learning journey.
 
 **Quick start for practitioners**: If you're already familiar with transformers, start at Chapter 5 (Features) and continue from there.
 
