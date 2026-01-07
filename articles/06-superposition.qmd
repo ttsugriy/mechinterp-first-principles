@@ -435,14 +435,15 @@ hasInterference = numActive >= 2
 
 ```{ojs}
 //| echo: false
-md`**Analysis:**
-- **Features**: ${numFeatures} packed into ${dimensions} dimensions
-- **Angle between adjacent features**: ${(360 / numFeatures).toFixed(1)}° ${360/numFeatures >= 90 ? "(orthogonal)" : 360/numFeatures >= 60 ? "(good separation)" : "(crowded)"}
-- **Geometric interference** (cosine similarity): ${(worstInterference * 100).toFixed(1)}%
-- **Co-occurrence probability** (at ${(sparsity*100).toFixed(0)}% activation): ${(cooccurrence * 100).toFixed(2)}%
-- **Expected total interference**: ${effectiveInterference < 0.05 ? "✓ Low — superposition works well" : effectiveInterference < 0.15 ? "⚠ Moderate — acceptable trade-off" : "✗ High — consider fewer features"}
-
-*The key insight: even with high geometric interference, low activation probability keeps expected interference manageable.*`
+html`<div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+<strong>Analysis:</strong><br>
+• <strong>Features</strong>: ${numFeatures} packed into ${dimensions} dimensions<br>
+• <strong>Angle between adjacent features</strong>: ${(360 / numFeatures).toFixed(1)}° ${360/numFeatures >= 90 ? "(orthogonal)" : 360/numFeatures >= 60 ? "(good separation)" : "(crowded)"}<br>
+• <strong>Geometric interference</strong> (cosine similarity): ${(worstInterference * 100).toFixed(1)}%<br>
+• <strong>Co-occurrence probability</strong> (at ${(sparsity*100).toFixed(0)}% activation): ${(cooccurrence * 100).toFixed(2)}%<br>
+• <strong>Expected total interference</strong>: ${effectiveInterference < 0.05 ? "✓ Low — superposition works well" : effectiveInterference < 0.15 ? "⚠ Moderate — acceptable trade-off" : "✗ High — consider fewer features"}<br><br>
+<em>The key insight: even with high geometric interference, low activation probability keeps expected interference manageable.</em>
+</div>`
 ```
 
 ::: {.callout-note}
