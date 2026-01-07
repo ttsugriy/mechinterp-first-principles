@@ -53,18 +53,17 @@ print(f"Loaded {model.cfg.model_name}: {model.cfg.n_layers} layers, {model.cfg.n
 **Never skip this step.** Before analyzing a behavior, confirm the model actually exhibits it.
 
 ```python
-def get_top_predictions(model, prompt, k=5):
+def get_top_predictions(model, prompt: str, k: int = 5) -> list[tuple[str, float, float]]:
     """Get the model's top-k predictions for the next token."""
     tokens = model.to_tokens(prompt)
     logits = model(tokens)
     top_logits, top_tokens = logits[0, -1].topk(k)
+    probs = torch.softmax(logits[0, -1], dim=-1)
 
-    predictions = []
-    for logit, token in zip(top_logits, top_tokens):
-        word = model.tokenizer.decode(token)
-        prob = torch.softmax(logits[0, -1], dim=-1)[token].item()
-        predictions.append((word, prob, logit.item()))
-    return predictions
+    return [
+        (model.tokenizer.decode(token), probs[token].item(), logit.item())
+        for logit, token in zip(top_logits, top_tokens)
+    ]
 
 # Test positive sentiment
 print("POSITIVE: 'I love this movie because it is'")
@@ -100,7 +99,7 @@ The top predictions are similar (common words like "so", "a"), but the *probabil
 
 ```python
 # Check specific sentiment words
-def get_token_logit(model, prompt, target_word):
+def get_token_logit(model, prompt: str, target_word: str) -> float:
     """Get the logit for a specific target word."""
     tokens = model.to_tokens(prompt)
     logits = model(tokens)
@@ -145,40 +144,24 @@ Now let's find *which components* are responsible for this difference.
 **The idea**: Decompose the final logit into per-component contributions. Which attention heads and MLPs push toward " great" in the positive case?
 
 ```python
-def logit_attribution(model, prompt, target_token):
+def logit_attribution(model, prompt: str, target_token: str) -> tuple[dict[str, float], float]:
     """
     Compute each component's contribution to the target token's logit.
-    Returns a dict of component -> contribution.
+    Returns a dict of component -> contribution, and the total logit.
     """
-    # Get the target token ID
     target_id = model.to_single_token(target_token)
-
-    # Run with cache
     tokens = model.to_tokens(prompt)
     logits, cache = model.run_with_cache(tokens)
+    target_dir = model.W_U[:, target_id]
 
-    # Get the unembedding direction for our target
-    target_dir = model.W_U[:, target_id]  # Shape: [d_model]
+    contributions = {
+        "embed": (cache["embed"][0, -1] @ target_dir).item(),
+        "pos_embed": (cache["pos_embed"][0, -1] @ target_dir).item(),
+    }
 
-    contributions = {}
-
-    # Embedding contribution
-    embed = cache["embed"][0, -1]  # Last position
-    contributions["embed"] = (embed @ target_dir).item()
-
-    # Position embedding contribution
-    pos_embed = cache["pos_embed"][0, -1]
-    contributions["pos_embed"] = (pos_embed @ target_dir).item()
-
-    # Each layer's attention and MLP
     for layer in range(model.cfg.n_layers):
-        # Attention heads (summed)
-        attn_out = cache["attn_out", layer][0, -1]
-        contributions[f"L{layer}_attn"] = (attn_out @ target_dir).item()
-
-        # MLP
-        mlp_out = cache["mlp_out", layer][0, -1]
-        contributions[f"L{layer}_mlp"] = (mlp_out @ target_dir).item()
+        contributions[f"L{layer}_attn"] = (cache["attn_out", layer][0, -1] @ target_dir).item()
+        contributions[f"L{layer}_mlp"] = (cache["mlp_out", layer][0, -1] @ target_dir).item()
 
     return contributions, logits[0, -1, target_id].item()
 

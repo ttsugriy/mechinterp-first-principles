@@ -209,22 +209,19 @@ for idx, val in zip(top_k.indices, top_k.values):
 Measure each component's contribution to predicting "Paris":
 
 ```python
-def logit_attribution(cache, model, target_token):
+def logit_attribution(cache, model, target_token: int) -> list[tuple[str, float]]:
     """Full attribution to target token."""
     target_dir = model.W_U[:, target_token]
 
-    results = []
-    for layer in range(model.cfg.n_layers):
-        # Per-head attribution
-        head_results = cache["result", layer][0, -1]  # [n_heads, d_model]
-        for head in range(model.cfg.n_heads):
-            contrib = (head_results[head] @ target_dir).item()
-            results.append((f"L{layer}H{head}", contrib))
-
-        # MLP attribution
-        mlp_out = cache["mlp_out", layer][0, -1]
-        contrib = (mlp_out @ target_dir).item()
-        results.append((f"L{layer}_MLP", contrib))
+    results = [
+        (f"L{layer}H{head}", (cache["result", layer][0, -1, head] @ target_dir).item())
+        for layer in range(model.cfg.n_layers)
+        for head in range(model.cfg.n_heads)
+    ]
+    results.extend(
+        (f"L{layer}_MLP", (cache["mlp_out", layer][0, -1] @ target_dir).item())
+        for layer in range(model.cfg.n_layers)
+    )
 
     return sorted(results, key=lambda x: -x[1])
 
@@ -249,7 +246,7 @@ _, corrupted_cache = model.run_with_cache(corrupted_tokens)
 # Expected answer for corrupted: " Rome"
 rome_token = model.to_single_token(" Rome")
 
-def patch_layer(layer, component="resid_post"):
+def patch_layer(layer: int, component: str = "resid_post") -> tuple[float, float]:
     """Patch layer from corrupted into clean."""
     corrupted_act = corrupted_cache[component, layer]
 
@@ -261,10 +258,7 @@ def patch_layer(layer, component="resid_post"):
         tokens,
         fwd_hooks=[(f"blocks.{layer}.hook_{component}", hook)]
     )
-
-    paris_logit = patched_logits[0, -1, answer_token].item()
-    rome_logit = patched_logits[0, -1, rome_token].item()
-    return paris_logit, rome_logit
+    return patched_logits[0, -1, answer_token].item(), patched_logits[0, -1, rome_token].item()
 
 print("Layer | Paris logit | Rome logit | Prediction")
 print("-" * 50)
@@ -281,12 +275,10 @@ for layer in range(12):
 Test necessity: What happens if we ablate the key components?
 
 ```python
-def ablate_mlp(layer):
-    """Mean-ablate an MLP layer."""
-    # Get mean activation across a dataset (simplified: use zeros)
+def ablate_mlp(layer: int) -> float:
+    """Zero-ablate an MLP layer."""
     def hook(act, hook):
-        act[:, :, :] = 0  # Zero ablation (mean ablation is better)
-        return act
+        return torch.zeros_like(act)
 
     ablated_logits = model.run_with_hooks(
         tokens,

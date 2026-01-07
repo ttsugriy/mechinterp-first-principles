@@ -43,20 +43,19 @@ str_tokens = model.to_str_tokens("Hello world")
 
 ```python
 # Quick logit attribution
-def logit_attribution(cache, model, target_token):
+def logit_attribution(cache, model, target_token: int) -> list[tuple[str, float]]:
     """Attribute final logit to each component."""
-    contributions = {}
     target_dir = model.W_U[:, target_token]
 
-    for layer in range(model.cfg.n_layers):
-        # Attention heads
-        for head in range(model.cfg.n_heads):
-            head_out = cache["result", layer][:, -1, head, :]
-            contributions[f"L{layer}H{head}"] = (head_out @ target_dir).item()
-
-        # MLP
-        mlp_out = cache["mlp_out", layer][:, -1, :]
-        contributions[f"L{layer}_MLP"] = (mlp_out @ target_dir).item()
+    contributions = {
+        f"L{layer}H{head}": (cache["result", layer][:, -1, head, :] @ target_dir).item()
+        for layer in range(model.cfg.n_layers)
+        for head in range(model.cfg.n_heads)
+    }
+    contributions.update({
+        f"L{layer}_MLP": (cache["mlp_out", layer][:, -1, :] @ target_dir).item()
+        for layer in range(model.cfg.n_layers)
+    })
 
     return sorted(contributions.items(), key=lambda x: -abs(x[1]))
 ```
@@ -76,24 +75,20 @@ def logit_attribution(cache, model, target_token):
 
 ```python
 # Basic activation patching template
-def patch_activation(model, clean_input, corrupted_input,
-                     layer, component="resid_post"):
+def patch_activation(model, clean_input: str, corrupted_input: str,
+                     layer: int, component: str = "resid_post"):
     """Patch component from corrupted into clean run."""
-    # Get corrupted activation
     _, corrupted_cache = model.run_with_cache(corrupted_input)
     corrupted_act = corrupted_cache[component, layer]
 
-    # Define hook
     def patch_hook(act, hook):
         act[:] = corrupted_act
         return act
 
-    # Run with patch
-    patched_logits = model.run_with_hooks(
+    return model.run_with_hooks(
         clean_input,
         fwd_hooks=[(f"blocks.{layer}.hook_{component}", patch_hook)]
     )
-    return patched_logits
 ```
 
 **Noising vs Denoising**:
