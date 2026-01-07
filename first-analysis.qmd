@@ -386,11 +386,10 @@ pattern = cache["pattern", important_layer][0, important_head]  # [seq, seq]
 print(f"Attention pattern for L{important_layer}H{important_head}")
 print(f"Tokens: {str_tokens}")
 
-# Visualize
+# Visualize - show attention patterns for all heads in this layer
 display(cv.attention.attention_patterns(
-    attention=cache["pattern", important_layer][0:1],  # [1, n_heads, seq, seq]
-    tokens=str_tokens,
-    attention_head_names=[f"H{h}" for h in range(model.cfg.n_heads)]
+    attention=cache["pattern", important_layer][0],  # [n_heads, seq, seq]
+    tokens=str_tokens
 ))
 ```
 
