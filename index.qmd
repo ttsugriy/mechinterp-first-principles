@@ -102,6 +102,20 @@ flowchart TB
 **Techniques-focused**: Jump to Article 9 (SAEs) after reading Articles 3-5 for the core prerequisites.
 :::
 
+::: {.callout-note}
+## Estimated Reading Times
+
+| Arc | Articles | Total Reading Time |
+|-----|----------|-------------------|
+| **Arc I: Foundations** | 1-4 + Summary | ~1 hour |
+| **Arc II: Core Theory** | 5-8 + Summary | ~1.5 hours |
+| **Arc III: Techniques** | 9-12 + Summary | ~1.5 hours |
+| **Arc IV: Synthesis** | 13-15 | ~1 hour |
+| **Total** | 15 articles + 3 summaries | **~5 hours** |
+
+Each article is 12-22 minutes. Take breaks between arcs—the summaries are designed as natural stopping points.
+:::
+
 ## Who This Is For
 
 - Software engineers curious about ML internals
