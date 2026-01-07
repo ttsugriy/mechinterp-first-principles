@@ -9,7 +9,7 @@ description: "The primary tool for finding interpretable features in neural netw
 
 ::: {.callout-note}
 ## Hands-On Notebook
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ttsugriy/mechinterp-first-principles/blob/main/notebooks/09-sparse-autoencoders.ipynb)
+<a href="https://colab.research.google.com/github/ttsugriy/mechinterp-first-principles/blob/main/notebooks/09-sparse-autoencoders.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
 Extract features from GPT-2, explore what they represent, try steering the model.
 :::

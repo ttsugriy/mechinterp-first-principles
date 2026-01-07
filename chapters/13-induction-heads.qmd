@@ -9,7 +9,7 @@ description: "Induction heads enable in-context learning—the ability to learn 
 
 ::: {.callout-note}
 ## Hands-On Notebook
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ttsugriy/mechinterp-first-principles/blob/main/notebooks/13-induction-heads.ipynb)
+<a href="https://colab.research.google.com/github/ttsugriy/mechinterp-first-principles/blob/main/notebooks/13-induction-heads.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
 Find induction heads, visualize their attention patterns, ablate them and measure the effect.
 :::
