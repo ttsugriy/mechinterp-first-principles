@@ -244,6 +244,58 @@ Before claiming you've found a circuit:
 
 ---
 
+## Comparison Tables
+
+### Attention vs MLPs
+
+| Aspect | Attention Heads | MLPs |
+|--------|-----------------|------|
+| **Operation** | Move information between positions | Transform information at each position |
+| **Function** | "What to look at" | "What to do with it" |
+| **Knowledge** | Patterns, relationships | Facts, associations |
+| **Example** | Induction heads, name movers | Factual recall, arithmetic |
+| **Ablation effect** | Breaks attention-dependent behaviors | Breaks knowledge-dependent behaviors |
+
+### Patching vs Ablation
+
+| Aspect | Patching | Ablation |
+|--------|----------|----------|
+| **Question** | "Where is this info processed?" | "Is this component necessary?" |
+| **Method** | Swap activations between runs | Remove or zero out component |
+| **Requires** | Two contrasting inputs | Single input + baseline |
+| **Measures** | Sufficiency for change | Necessity for behavior |
+| **Limitation** | Needs good corrupted input | Backup circuits mask importance |
+
+### Noising vs Denoising Patching
+
+| Aspect | Noising | Denoising |
+|--------|---------|-----------|
+| **Direction** | Clean → Corrupted | Corrupted → Clean |
+| **Question** | "Does breaking X break behavior?" | "Does restoring X restore behavior?" |
+| **Finds** | What's necessary | What's sufficient |
+| **Bias** | May miss redundant components | May overestimate component importance |
+
+### SAE Metrics
+
+| Metric | Measures | Good Values |
+|--------|----------|-------------|
+| **L0 (sparsity)** | Average features active | 20-100 for residual SAEs |
+| **Reconstruction loss** | How much info is lost | Lower is better (<10% degradation) |
+| **CE loss recovered** | Task performance after SAE | >90% of original |
+| **Feature absorption** | Do features capture consistent concepts? | Minimize with larger dictionaries |
+
+### Hook Types for Different Goals
+
+| Goal | Primary Hook | Why |
+|------|--------------|-----|
+| Read attention patterns | `hook_pattern` | Direct access to attention weights |
+| Modify what heads attend to | `hook_q` or `hook_k` | Changes attention computation |
+| Change what heads output | `hook_z` or `hook_result` | Modifies head contribution |
+| Patch entire layer | `hook_resid_post` | Captures all layer computation |
+| Inject features | `hook_resid_pre` | Before next layer processes |
+
+---
+
 ## Useful Links
 
 - [Neuronpedia](https://www.neuronpedia.org/) - Explore SAE features

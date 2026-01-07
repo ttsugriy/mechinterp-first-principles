@@ -1,0 +1,405 @@
+---
+title: "Exercises"
+subtitle: "Practice problems with solutions"
+---
+
+Exercises organized by chapter. Each includes hints and full solutions.
+
+---
+
+## Arc I: Foundations
+
+### Chapter 2: Transformers
+
+::: {.callout-note collapse="true"}
+## Exercise 2.1: Attention Pattern Analysis
+
+**Problem**: Load GPT-2 Small and run the prompt "The cat sat on the". Visualize the attention pattern for layer 0, head 0. What token does "the" (final position) attend to most?
+
+::: {.callout-tip collapse="true"}
+## Hint
+Use `model.run_with_cache()` and access `cache["pattern", 0][0, 0]` for layer 0, head 0.
+:::
+
+::: {.callout-warning collapse="true"}
+## Solution
+```python
+import transformer_lens as tl
+
+model = tl.HookedTransformer.from_pretrained("gpt2-small")
+tokens = model.to_tokens("The cat sat on the")
+_, cache = model.run_with_cache(tokens)
+
+# Layer 0, head 0 attention pattern
+pattern = cache["pattern", 0][0, 0]  # [seq_len, seq_len]
+
+# What does final position attend to?
+final_attn = pattern[-1]
+print("Attention from final 'the':")
+for i, (tok, attn) in enumerate(zip(model.to_str_tokens(tokens[0]), final_attn)):
+    print(f"  {tok}: {attn:.3f}")
+
+# Typically: early heads attend to nearby tokens or BOS
+```
+:::
+:::
+
+::: {.callout-note collapse="true"}
+## Exercise 2.2: MLP Activation Sparsity
+
+**Problem**: For the same prompt, compute the fraction of MLP neurons that are active (> 0 after GELU) in layer 5. Is MLP activation sparse?
+
+::: {.callout-tip collapse="true"}
+## Hint
+Access `cache["post", 5]` for post-GELU activations. Count how many are > 0.
+:::
+
+::: {.callout-warning collapse="true"}
+## Solution
+```python
+mlp_post = cache["post", 5][0]  # [seq_len, d_mlp]
+active = (mlp_post > 0).float().mean()
+print(f"Fraction active: {active:.1%}")
+# Typically 30-50% are active - moderately sparse
+```
+:::
+:::
+
+### Chapter 3: Residual Stream
+
+::: {.callout-note collapse="true"}
+## Exercise 3.1: Logit Lens
+
+**Problem**: Run "The Eiffel Tower is in" through GPT-2 Small. At each layer, project the residual stream to vocabulary space and find the top prediction. At which layer does "Paris" first appear in top 5?
+
+::: {.callout-warning collapse="true"}
+## Solution
+```python
+prompt = "The Eiffel Tower is in"
+tokens = model.to_tokens(prompt)
+_, cache = model.run_with_cache(tokens)
+
+for layer in range(12):
+    resid = cache["resid_post", layer][0, -1]
+    logits = resid @ model.W_U
+    top5 = logits.topk(5).indices
+    top5_tokens = [model.tokenizer.decode(t) for t in top5]
+    has_paris = " Paris" in top5_tokens or "Paris" in top5_tokens
+    print(f"Layer {layer}: {top5_tokens} {'<-- Paris!' if has_paris else ''}")
+```
+:::
+:::
+
+::: {.callout-note collapse="true"}
+## Exercise 3.2: Component Contribution
+
+**Problem**: For the same prompt, which single component (attention head or MLP) contributes most to the "Paris" logit?
+
+::: {.callout-warning collapse="true"}
+## Solution
+```python
+paris_token = model.to_single_token(" Paris")
+paris_dir = model.W_U[:, paris_token]
+
+contributions = []
+
+for layer in range(12):
+    # MLP
+    mlp = cache["mlp_out", layer][0, -1]
+    contributions.append((f"L{layer}_MLP", (mlp @ paris_dir).item()))
+
+    # Attention heads
+    head_out = cache["result", layer][0, -1]  # [n_heads, d_model]
+    for head in range(12):
+        contrib = (head_out[head] @ paris_dir).item()
+        contributions.append((f"L{layer}H{head}", contrib))
+
+top = sorted(contributions, key=lambda x: -x[1])[:5]
+print("Top contributors to 'Paris':")
+for name, val in top:
+    print(f"  {name}: {val:+.2f}")
+```
+:::
+:::
+
+### Chapter 4: Geometry
+
+::: {.callout-note collapse="true"}
+## Exercise 4.1: Semantic Clustering
+
+**Problem**: Get the unembedding vectors for: "Paris", "London", "Berlin", "cat", "dog", "fish". Compute pairwise cosine similarities. Do cities cluster together? Do animals?
+
+::: {.callout-warning collapse="true"}
+## Solution
+```python
+import torch
+
+words = [" Paris", " London", " Berlin", " cat", " dog", " fish"]
+tokens = [model.to_single_token(w) for w in words]
+vecs = torch.stack([model.W_U[:, t] for t in tokens])
+
+# Pairwise cosine similarity
+vecs_norm = vecs / vecs.norm(dim=1, keepdim=True)
+sims = vecs_norm @ vecs_norm.T
+
+print("Cosine similarities:")
+for i, w1 in enumerate(words):
+    for j, w2 in enumerate(words):
+        if j > i:
+            print(f"  {w1} - {w2}: {sims[i,j]:.3f}")
+
+# Cities should have higher similarity with each other than with animals
+```
+:::
+:::
+
+---
+
+## Arc II: Core Theory
+
+### Chapter 5: Features
+
+::: {.callout-note collapse="true"}
+## Exercise 5.1: Feature Direction Extraction
+
+**Problem**: Create a "sentiment" direction by taking the difference between embeddings of positive and negative words. Test if this direction correlates with sentiment in new sentences.
+
+::: {.callout-warning collapse="true"}
+## Solution
+```python
+positive = [" good", " great", " excellent", " wonderful"]
+negative = [" bad", " terrible", " awful", " horrible"]
+
+pos_vecs = torch.stack([model.W_E[model.to_single_token(w)] for w in positive])
+neg_vecs = torch.stack([model.W_E[model.to_single_token(w)] for w in negative])
+
+sentiment_dir = pos_vecs.mean(0) - neg_vecs.mean(0)
+sentiment_dir = sentiment_dir / sentiment_dir.norm()
+
+# Test on new sentences
+test = ["This movie is fantastic", "This movie is terrible"]
+for sent in test:
+    tokens = model.to_tokens(sent)
+    _, cache = model.run_with_cache(tokens)
+    final = cache["resid_post", 11][0, -1]
+    score = (final @ sentiment_dir).item()
+    print(f"{sent}: {score:+.2f}")
+```
+:::
+:::
+
+### Chapter 6: Superposition
+
+::: {.callout-note collapse="true"}
+## Exercise 6.1: Measuring Interference
+
+**Problem**: The residual stream has 768 dimensions. If features were orthogonal, we could store at most 768. But models represent many more concepts. Pick 100 random unembedding vectors and compute the average absolute cosine similarity. How close to orthogonal are they?
+
+::: {.callout-warning collapse="true"}
+## Solution
+```python
+import random
+
+# Sample 100 random tokens
+all_tokens = list(range(model.cfg.d_vocab))
+sample = random.sample(all_tokens, 100)
+vecs = model.W_U[:, sample].T  # [100, 768]
+vecs = vecs / vecs.norm(dim=1, keepdim=True)
+
+# Average absolute cosine similarity
+sims = (vecs @ vecs.T).abs()
+# Exclude diagonal
+mask = ~torch.eye(100, dtype=bool)
+avg_sim = sims[mask].mean()
+
+print(f"Average |cosine similarity|: {avg_sim:.4f}")
+# Expected: ~0.02-0.05 (nearly orthogonal in high dimensions)
+```
+:::
+:::
+
+---
+
+## Arc III: Techniques
+
+### Chapter 9: SAEs
+
+::: {.callout-note collapse="true"}
+## Exercise 9.1: Feature Activation Analysis
+
+**Problem**: Load an SAE for GPT-2 Small layer 8. Run "The president of the United States" and find the top 5 most active features at the final position. Look them up on Neuronpedia.
+
+::: {.callout-warning collapse="true"}
+## Solution
+```python
+from sae_lens import SAE
+
+sae, _, _ = SAE.from_pretrained(
+    release="gpt2-small-res-jb",
+    sae_id="blocks.8.hook_resid_pre"
+)
+
+prompt = "The president of the United States"
+tokens = model.to_tokens(prompt)
+_, cache = model.run_with_cache(tokens)
+
+resid = cache["resid_pre", 8][0, -1]
+acts = sae.encode(resid.unsqueeze(0))[0]
+
+top5 = acts.topk(5)
+print("Top 5 features:")
+for idx, val in zip(top5.indices, top5.values):
+    print(f"  Feature {idx.item()}: {val.item():.2f}")
+    print(f"  https://neuronpedia.org/gpt2-small/{8}-res-jb/{idx.item()}")
+```
+:::
+:::
+
+### Chapter 10: Attribution
+
+::: {.callout-note collapse="true"}
+## Exercise 10.1: Full Attribution Decomposition
+
+**Problem**: For "2 + 2 =", decompose the logit for " 4" into contributions from each component. What fraction comes from MLPs vs attention?
+
+::: {.callout-warning collapse="true"}
+## Solution
+```python
+prompt = "2 + 2 ="
+tokens = model.to_tokens(prompt)
+_, cache = model.run_with_cache(tokens)
+
+target = model.to_single_token(" 4")
+target_dir = model.W_U[:, target]
+
+mlp_total = 0
+attn_total = 0
+
+for layer in range(12):
+    mlp = cache["mlp_out", layer][0, -1]
+    mlp_total += (mlp @ target_dir).item()
+
+    attn = cache["attn_out", layer][0, -1]
+    attn_total += (attn @ target_dir).item()
+
+print(f"MLP contribution: {mlp_total:.2f}")
+print(f"Attention contribution: {attn_total:.2f}")
+print(f"MLP fraction: {mlp_total / (mlp_total + attn_total):.1%}")
+```
+:::
+:::
+
+### Chapter 11: Patching
+
+::: {.callout-note collapse="true"}
+## Exercise 11.1: Activation Patching
+
+**Problem**: Patch the residual stream at layer 6 from "The Louvre is in" into "The Colosseum is in". Does the prediction change from "Rome" to "Paris"?
+
+::: {.callout-warning collapse="true"}
+## Solution
+```python
+clean = "The Colosseum is in"
+corrupt = "The Louvre is in"
+
+clean_tokens = model.to_tokens(clean)
+corrupt_tokens = model.to_tokens(corrupt)
+
+_, corrupt_cache = model.run_with_cache(corrupt_tokens)
+corrupt_resid = corrupt_cache["resid_post", 6]
+
+def patch_hook(act, hook):
+    act[:, -1, :] = corrupt_resid[:, -1, :]
+    return act
+
+patched = model.run_with_hooks(
+    clean_tokens,
+    fwd_hooks=[("blocks.6.hook_resid_post", patch_hook)]
+)
+
+rome = model.to_single_token(" Rome")
+paris = model.to_single_token(" Paris")
+
+print(f"Rome logit: {patched[0, -1, rome]:.2f}")
+print(f"Paris logit: {patched[0, -1, paris]:.2f}")
+print(f"Prediction: {model.tokenizer.decode(patched[0, -1].argmax())}")
+```
+:::
+:::
+
+### Chapter 12: Ablation
+
+::: {.callout-note collapse="true"}
+## Exercise 12.1: Attention Head Ablation
+
+**Problem**: Zero-ablate each attention head individually for "The Eiffel Tower is in". Which head, when ablated, most reduces the "Paris" logit?
+
+::: {.callout-warning collapse="true"}
+## Solution
+```python
+prompt = "The Eiffel Tower is in"
+tokens = model.to_tokens(prompt)
+paris = model.to_single_token(" Paris")
+
+baseline = model(tokens)[0, -1, paris].item()
+print(f"Baseline Paris logit: {baseline:.2f}")
+
+results = []
+for layer in range(12):
+    for head in range(12):
+        def ablate_head(act, hook, h=head):
+            act[:, :, h, :] = 0
+            return act
+
+        ablated = model.run_with_hooks(
+            tokens,
+            fwd_hooks=[(f"blocks.{layer}.hook_z", ablate_head)]
+        )
+        new_logit = ablated[0, -1, paris].item()
+        results.append((f"L{layer}H{head}", baseline - new_logit))
+
+top = sorted(results, key=lambda x: -x[1])[:5]
+print("\nHeads whose ablation most reduces Paris logit:")
+for name, drop in top:
+    print(f"  {name}: -{drop:.2f}")
+```
+:::
+:::
+
+---
+
+## Challenge Problems
+
+::: {.callout-note collapse="true"}
+## Challenge 1: Find a Factual Recall Circuit
+
+**Problem**: Analyze "The capital of France is" → "Paris". Identify:
+1. Which attention heads move information from "France" to the final position
+2. Which MLP layers retrieve the answer
+3. Verify with patching that these components are causally important
+
+This is a multi-hour exercise. Document your methodology and findings.
+:::
+
+::: {.callout-note collapse="true"}
+## Challenge 2: Compare Arithmetic Circuits
+
+**Problem**: Compare the circuits for "2 + 3 =" vs "7 + 8 =".
+- Do they use the same components?
+- Is there evidence of different strategies for small vs large numbers?
+- What happens for "99 + 1 ="?
+:::
+
+::: {.callout-note collapse="true"}
+## Challenge 3: Adversarial Feature Search
+
+**Problem**: Find an input that maximally activates a specific SAE feature. Start with feature 1000 in the layer 8 SAE. Use gradient-based optimization or greedy token search.
+:::
+
+---
+
+## Solutions Notebook
+
+All exercises are available as a runnable notebook:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ttsugriy/mechinterp-first-principles/blob/main/notebooks/exercises.ipynb)

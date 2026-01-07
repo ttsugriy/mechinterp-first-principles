@@ -508,6 +508,34 @@ SAEs give us the vocabulary (features). The next chapters give us the grammar (h
 
 ---
 
+## Common Confusions
+
+::: {.callout-warning collapse="true"}
+## "SAE features are the 'true' features of the model"
+
+SAE features are one decomposition of the model's representations, not necessarily the decomposition. Different SAE training runs produce different features. The model doesn't "know about" your SAE—you're projecting a structure onto its activations. Treat SAE features as useful hypotheses, not ground truth.
+:::
+
+::: {.callout-warning collapse="true"}
+## "Higher dictionary size is always better"
+
+Larger dictionaries capture more features but suffer from splitting (one concept becomes many redundant features) and absorption (common features absorb rare ones). There's a sweet spot that depends on the model and layer. Typically 16x-32x expansion is good; 128x may be overkill.
+:::
+
+::: {.callout-warning collapse="true"}
+## "Low reconstruction loss means the SAE is perfect"
+
+Reconstruction loss measures how well the SAE approximates the original activations, not how interpretable or useful the features are. An SAE could achieve low loss with uninterpretable features. Always evaluate interpretability and downstream task performance, not just loss.
+:::
+
+::: {.callout-warning collapse="true"}
+## "Steering proves the feature is 'real'"
+
+Steering shows that adding this direction changes behavior in a consistent way. It doesn't prove the model "uses" this feature naturally. You're demonstrating causal influence, not necessarily that the direction matches the model's internal representation. Steering is evidence, not proof.
+:::
+
+---
+
 ## Further Reading
 
 1. **Towards Monosemanticity** — [Anthropic](https://transformer-circuits.pub/2023/monosemantic-features): The foundational paper introducing SAEs for interpretability.

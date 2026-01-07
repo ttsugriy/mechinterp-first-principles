@@ -629,6 +629,34 @@ The transition is *sudden*, not gradual—small changes in sparsity cause large 
 
 ---
 
+## Common Confusions
+
+::: {.callout-warning collapse="true"}
+## "Superposition means neurons are broken"
+
+No—neurons are doing exactly what gradient descent told them to. Superposition is an *optimal* compression strategy, not a defect. The network maximizes information capacity by reusing neurons for multiple features. From the network's perspective, it's efficient engineering.
+:::
+
+::: {.callout-warning collapse="true"}
+## "More dimensions would eliminate superposition"
+
+Partially true, but features scale with capacity. Larger models don't have less superposition—they have more features. A 4096-dim model with 2M features has similar packing density to a 768-dim model with 400K features. The fundamental tension remains.
+:::
+
+::: {.callout-warning collapse="true"}
+## "SAEs 'solve' superposition"
+
+SAEs decompose superposition into interpretable features, but they don't eliminate the underlying complexity. SAE features are one possible decomposition, not necessarily the "true" features. Different SAE training runs produce different features. Think of SAEs as a useful lens, not ground truth.
+:::
+
+::: {.callout-warning collapse="true"}
+## "Interference is always bad"
+
+Interference is a cost, but the benefit (representing more features) often outweighs it. When features are sparse enough, interference rarely matters in practice. The network accepts small errors on rare co-occurrences in exchange for massive capacity gains. This is a rational trade-off.
+:::
+
+---
+
 ## Further Reading
 
 1. **Toy Models of Superposition** — [Anthropic](https://transformer-circuits.pub/2022/toy_model/index.html): The foundational paper on superposition, introducing the mathematical framework and toy model experiments. Essential reading.

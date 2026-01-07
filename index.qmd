@@ -95,11 +95,25 @@ flowchart TB
 ::: {.callout-tip}
 ## Reading Paths
 
-**Linear path**: Read chapters 1-15 in order for the complete learning journey.
+Choose based on your background and goals:
 
-**Quick start for practitioners**: If you're already familiar with transformers, start at Chapter 5 (Features) and continue from there.
+**Complete Learning Journey** (5 hours)
+: Chapters 1→15 in order. Best for deep understanding.
 
-**Techniques-focused**: Jump to Chapter 9 (SAEs) after reading Chapters 3-5 for the core prerequisites.
+**ML Practitioner Fast Track** (3 hours)
+: Skip to Ch 5→8 (theory), then Ch 9→12 (techniques), then Ch 13 (case study).
+: *Assumes*: You know transformers, attention, MLPs.
+
+**Safety-Focused Path** (2.5 hours)
+: Ch 1 (motivation) → Ch 5-6 (features, superposition) → Ch 9 (SAEs) → Ch 14 (open problems)
+: *Goal*: Understand what interpretability can and can't do for AI safety.
+
+**Hands-On Researcher** (4 hours)
+: [Setup](setup.qmd) → [First Analysis](first-analysis.qmd) → Ch 9-12 (techniques) → Ch 15 (practice) → [Exercises](exercises.qmd)
+: *Goal*: Start doing interpretability research quickly.
+
+**Reference User**
+: Use [Quick Reference](quick-reference.qmd) as a cheat sheet, [Zoo of Circuits](zoo-of-circuits.qmd) for known mechanisms, [Running Example](running-example.qmd) to see all techniques applied to one behavior.
 :::
 
 ::: {.callout-important}

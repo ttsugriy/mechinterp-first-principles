@@ -1,0 +1,357 @@
+---
+title: "The Running Example"
+subtitle: "One behavior, every technique"
+---
+
+This page follows a single behavior through every technique in the book. As you learn each method, return here to see how it applies to the same example.
+
+::: {.callout-tip}
+## How to Use This Page
+
+This is a **companion** to the main chapters, not a replacement. Read the technique chapters first, then return here to see how each technique illuminates the same phenomenon from a different angle.
+:::
+
+## The Behavior: Factual Recall
+
+We'll analyze how GPT-2 Small completes:
+
+> **"The Eiffel Tower is located in"** → **" Paris"**
+
+This is a good running example because:
+
+- It's simple enough to fully analyze
+- It involves both attention (finding relevant context) and MLPs (storing knowledge)
+- It's different from induction heads (pattern completion vs. factual recall)
+- It can be studied with every technique we'll learn
+
+---
+
+## Setup (Used Throughout)
+
+```python
+import torch
+import transformer_lens as tl
+
+model = tl.HookedTransformer.from_pretrained("gpt2-small")
+
+prompt = "The Eiffel Tower is located in"
+answer = " Paris"
+
+tokens = model.to_tokens(prompt)
+answer_token = model.to_single_token(answer)
+
+# Verify the model knows this
+logits = model(tokens)
+top_token = logits[0, -1].argmax()
+print(f"Model predicts: '{model.tokenizer.decode(top_token)}'")
+# Should print: Model predicts: ' Paris'
+```
+
+---
+
+## Arc I: Understanding the Substrate
+
+### Chapter 2: The Forward Pass
+
+At the most basic level, the prediction happens through:
+1. Tokens are embedded
+2. 12 layers of attention + MLP process the embeddings
+3. Final residual stream is unembedded to logits
+4. "Paris" has the highest logit
+
+```python
+# The forward pass is just matrix multiplications
+logits, cache = model.run_with_cache(tokens)
+
+print(f"Input shape: {tokens.shape}")  # [1, 7] - batch, sequence
+print(f"Final residual: {cache['resid_post', 11].shape}")  # [1, 7, 768]
+print(f"Logits shape: {logits.shape}")  # [1, 7, 50257]
+print(f"Paris logit: {logits[0, -1, answer_token]:.2f}")
+```
+
+### Chapter 3: The Residual Stream
+
+The prediction "Paris" is the sum of all component contributions:
+
+```python
+# Decompose the final logit
+paris_dir = model.W_U[:, answer_token]  # Unembedding direction for Paris
+
+contributions = {}
+
+# Embedding
+embed = cache["embed"][0, -1]
+contributions["embed"] = (embed @ paris_dir).item()
+
+# Each layer
+for layer in range(12):
+    attn_out = cache["attn_out", layer][0, -1]
+    mlp_out = cache["mlp_out", layer][0, -1]
+    contributions[f"L{layer}_attn"] = (attn_out @ paris_dir).item()
+    contributions[f"L{layer}_mlp"] = (mlp_out @ paris_dir).item()
+
+# Sort by contribution
+sorted_contrib = sorted(contributions.items(), key=lambda x: x[1], reverse=True)
+print("Top contributors to 'Paris' logit:")
+for name, value in sorted_contrib[:5]:
+    print(f"  {name}: {value:+.2f}")
+```
+
+**Typical finding**: Mid-to-late MLPs contribute most to factual recall.
+
+### Chapter 4: Geometry
+
+The "Paris" direction is just one direction in 768-dimensional space:
+
+```python
+# What's the cosine similarity between Paris and France?
+france_token = model.to_single_token(" France")
+paris_dir = model.W_U[:, answer_token]
+france_dir = model.W_U[:, france_token]
+
+cos_sim = torch.cosine_similarity(paris_dir, france_dir, dim=0)
+print(f"Cosine similarity Paris-France: {cos_sim:.3f}")
+# These directions are related but not identical
+```
+
+---
+
+## Arc II: Core Theory
+
+### Chapter 5: Features
+
+The residual stream contains features—but which ones are relevant here?
+
+```python
+# The residual stream at the final position encodes information
+# that will be used to predict "Paris"
+
+final_resid = cache["resid_post", 11][0, -1]  # [768]
+
+# This vector encodes features like:
+# - "We're completing a sentence about location"
+# - "The subject is a famous landmark"
+# - "The landmark is the Eiffel Tower"
+# - "The Eiffel Tower is in Paris"
+
+# The model "knows" Paris because these features activate
+# and together they point toward the Paris direction
+```
+
+### Chapter 6: Superposition
+
+Many features are packed into 768 dimensions:
+
+```python
+# The model needs to represent:
+# - Thousands of landmarks
+# - Thousands of cities
+# - Relationships between them
+# All in 768 dimensions
+
+# This works because features are sparse:
+# "Eiffel Tower" rarely co-occurs with "Big Ben" in the same position
+# So they can share dimensions without interference
+```
+
+### Chapter 8: Circuits
+
+The factual recall involves a circuit:
+1. **Attention heads** attend to "Eiffel Tower" from the final position
+2. **MLPs** in middle layers retrieve the associated location
+3. **Later layers** refine the prediction
+
+```python
+# Which attention heads look at "Eiffel Tower"?
+eiffel_pos = 1  # Position of "Eiffel" token
+
+for layer in range(12):
+    pattern = cache["pattern", layer][0, :, -1, :]  # [n_heads, seq_len]
+    for head in range(12):
+        attn_to_eiffel = pattern[head, eiffel_pos].item()
+        if attn_to_eiffel > 0.1:
+            print(f"L{layer}H{head} attends to 'Eiffel' with weight {attn_to_eiffel:.2f}")
+```
+
+---
+
+## Arc III: Techniques
+
+### Chapter 9: SAE Features
+
+Extract interpretable features using sparse autoencoders:
+
+```python
+from sae_lens import SAE
+
+# Load SAE for layer 8 (where factual recall happens)
+sae, cfg, _ = SAE.from_pretrained(
+    release="gpt2-small-res-jb",
+    sae_id="blocks.8.hook_resid_pre"
+)
+
+# Get features active at the final position
+resid = cache["resid_pre", 8][0, -1]  # [768]
+feature_acts = sae.encode(resid.unsqueeze(0))  # [1, n_features]
+
+# Top features
+top_k = feature_acts[0].topk(10)
+print("Top active SAE features:")
+for idx, val in zip(top_k.indices, top_k.values):
+    print(f"  Feature {idx.item()}: {val.item():.2f}")
+    # Look these up on Neuronpedia to see what they represent!
+```
+
+**What you might find**: Features for "famous landmarks", "European cities", "France-related concepts".
+
+### Chapter 10: Attribution
+
+Measure each component's contribution to predicting "Paris":
+
+```python
+def logit_attribution(cache, model, target_token):
+    """Full attribution to target token."""
+    target_dir = model.W_U[:, target_token]
+
+    results = []
+    for layer in range(model.cfg.n_layers):
+        # Per-head attribution
+        head_results = cache["result", layer][0, -1]  # [n_heads, d_model]
+        for head in range(model.cfg.n_heads):
+            contrib = (head_results[head] @ target_dir).item()
+            results.append((f"L{layer}H{head}", contrib))
+
+        # MLP attribution
+        mlp_out = cache["mlp_out", layer][0, -1]
+        contrib = (mlp_out @ target_dir).item()
+        results.append((f"L{layer}_MLP", contrib))
+
+    return sorted(results, key=lambda x: -x[1])
+
+top_components = logit_attribution(cache, model, answer_token)[:10]
+print("Top 10 components for 'Paris':")
+for name, contrib in top_components:
+    print(f"  {name}: {contrib:+.2f}")
+```
+
+**Typical finding**: MLP layers 7-9 contribute most.
+
+### Chapter 11: Patching
+
+Test causality: Does patching from a different landmark change the prediction?
+
+```python
+# Corrupted prompt: same structure, different landmark
+corrupted_prompt = "The Colosseum is located in"
+corrupted_tokens = model.to_tokens(corrupted_prompt)
+_, corrupted_cache = model.run_with_cache(corrupted_tokens)
+
+# Expected answer for corrupted: " Rome"
+rome_token = model.to_single_token(" Rome")
+
+def patch_layer(layer, component="resid_post"):
+    """Patch layer from corrupted into clean."""
+    corrupted_act = corrupted_cache[component, layer]
+
+    def hook(act, hook):
+        act[:, -1, :] = corrupted_act[:, -1, :]
+        return act
+
+    patched_logits = model.run_with_hooks(
+        tokens,
+        fwd_hooks=[(f"blocks.{layer}.hook_{component}", hook)]
+    )
+
+    paris_logit = patched_logits[0, -1, answer_token].item()
+    rome_logit = patched_logits[0, -1, rome_token].item()
+    return paris_logit, rome_logit
+
+print("Layer | Paris logit | Rome logit | Prediction")
+print("-" * 50)
+for layer in range(12):
+    paris, rome = patch_layer(layer)
+    pred = "Paris" if paris > rome else "Rome"
+    print(f"  {layer:2d}  |   {paris:+.2f}    |   {rome:+.2f}   | {pred}")
+```
+
+**What to look for**: At which layer does patching flip the prediction from Paris to Rome?
+
+### Chapter 12: Ablation
+
+Test necessity: What happens if we ablate the key components?
+
+```python
+def ablate_mlp(layer):
+    """Mean-ablate an MLP layer."""
+    # Get mean activation across a dataset (simplified: use zeros)
+    def hook(act, hook):
+        act[:, :, :] = 0  # Zero ablation (mean ablation is better)
+        return act
+
+    ablated_logits = model.run_with_hooks(
+        tokens,
+        fwd_hooks=[(f"blocks.{layer}.hook_mlp_out", hook)]
+    )
+    return ablated_logits[0, -1, answer_token].item()
+
+original_logit = logits[0, -1, answer_token].item()
+print(f"Original Paris logit: {original_logit:.2f}")
+print("\nAblating each MLP:")
+for layer in range(12):
+    ablated = ablate_mlp(layer)
+    change = ablated - original_logit
+    print(f"  Layer {layer}: {ablated:.2f} (change: {change:+.2f})")
+```
+
+**What to look for**: Which layers, when ablated, most reduce the Paris logit?
+
+---
+
+## Arc IV: Synthesis
+
+### Chapter 13: Comparison to Induction Heads
+
+Factual recall and induction are different mechanisms:
+
+| Aspect | Induction Heads | Factual Recall |
+|--------|-----------------|----------------|
+| **What** | Pattern completion [A][B]...[A] → [B] | Knowledge retrieval |
+| **Where** | Attention heads (layers 1-2) | MLPs (layers 7-9) |
+| **How** | Attention pattern matching | MLP key-value lookup |
+| **Requires** | Pattern in context | Knowledge in weights |
+
+### The Complete Picture
+
+For "The Eiffel Tower is located in" → " Paris":
+
+1. **Embedding**: Tokens become vectors
+2. **Early attention**: Heads attend to "Eiffel Tower", building context
+3. **Mid MLPs (layers 7-9)**: Retrieve "Paris" from learned associations
+4. **Late layers**: Refine and commit to prediction
+5. **Unembedding**: "Paris" direction has highest logit
+
+---
+
+## Summary: One Behavior, All Techniques
+
+| Technique | What We Learn About Factual Recall |
+|-----------|-----------------------------------|
+| **Forward pass** | 12 layers transform "Eiffel Tower" into "Paris" |
+| **Residual stream** | MLPs contribute most to final prediction |
+| **Geometry** | "Paris" is a direction in vocabulary space |
+| **Features** | Relevant concepts activate at final position |
+| **SAE** | Can identify specific features like "France-related" |
+| **Attribution** | MLP 8-9 have highest logit contribution |
+| **Patching** | Swapping landmark info changes prediction |
+| **Ablation** | Mid-layer MLPs are necessary for recall |
+
+Each technique reveals a different facet of the same phenomenon. Together, they build a complete mechanistic understanding.
+
+---
+
+## Try It Yourself
+
+1. **Different fact**: Try "The capital of Japan is" → "Tokyo"
+2. **Harder fact**: Try "The 16th president of the US was" → "Lincoln"
+3. **Compare**: How does the circuit differ for well-known vs. obscure facts?
+4. **Break it**: Find a fact the model gets wrong and analyze why

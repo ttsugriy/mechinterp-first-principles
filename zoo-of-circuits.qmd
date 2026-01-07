@@ -1,0 +1,236 @@
+---
+title: "Zoo of Known Circuits"
+subtitle: "A catalog of discovered mechanisms"
+---
+
+A reference of documented circuits and mechanisms in language models, organized by function.
+
+---
+
+## Attention Patterns
+
+### Induction Heads
+
+**Function**: Pattern completion. Given [A][B]...[A], predict [B].
+
+**Location**: Layers 1-2 in GPT-2 Small (two-layer circuit)
+
+**Components**:
+
+- Previous token heads (L0): Copy info from position i to i+1
+- Induction heads (L1-2): Match current token, attend to position after previous occurrence
+
+**Verification**: Ablating induction heads eliminates in-context learning
+
+**Reference**: [In-context Learning and Induction Heads](https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html)
+
+---
+
+### Previous Token Heads
+
+**Function**: Attend primarily to the immediately preceding token
+
+**Location**: Early layers (L0-1)
+
+**Signature**: Attention pattern shows diagonal stripe (position n attends to n-1)
+
+**Use**: Enables copying, serves as component in induction heads
+
+---
+
+### Duplicate Token Heads
+
+**Function**: Attend to previous occurrences of the current token
+
+**Location**: Early-mid layers
+
+**Signature**: High attention to positions with matching tokens
+
+---
+
+## Language Structure
+
+### IOI (Indirect Object Identification)
+
+**Function**: Complete "John gave Mary the ball. Mary gave [the ball to] ___" → "John"
+
+**Location**: 26 attention heads across 7 functional groups
+
+**Components**:
+1. **Duplicate Token Heads**: Detect repeated names
+2. **S-Inhibition Heads**: Suppress the subject
+3. **Name Mover Heads**: Move the correct name to output
+4. **Backup Name Movers**: Redundancy
+5. **Negative Name Movers**: Fine-tuning
+
+**Size**: ~2.8M parameters of 124M involved
+
+**Reference**: [Interpretability in the Wild: IOI](https://arxiv.org/abs/2211.00593)
+
+---
+
+### Greater-Than Circuit
+
+**Function**: Compare numbers, e.g., "The war lasted from 1732 to 17___" → predict digits > 32
+
+**Location**: MLPs in layers 9-11 (GPT-2 Small)
+
+**Mechanism**: MLPs encode ordinal relationships between year tokens
+
+**Reference**: [Finding Arithmetic Circuits in Transformers](https://arxiv.org/abs/2303.03846)
+
+---
+
+## Knowledge Retrieval
+
+### Factual Recall (MLP-based)
+
+**Function**: Complete factual statements like "The Eiffel Tower is in ___" → "Paris"
+
+**Location**: Mid-layer MLPs (layers 7-9 in GPT-2 Small)
+
+**Mechanism**:
+1. Attention heads gather context about the subject
+2. MLPs act as key-value stores (subject → attribute)
+3. Late layers refine and commit to prediction
+
+**Evidence**: Patching MLPs changes retrieved facts; ablating key MLPs disrupts recall
+
+**Reference**: [Locating and Editing Factual Associations](https://arxiv.org/abs/2202.05262) (ROME paper)
+
+---
+
+### Copy Suppression
+
+**Function**: Suppress copying when it would be wrong
+
+**Location**: Late attention layers
+
+**Mechanism**: Negative attention to positions that would be incorrectly copied
+
+**Example**: In "The cat sat. The dog ___", suppress copying "sat" despite recency
+
+---
+
+## Modular Arithmetic (Toy Models)
+
+### Grokking Circuits
+
+**Function**: Compute modular addition (a + b mod p)
+
+**Location**: One-layer transformer trained on modular arithmetic
+
+**Mechanism**:
+
+- Fourier basis representation of inputs
+- Rotation in 2D embedding space
+- Discrete Fourier transform on residual stream
+
+**Significance**: Shows neural networks can learn exact algorithms, not just heuristics
+
+**Reference**: [Progress Measures for Grokking via Mechanistic Interpretability](https://arxiv.org/abs/2301.05217)
+
+---
+
+## Safety-Relevant Features
+
+### Deception-Related Features
+
+**What**: SAE features that activate when model discusses deception, misleading, or dishonesty
+
+**Found in**: Claude 3 Sonnet SAE analysis
+
+**Use**: Monitoring for deceptive reasoning
+
+**Caveat**: Feature presence doesn't guarantee behavior control
+
+---
+
+### Sycophancy Features
+
+**What**: Features that activate when agreeing with user despite knowing better
+
+**Found in**: Claude SAE analysis
+
+**Use**: Detecting sycophantic drift during deployment
+
+---
+
+### Refusal Features
+
+**What**: Features associated with declining harmful requests
+
+**Found in**: Multiple RLHF'd models
+
+**Mechanism**: Safety training increases activation of these features for harmful prompts
+
+---
+
+## Emerging Patterns
+
+### Multi-Step Reasoning Chains
+
+**Status**: Partially understood
+
+**What we know**:
+
+- Reasoning happens incrementally across layers
+- Information flows from question tokens through intermediate computations
+- Chain-of-thought helps by externalizing intermediate steps
+
+**What's unclear**:
+
+- Exact circuits for different reasoning types
+- How context length affects reasoning depth
+
+---
+
+### Code Generation
+
+**Status**: Poorly understood
+
+**Observations**:
+
+- Different syntax structures activate different layer patterns
+- Function names and variable names processed differently
+- Indentation tracking involves specialized attention patterns
+
+**Challenge**: Code behavior is diverse, making circuit isolation hard
+
+---
+
+## How to Discover New Circuits
+
+1. **Pick a narrow behavior**: Choose something testable and specific
+2. **Find contributing components**: Use attribution to identify important heads/MLPs
+3. **Verify causality**: Use patching to confirm components are necessary
+4. **Understand mechanism**: Study attention patterns, MLP activations
+5. **Test generalization**: Check if circuit works on variations
+6. **Document thoroughly**: Share findings with clear methodology
+
+---
+
+## Adding to This Zoo
+
+If you discover a new circuit:
+
+1. **Minimum requirements**:
+   - Clear description of the behavior
+   - Components involved (heads, MLPs, layers)
+   - Causal evidence (patching or ablation results)
+   - Reproducible code
+
+2. **Ideal additions**:
+   - Multiple verification methods
+   - Transfer to other models
+   - Connections to other known circuits
+
+Open an issue or PR on the [repository](https://github.com/ttsugriy/mechinterp-first-principles) with your findings.
+
+---
+
+## Further Reading
+
+- [Transformer Circuits Thread](https://transformer-circuits.pub/) — Anthropic's ongoing circuit discoveries
+- [200 Concrete Problems](https://www.neelnanda.io/mechanistic-interpretability/200-concrete-problems) — Research questions including many circuit-hunting problems
+- [ACDC: Automated Circuit Discovery](https://arxiv.org/abs/2304.14997) — Tools for scaling circuit discovery

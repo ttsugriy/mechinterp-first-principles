@@ -80,6 +80,7 @@ Chris Olah publishes [Building Blocks of Interpretability](https://distill.pub/2
 The [Circuits thread](https://distill.pub/2020/circuits/) launches on Distill. This is the conceptual birth of mechanistic interpretability as we know it.
 
 Key ideas introduced:
+
 - **Circuits**: Subnetworks implementing identifiable algorithms
 - **Features**: The fundamental units of representation
 - **Universality**: Similar circuits across different networks
@@ -88,6 +89,7 @@ The focus is still on vision models (InceptionV1), but the framework is general.
 
 **2020 — Curve Detectors, High-Low Frequency**
 A series of papers document specific circuits in vision models:
+
 - Curve detector circuits
 - High-low frequency detector circuits
 - Branch specialization
@@ -109,6 +111,7 @@ This paper establishes the conceptual vocabulary still used today: residual stre
 
 **2021 — TransformerLens Created**
 Neel Nanda creates [TransformerLens](https://github.com/neelnanda-io/TransformerLens), the standard library for mechanistic interpretability research. It provides:
+
 - Easy access to all intermediate activations
 - Hooks for interventions
 - Support for many model architectures
@@ -123,6 +126,7 @@ This dramatically lowers the barrier to entry for interpretability research.
 [This paper](https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html) documents the first complete, validated circuit in a language model.
 
 Key findings:
+
 - Induction heads implement in-context learning
 - They emerge via a phase transition during training
 - The circuit requires two layers (previous token head → induction head)
@@ -140,6 +144,7 @@ This paper explains *why* interpretability is hard and points toward solutions (
 
 **2022 — Grokking Analysis**
 Neel Nanda and colleagues analyze [grokking](https://arxiv.org/abs/2301.02679)—sudden generalization after prolonged memorization. They find:
+
 - Grokking corresponds to learning efficient algorithms
 - The model transitions from memorization circuits to generalization circuits
 - Mechanistic analysis can predict when grokking occurs
@@ -159,6 +164,7 @@ This proves the concept and sets the stage for larger-scale work.
 
 **2023 — Neuronpedia Launched**
 [Neuronpedia](https://www.neuronpedia.org/) launches, providing:
+
 - Interactive exploration of SAE features
 - Crowdsourced feature interpretations
 - A shared vocabulary for discussing features
@@ -180,6 +186,7 @@ The "Golden Gate Claude" demonstration shows that adding the "Golden Gate Bridge
 
 **2024 — Automated Circuit Discovery**
 Multiple papers develop automated methods for finding circuits:
+
 - ACDC (Automated Circuit DisCovery)
 - Subnetwork Probing
 - Attribution Patching at scale
@@ -188,6 +195,7 @@ The goal: move from artisanal circuit analysis to systematic discovery.
 
 **2024 — Attention Pattern Taxonomy**
 Researchers develop taxonomies of attention head behaviors:
+
 - Previous token heads
 - Induction heads
 - Duplicate token heads
@@ -201,18 +209,21 @@ This moves toward a "parts list" for transformer internals.
 
 **2025 — SAEBench**
 [SAEBench](https://arxiv.org/abs/2501.00663) provides standardized evaluation for SAEs:
+
 - Benchmark tasks for assessing feature quality
 - Discovery that proxy metrics (L0, reconstruction) don't predict downstream utility
 - Push for task-specific evaluation
 
 **2025 — Multi-Phase Emergence**
 Research reveals that capability emergence is more complex than single phase transitions:
+
 - Multiple distinct phases during training
 - Different capabilities emerge at different times
 - Implications for understanding training dynamics
 
 **2025 — Feature Absorption**
 Researchers discover that scaling SAEs has limits:
+
 - Common features "absorb" related features
 - Hierarchical concepts don't decompose cleanly
 - New architectures (matryoshka SAEs) proposed as solutions

@@ -46,6 +46,7 @@ for head in top_heads[:5]:
 **Why it's wrong**: Zero ablation creates activations the model has never seen during training. The model might fail because of the *weirdness* of the intervention, not because the component is truly necessary.
 
 **Signs of distribution shift**:
+
 - Model outputs become incoherent (not just wrong)
 - Loss explodes to very high values
 - Effects are much larger than expected
@@ -80,6 +81,7 @@ def resample_ablate(act, hook, other_acts):
 **Why it's wrong**: Any single example might work through an unusual path. Mechanistic claims need to generalize.
 
 **The fix**: Test on diverse examples with the same structure:
+
 - Different entities (London, Tokyo, Berlin)
 - Different phrasings ("What city is the Eiffel Tower in?", "The Eiffel Tower is located in")
 - Edge cases (fictional cities, ambiguous cases)
@@ -114,6 +116,7 @@ if consistent(results):
 **Why it's wrong**: Transformers have redundancy. A component might be sufficient but not necessary because backup circuits compensate.
 
 **The fix**:
+
 - Test combinations of components (ablate multiple together)
 - Check if the component is sufficient (patching it in restores behavior)
 - Look for backup activation after ablation
@@ -144,6 +147,7 @@ if single_ablated ≈ original but double_ablated ≠ original:
 **Why it's wrong**: Components don't "understand" or "know" anything. They implement mathematical operations that *correlate* with human-interpretable concepts. The mapping is often imperfect and context-dependent.
 
 **The fix**: Use precise language:
+
 - "This head's attention pattern correlates with syntactic dependencies"
 - "This MLP's output increases the logit for 'France' when the input contains 'Paris'"
 
@@ -167,6 +171,7 @@ Finding a pattern and immediately concluding it's meaningful.
 **Why it's wrong**: With enough components and examples, you'll find *some* pattern by chance. The question is whether it's a real mechanism or statistical noise.
 
 **The fix**: Always ask:
+
 - What would I expect to see if there were no mechanism?
 - Can I construct a control that shouldn't show this pattern?
 - Does the pattern hold on held-out examples?
@@ -200,10 +205,12 @@ Using corrupted inputs that differ from clean inputs in too many ways.
 **Why it's wrong**: If your corrupted input changes multiple things, you can't isolate what caused the behavior change.
 
 **Bad pairs**:
+
 - Clean: "The capital of France is" → Corrupted: "Hello world foo bar"
 - Clean: "John gave Mary the book" → Corrupted: "asdfgh jkl"
 
 **Good pairs**:
+
 - Clean: "The capital of France is" → Corrupted: "The capital of Poland is"
 - Clean: "John gave Mary the book" → Corrupted: "John gave John the book"
 
@@ -248,6 +255,7 @@ Looking for a mechanism in the wrong layers.
 :::
 
 **Common confusions**:
+
 - Looking for factual recall in early layers (it's usually in mid-to-late MLPs)
 - Looking for syntax in late layers (it's usually in early-to-mid attention)
 - Expecting all computation to happen in one layer (it's often distributed)
@@ -327,6 +335,7 @@ interpret("Feature 42 = animals")
 :::
 
 **Why it's wrong**: SAE features are a *decomposition* that optimizes for sparsity and reconstruction. They're useful but:
+
 - Different SAEs give different features
 - The "right" decomposition might not exist
 - Important concepts might span multiple features
@@ -343,6 +352,7 @@ Preferring simple, clean interpretations over messy but accurate ones.
 :::
 
 **Why it's wrong**: Real circuits are often:
+
 - Distributed across many components
 - Context-dependent
 - Partially redundant
@@ -364,6 +374,7 @@ Preferring simple, clean interpretations over messy but accurate ones.
 **Why it's wrong**: Complex behaviors involve many interacting mechanisms. Starting with them means you can't isolate anything.
 
 **The fix**: Start with the simplest version of the behavior:
+
 - Induction (simple pattern completion)
 - Single-token factual recall ("The Eiffel Tower is in" → "Paris")
 - Basic syntax (subject-verb agreement)
@@ -425,6 +436,7 @@ Reinventing techniques or missing known failure modes.
 The common thread in all these mistakes: **premature certainty**.
 
 Mechanistic interpretability requires:
+
 - Skepticism about your own interpretations
 - Multiple lines of evidence
 - Willingness to accept complexity

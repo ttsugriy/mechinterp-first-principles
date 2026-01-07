@@ -24,6 +24,7 @@ We'll analyze a simple but interesting behavior:
 **The question**: How does the model know to predict positive vs negative words? Which components read the sentiment word ("love" vs "hate") and influence the prediction?
 
 This is perfect for a first analysis because:
+
 - It's intuitive (we understand what "should" happen)
 - It works reliably in GPT-2 Small
 - It demonstrates core techniques (attribution, patching)
@@ -131,6 +132,7 @@ Logit for 'bad':
 ```
 
 **Confirmed!** The model does shift predictions based on sentiment:
+
 - " great" gets higher logit after "love" (13.8 vs 11.2)
 - " bad" gets higher logit after "hate" (13.1 vs 10.5)
 

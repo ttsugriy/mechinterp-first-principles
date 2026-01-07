@@ -461,6 +461,7 @@ Attention: 0  █  0  0  █  0  0  0  0
 The head at position 5 (token $B$) strongly attends to position 1 (the previous occurrence of $B$) where the prior token was $A$.
 
 This creates diagonal stripes across the attention matrix because:
+
 - When processing position 5, attend to position 1 (offset -4)
 - When processing position 6, attend to position 2 (offset -4)
 - When processing position 7, attend to position 3 (offset -4)

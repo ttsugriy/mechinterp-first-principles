@@ -45,6 +45,9 @@ book:
         - chapters/15-practice-regime.qmd
     - part: "Reference"
       chapters:
+        - running-example.qmd
+        - exercises.qmd
+        - zoo-of-circuits.qmd
         - quick-reference.qmd
         - model-selection.qmd
         - anti-patterns.qmd

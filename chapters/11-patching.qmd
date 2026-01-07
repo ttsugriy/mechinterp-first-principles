@@ -487,6 +487,34 @@ Together, attribution, patching, and ablation form a complete toolkit for unders
 
 ---
 
+## Common Confusions
+
+::: {.callout-warning collapse="true"}
+## "High recovery means the component is important"
+
+Not quite. High recovery from denoising patching means the component is *sufficient* to convey the information. But other components might also be sufficient (redundancy). Always combine with noising experiments to test necessity.
+:::
+
+::: {.callout-warning collapse="true"}
+## "Low patching effect means the component doesn't matter"
+
+Low effect could mean: (1) the component genuinely doesn't matter, (2) backup circuits compensate, or (3) your corrupted input was poorly chosen. If attribution says a component matters but patching says it doesn't, investigate backup circuits or try different corruptions.
+:::
+
+::: {.callout-warning collapse="true"}
+## "I can patch any activation and get meaningful results"
+
+Patching creates out-of-distribution activations. If you patch a head output to an extreme value, downstream components may behave unpredictably. Results are most reliable when patched activations are realistic (come from a related input).
+:::
+
+::: {.callout-warning collapse="true"}
+## "Noising and denoising are interchangeable"
+
+They answer different questions. Noising tests necessity ("is this component needed?"). Denoising tests sufficiency ("is this component enough?"). A component that fails noising but passes denoising is necessary; one that passes both is both necessary and sufficient.
+:::
+
+---
+
 ## Further Reading
 
 1. **Interpretability in the Wild: IOI** — [arXiv:2211.00593](https://arxiv.org/abs/2211.00593): The paper that established patching methodology by reverse-engineering the IOI circuit.

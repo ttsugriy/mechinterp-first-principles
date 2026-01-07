@@ -29,6 +29,7 @@ Choosing the right model is crucial for productive interpretability research. Th
 | GPT-2 XL | 1.5B | 48 | 25 | 1600 | ~7 GB |
 
 **Pros**:
+
 - Most studied models in interpretability
 - TransformerLens has excellent support
 - Pre-trained SAEs available (especially for Small)
@@ -36,6 +37,7 @@ Choosing the right model is crucial for productive interpretability research. Th
 - Fast to run, even on CPU
 
 **Cons**:
+
 - No training checkpoints available
 - Older architecture (no RoPE, no GQA)
 - Limited factual knowledge (2019 training data)
@@ -63,6 +65,7 @@ model = tl.HookedTransformer.from_pretrained("gpt2-small")
 | Pythia-12B | 12B | 36 | 40 | 5120 | ~48 GB |
 
 **Pros**:
+
 - **Training checkpoints**: 154 checkpoints per model, enabling training dynamics research
 - Consistent architecture across all sizes (great for scaling experiments)
 - Trained on The Pile (diverse, well-documented data)
@@ -70,6 +73,7 @@ model = tl.HookedTransformer.from_pretrained("gpt2-small")
 - Rotary position embeddings (RoPE)
 
 **Cons**:
+
 - Slightly less studied than GPT-2
 - Fewer pre-trained SAEs available
 - Unusual d_head for 1B model (256 vs typical 64)
@@ -99,12 +103,14 @@ model = tl.HookedTransformer.from_pretrained(
 | Llama-3-8B | 8B | 32 | 32 | 4096 | ~32 GB |
 
 **Pros**:
+
 - State-of-the-art capabilities (especially Llama 3)
 - Group Query Attention (GQA) in newer versions
 - Better factual knowledge than smaller models
 - Active research community
 
 **Cons**:
+
 - Large, requires significant VRAM
 - TransformerLens support varies
 - Fewer interpretability resources
@@ -122,11 +128,13 @@ model = tl.HookedTransformer.from_pretrained(
 | Gemma-7B | 7B | 28 | 16 | 3072 | ~28 GB |
 
 **Pros**:
+
 - Modern architecture from Google
 - Strong performance for size
 - Open weights
 
 **Cons**:
+
 - Less interpretability tooling
 - Newer, less studied
 - Some architectural differences
@@ -142,11 +150,13 @@ model = tl.HookedTransformer.from_pretrained(
 | Mistral-7B | 7B | 32 | 32 | 4096 | ~28 GB |
 
 **Pros**:
+
 - Excellent performance for size
 - Sliding window attention
 - Strong community support
 
 **Cons**:
+
 - Sliding window attention complicates interpretability
 - Less tooling than GPT-2/Pythia
 
@@ -208,6 +218,7 @@ flowchart TD
 ### Research GPU (24-48 GB VRAM)
 
 All models up to ~7B fit comfortably. For larger models:
+
 - Use gradient checkpointing
 - Use 8-bit or 4-bit quantization
 - Use model parallelism
@@ -311,6 +322,7 @@ sae, cfg, sparsity = SAE.from_pretrained(
 **Symptom**: Technique works on GPT-2, fails on Llama.
 
 **Fix**: Models have different architectures. Check for:
+
 - Attention type (MHA vs GQA vs MQA)
 - Position encoding (learned vs RoPE vs ALiBi)
 - Normalization (LayerNorm vs RMSNorm)
