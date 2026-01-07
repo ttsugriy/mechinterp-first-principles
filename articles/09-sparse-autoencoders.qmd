@@ -95,6 +95,13 @@ The sparsity constraint ensures this expansion doesn't become trivial. The SAE c
 Think of SAEs like profiler stack sampling, but for representations. A profiler takes a complex execution and decomposes it into individual function calls. An SAE takes a complex activation and decomposes it into individual features. Both reveal hidden structure through systematic decomposition.
 :::
 
+::: {.callout-warning}
+## Pause and Think
+Regular autoencoders compress to a *smaller* space. SAEs expand to a *larger* space. Why does this expansion help with interpretability?
+
+*Hint*: Think about what the input activation actually represents (from Article 6).
+:::
+
 ## The Training Objective
 
 SAEs are trained with two competing objectives:
@@ -189,6 +196,13 @@ If amplifying feature 892 makes the model insert cooking references into unrelat
 
 The famous "Golden Gate Bridge" feature was discovered this way: amplifying it made Claude identify *as* the Golden Gate Bridge.
 
+::: {.callout-caution}
+## Common Misconception: SAE Features Are "Ground Truth"
+**Wrong**: "SAE features are the actual features the model uses internally."
+
+**Right**: SAE features are a *reconstruction* that's convenient for us to interpret. The real model may use different bases, or may not have discrete "features" at all in some representations. SAE features are useful proxies—they help us understand the model—but they're not necessarily how the model "thinks." The 10-40% reconstruction error reminds us that SAEs are approximations.
+:::
+
 ### Automated Interpretation
 
 For millions of features, manual inspection doesn't scale. Researchers use:
@@ -216,6 +230,19 @@ In 2024, Anthropic applied SAEs to Claude 3 Sonnet at unprecedented scale, train
 **Features are sparse**: Fewer than 300 features active per token, out of millions available.
 
 **Features transfer**: Some features discovered on text also activate appropriately on images (for multimodal models).
+
+::: {.callout-note}
+## Try It Yourself: Explore SAE Features on Neuronpedia
+[Neuronpedia](https://www.neuronpedia.org/) hosts SAE features for multiple models. Explore what interpretable features look like:
+
+1. Visit [neuronpedia.org/gpt2-small](https://www.neuronpedia.org/gpt2-small) for GPT-2 Small features
+2. Try the "Random Feature" button to see a randomly selected feature
+3. Look at the max-activating examples—can you guess what the feature represents?
+4. Search for features related to concepts like "programming" or "sentiment"
+5. Compare early-layer vs. late-layer features—notice how abstraction increases with depth
+
+This is what SAE output looks like in practice. Each feature is a direction in activation space; Neuronpedia shows you what each direction "means."
+:::
 
 ::: {.callout-note}
 ## The Transformation

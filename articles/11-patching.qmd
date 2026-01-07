@@ -106,6 +106,13 @@ You need to know what the "correct" output is for both inputs. Avoid ambiguous c
 **Mistake 4: Forgetting position**
 Token position matters! If you swap "John" and "Mary," make sure the positions are comparable.
 
+::: {.callout-warning}
+## Pause and Think
+You patch an attention head's output and the model's prediction changes from wrong to right. Does this prove the head *causes* the correct behavior? What alternative explanation might exist?
+
+*Hint*: Consider what information the patched activation might contain besides the "target" information.
+:::
+
 ### When Construction Is Hard
 
 Some tasks don't have natural clean/corrupted pairs:

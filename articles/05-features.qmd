@@ -67,7 +67,7 @@ What does the network do? It **shares neurons across concepts**. Multiple featur
 
 This is efficient. It works because most features rarely co-occur: you don't often see cat faces and car fronts in the same image, so using the same neuron for both doesn't cause problems during inference. The network gets away with the overlap.
 
-But it's a disaster for interpretation. When you ask "what does neuron 847 mean?", the answer is "it means cat faces *and* car fronts *and* probably several other things." The neuron doesn't have a single meaning. It's a superposition of meanings.
+But it's a disaster for interpretation. When you ask "what does neuron 847 mean?", the answer is "it means cat faces *and* car fronts *and* probably several other things." The neuron doesn't have a single meaning. It's a superposition of meanings (we'll explore this phenomenon deeply in [Article 6](06-superposition.qmd)).
 
 ::: {.callout-note}
 ## Incidental Polysemanticity
@@ -157,6 +157,13 @@ Here's the key insight: **even when neurons are polysemantic, features can be mo
 
 The features are directions in activation space. Multiple features can be encoded in overlapping patterns across neurons. Each feature, as a direction, might be interpretable—"this direction means cat faces," "that direction means car fronts." But any individual neuron participates in multiple features, so looking at neurons individually gives you the confusing polysemantic picture.
 
+::: {.callout-warning}
+## Pause and Think
+If you found a neuron that activates for both "Paris" and "pizza," what are two possible explanations? How would you distinguish between them?
+
+*Hint*: One explanation involves features, the other involves superposition.
+:::
+
 ```{mermaid}
 %%| fig-cap: "Polysemantic neurons vs monosemantic features: each neuron participates in multiple features, but each feature direction is interpretable."
 %%| fig-width: 8
@@ -187,6 +194,15 @@ flowchart LR
 ::: {.callout-note}
 ## The Decomposition Goal
 The goal of mechanistic interpretability is to decompose polysemantic neurons into monosemantic features. We want to find the directions that correspond to interpretable concepts, even though the neurons that encode those directions are a tangled mess.
+:::
+
+::: {.callout-caution}
+## Common Misconception: Neurons = Features
+**Wrong**: "Each neuron corresponds to a concept."
+
+**Right**: Neurons are an *arbitrary basis* for activation space. Features are *learned directions* that may not align with any single neuron. A "cat" feature might involve small contributions from hundreds of neurons, none of which individually mean "cat."
+
+This is why early neural network interpretation (looking at individual neurons) often failed—it was looking in the wrong basis.
 :::
 
 ## Concrete Examples: Features in the Wild
@@ -223,6 +239,18 @@ Features also capture specialized knowledge:
 - Programming features that activate on specific coding patterns
 
 These features show that the model's "knowledge" is organized geometrically, with related concepts nearby.
+
+::: {.callout-note}
+## Try It Yourself: Explore Real Features
+[Neuronpedia](https://www.neuronpedia.org/) lets you explore features discovered by sparse autoencoders in real models. Try:
+
+1. Browse GPT-2 features at [neuronpedia.org/gpt2-small](https://www.neuronpedia.org/gpt2-small)
+2. Search for a concept you're interested in (try "code", "emotion", or "legal")
+3. Click a feature to see its max-activating examples
+4. Notice how each feature responds to a coherent concept—this is monosemanticity in action
+
+Spend 10 minutes exploring. You'll develop intuition for what "feature as direction" means in practice.
+:::
 
 ### Induction Features
 

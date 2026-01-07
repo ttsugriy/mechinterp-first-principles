@@ -680,6 +680,28 @@ Unlike most neural network behaviors, the induction circuit is:
 
 This makes induction heads the **best-understood capability** in transformers.
 
+::: {.callout-note}
+## Try It Yourself: Find Induction Heads in TransformerLens
+If you want to see induction heads directly, [TransformerLens](https://github.com/neelnanda-io/TransformerLens) makes it straightforward:
+
+```python
+import transformer_lens as tl
+model = tl.HookedTransformer.from_pretrained("gpt2-small")
+
+# Create a sequence with repetition
+prompt = "A B C D E A B C D"  # Should predict "E"
+
+# Get attention patterns
+_, cache = model.run_with_cache(prompt)
+
+# Look at layer 2 (where induction heads live in GPT-2)
+# Induction heads show diagonal stripes in their attention patterns
+attn = cache["pattern", 2]  # Shape: (batch, head, query_pos, key_pos)
+```
+
+Look for heads with strong attention to positions where the previous token matches the current token's previous token. That's the induction signature.
+:::
+
 ### 4. They Demonstrate Composition
 
 The circuit requires two layers working together—K-composition between previous token heads and induction heads. This is proof that transformers build complex algorithms by composing simple components.

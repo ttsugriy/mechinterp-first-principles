@@ -111,7 +111,7 @@ Researchers at Redwood Research discovered that GPT-2 Small solves this task usi
 
 **2. Duplicate Token Heads**: Detect that "John" appears twice, marking it as the subject
 
-**3. Induction Heads**: Use patterns to identify the indirect object position
+**3. Induction Heads** (see [Article 13](13-induction-heads.qmd)): Use patterns to identify the indirect object position
 
 **4. S-Inhibition Heads**: Suppress attention to the subject ("John")—make sure we don't output the wrong name
 

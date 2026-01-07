@@ -52,7 +52,7 @@ Vector arithmetic on learned representations produces semantically meaningful re
 
 This article is about that geometry. We've established that transformers are matrix multiplication machines (Article 2) and that information flows through a shared residual stream (Article 3). Now we ask: what's the *structure* of that stream? What does it mean for a concept to be a "direction"? And why does high-dimensional geometry enable representations far richer than we might expect?
 
-The answers will set up everything that follows. Features, superposition, circuits—all of these build on the geometric perspective we develop here.
+The answers will set up everything that follows. Features ([Article 5](05-features.qmd)), superposition ([Article 6](06-superposition.qmd)), circuits ([Article 8](08-circuits.qmd))—all of these build on the geometric perspective we develop here.
 
 ## From Numbers to Geometry
 

@@ -201,7 +201,7 @@ A model with L layers, H heads per layer, and MLP layers has on the order of $(H
 
 The residual stream is how attention heads **compose** with each other.
 
-Consider the famous **induction head** circuit. An induction head performs in-context learning: if it sees "...Harry Potter... Harry" it predicts "Potter" because it saw that pattern before.
+Consider the famous **induction head** circuit (explored fully in [Article 13](13-induction-heads.qmd)). An induction head performs in-context learning: if it sees "...Harry Potter... Harry" it predicts "Potter" because it saw that pattern before.
 
 This requires two heads working together:
 

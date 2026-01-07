@@ -99,6 +99,13 @@ This isn't just theoretical. The Johnson-Lindenstrauss lemma, which we mentioned
 
 A 768-dimensional space can comfortably hold tens of thousands of nearly-orthogonal directions. A 4,096-dimensional space can hold millions. This is why superposition is so effective—the geometry allows it.
 
+::: {.callout-warning}
+## Pause and Think
+If superposition lets networks pack many features into limited dimensions, why is this a problem for interpretability?
+
+*Hint*: Think about what happens when you look at a single neuron's activation.
+:::
+
 ## Polytope Arrangements
 
 When researchers study superposition in toy models, they find that networks don't just pack features randomly. They arrange them with elegant geometric structure.
@@ -196,6 +203,13 @@ The neuron is polysemantic because it's the intersection of multiple feature dir
 ::: {.callout-important}
 ## The Key Insight
 Polysemanticity is a *symptom* of superposition, not a separate phenomenon. The network is packing multiple monosemantic features into overlapping representations. Individual neurons look confusing because they're the cross-section of a higher-dimensional structure we can't see directly.
+:::
+
+::: {.callout-caution}
+## Common Misconception: Superposition Means Features Are "Mixed"
+**Wrong**: "In superposition, the model can't distinguish between features—they're blended together."
+
+**Right**: Features remain distinct directions. The model *can* distinguish them via their direction, even if individual neurons respond to multiple features. It's like separating sounds by frequency: each sound is still there, just overlapping in time. Superposition encodes cleanly; *we* have trouble reading it because we look at neurons instead of directions.
 :::
 
 ## The Sparsity Requirement

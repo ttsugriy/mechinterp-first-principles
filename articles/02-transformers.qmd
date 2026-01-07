@@ -166,6 +166,13 @@ print(f"Attention weights:\n{attn_weights}")
 **Key insight**: Every step is matrix multiplication except `softmax`, which is the essential nonlinearity. Without softmax, the whole thing would collapse to a single linear transformation.
 :::
 
+::: {.callout-warning}
+## Pause and Think
+Before continuing, ask yourself: Why does attention need three separate projections (Q, K, V)? What would happen if we used the same matrix for queries and keys?
+
+*Hint*: Think about what a position is "asking for" versus what it "contains."
+:::
+
 ::: {.callout-important}
 ## Why This Matters
 Attention is how transformers move information between positions. A token at the end of the sequence can access information from the beginning. This is fundamentally different from older architectures that processed sequences one step at a time.

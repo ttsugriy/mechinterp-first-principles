@@ -118,6 +118,13 @@ For the prompt "The capital of France is ___":
 
 The model's confidence in "Paris" is the sum of all contributions. We can now ask: what is MLP 8 doing? What pattern is head 7.4 attending to?
 
+::: {.callout-warning}
+## Pause and Think
+A component has high attribution for "Paris." Does this prove it's *responsible* for the model knowing Paris is France's capital? Or could something else explain the high attribution?
+
+*Hint*: Think about the difference between correlation and causation.
+:::
+
 ::: {.callout-note collapse="true"}
 ## Step-by-Step: How Attribution Math Works
 
@@ -294,6 +301,13 @@ Consider two scenarios:
 In both scenarios, head 7.4 has high attribution. But in scenario A, it's causally necessary; in scenario B, it's redundant.
 
 Attribution can't distinguish these cases.
+
+::: {.callout-caution}
+## Common Misconception: High Attribution = High Importance
+**Wrong**: "The component with highest attribution is the most important for this behavior."
+
+**Right**: High attribution means the component's output *correlates* with the prediction—it points in the same direction. But the same information may flow through multiple redundant paths. The "most important" component is often the one that's *necessary* (which requires patching or ablation to determine), not just the one with the highest correlation.
+:::
 
 ::: {.callout-important}
 ## The Fundamental Limitation
