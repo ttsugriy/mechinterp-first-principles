@@ -212,16 +212,17 @@ Measure each component's contribution to predicting "Paris":
 def logit_attribution(cache, model, target_token: int) -> list[tuple[str, float]]:
     """Full attribution to target token."""
     target_dir = model.W_U[:, target_token]
+    results = []
 
-    results = [
-        (f"L{layer}H{head}", (cache["result", layer][0, -1, head] @ target_dir).item())
-        for layer in range(model.cfg.n_layers)
-        for head in range(model.cfg.n_heads)
-    ]
-    results.extend(
-        (f"L{layer}_MLP", (cache["mlp_out", layer][0, -1] @ target_dir).item())
-        for layer in range(model.cfg.n_layers)
-    )
+    for layer in range(model.cfg.n_layers):
+        # Per-head attribution: project each head's output onto target direction
+        for head in range(model.cfg.n_heads):
+            head_out = cache["result", layer][0, -1, head]
+            results.append((f"L{layer}H{head}", (head_out @ target_dir).item()))
+
+        # MLP attribution
+        mlp_out = cache["mlp_out", layer][0, -1]
+        results.append((f"L{layer}_MLP", (mlp_out @ target_dir).item()))
 
     return sorted(results, key=lambda x: -x[1])
 

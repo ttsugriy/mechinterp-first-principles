@@ -45,17 +45,18 @@ str_tokens = model.to_str_tokens("Hello world")
 # Quick logit attribution
 def logit_attribution(cache, model, target_token: int) -> list[tuple[str, float]]:
     """Attribute final logit to each component."""
-    target_dir = model.W_U[:, target_token]
+    target_dir = model.W_U[:, target_token]  # Direction in vocab space
+    contributions = {}
 
-    contributions = {
-        f"L{layer}H{head}": (cache["result", layer][:, -1, head, :] @ target_dir).item()
-        for layer in range(model.cfg.n_layers)
-        for head in range(model.cfg.n_heads)
-    }
-    contributions.update({
-        f"L{layer}_MLP": (cache["mlp_out", layer][:, -1, :] @ target_dir).item()
-        for layer in range(model.cfg.n_layers)
-    })
+    for layer in range(model.cfg.n_layers):
+        # Each attention head's contribution
+        for head in range(model.cfg.n_heads):
+            head_out = cache["result", layer][:, -1, head, :]
+            contributions[f"L{layer}H{head}"] = (head_out @ target_dir).item()
+
+        # MLP's contribution
+        mlp_out = cache["mlp_out", layer][:, -1, :]
+        contributions[f"L{layer}_MLP"] = (mlp_out @ target_dir).item()
 
     return sorted(contributions.items(), key=lambda x: -abs(x[1]))
 ```

@@ -101,15 +101,16 @@ for layer in range(12):
 paris_token = model.to_single_token(" Paris")
 paris_dir = model.W_U[:, paris_token]
 
-contributions = [
-    (f"L{layer}_MLP", (cache["mlp_out", layer][0, -1] @ paris_dir).item())
-    for layer in range(12)
-]
-contributions.extend(
-    (f"L{layer}H{head}", (cache["result", layer][0, -1, head] @ paris_dir).item())
-    for layer in range(12)
-    for head in range(12)
-)
+contributions = []
+for layer in range(12):
+    # MLP contribution
+    mlp_out = cache["mlp_out", layer][0, -1]
+    contributions.append((f"L{layer}_MLP", (mlp_out @ paris_dir).item()))
+
+    # Each attention head's contribution
+    for head in range(12):
+        head_out = cache["result", layer][0, -1, head]
+        contributions.append((f"L{layer}H{head}", (head_out @ paris_dir).item()))
 
 top = sorted(contributions, key=lambda x: -x[1])[:5]
 print("Top contributors to 'Paris':")
